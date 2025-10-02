@@ -1,0 +1,67 @@
+/* ===== Utilidades de animación y tipografías (global) ===== */
+
+/* Google Fonts utilidades: Oswald (ya cargada en index.html) */
+.oswald {
+  font-family: "Oswald", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+/* Pesos variables (200..700) */
+.oswald-200 { font-weight: 200; }
+.oswald-300 { font-weight: 300; }
+.oswald-400 { font-weight: 400; }
+.oswald-500 { font-weight: 500; }
+.oswald-600 { font-weight: 600; }
+.oswald-700 { font-weight: 700; }
+
+/* Fades suaves (se usan en otros componentes también) */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-4px); }
+}
+.fade-in { animation: fade-in 600ms ease forwards; }
+.fade-out { animation: fade-out 600ms ease forwards; }
+
+/* Contenedor con perspectiva para efectos 3D (flip) */
+.flip-perspective {
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+}
+
+/* Animaciones flip up/down (estilo CodePen) */
+@keyframes flip-in-up {
+  0% { opacity: 0; transform: rotateX(90deg) translateZ(0); transform-origin: bottom; }
+  100% { opacity: 1; transform: rotateX(0deg) translateZ(0); transform-origin: bottom; }
+}
+@keyframes flip-out-up {
+  0% { opacity: 1; transform: rotateX(0deg) translateZ(0); transform-origin: top; }
+  100% { opacity: 0; transform: rotateX(-90deg) translateZ(0); transform-origin: top; }
+}
+.flip-in-up { animation: flip-in-up 500ms cubic-bezier(.2,.8,.2,1) forwards; backface-visibility: hidden; }
+.flip-out-up { animation: flip-out-up 400ms cubic-bezier(.2,.8,.2,1) forwards; backface-visibility: hidden; }
+
+/* ===== Modo monocromático oscuro (activar con <body class="mono-dark">) ===== */
+.mono-dark {
+  background-color: #0b0b0b;
+  color: #ffffff;
+}
+/* Fuerza texto blanco en elementos comunes */
+.mono-dark, .mono-dark * {
+  --tw-text-opacity: 1;
+  color: rgba(255,255,255,var(--tw-text-opacity));
+}
+/* Convierte todo a escala de grises sin afectar accesibilidad del foco */
+.mono-dark #root {
+  filter: grayscale(1);
+}
+/* Links y bordes visibles en oscuro */
+.mono-dark a { color: #ffffff; }
+.mono-dark hr, .mono-dark .border, .mono-dark [class*="border-"] { border-color: rgba(255,255,255,0.35); }
+
+/* Ajuste de fondo translúcido por si hay headers con blur */
+.mono-dark .bg-background\/30 { background-color: rgba(0,0,0,0.3) !important; }
+.mono-dark .bg-background\/60 { background-color: rgba(0,0,0,0.6) !important; }
