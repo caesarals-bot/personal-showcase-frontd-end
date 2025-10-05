@@ -22,3 +22,39 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Información personal sensible
+src/data/
+!src/data/*.example.ts
+!src/data/index.ts
+
+# Configuraciones de Firebase (cuando se implemente)
+.env
+.env.local
+.env.production
+.env.development
+firebase-config.ts
+firebase/
+.firebaserc
+firebase.json
+
+# Archivos de configuración personal
+config/personal/
+assets/personal/
+
+# Imágenes personales
+public/mia*.png
+public/mia*.jpg
+public/mia*.jpeg
+public/comic-*.webp
+
+# Certificados y claves
+*.pem
+*.key
+*.crt
+*.p12
+
+# Archivos de backup
+*.backup
+*.bak
+*.tmp

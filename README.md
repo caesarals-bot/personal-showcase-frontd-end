@@ -138,7 +138,7 @@ Alias configurado: `@/` -> `src/` (ver `tsconfig.json` y `vite.config.ts`).
 - Estilos no se aplican: verifica `tailwind.config.js` (`content`), `@tailwind` en `src/index.css` y la importación en `src/main.tsx`
 - Alias `@/` no resuelto: confirma `tsconfig.json` (`paths`) y `vite.config.ts` (`resolve.alias`)
 
-## Roadmap
+## roadmap
 - Crear `AppLayout` con navegación y tema
 - Módulos `home`, `about`, `portfolio`, `contact`
 - Integración de temas (claro/oscuro)

@@ -59,15 +59,15 @@ const NavbarShadcn = () => {
                             </NavigationMenuItem>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
-                                        Portafolio
+                                    <a href="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                        Sobre mí
                                     </a>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
-                                        Sobre mí
+                                    <a href="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                        Portafolio
                                     </a>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
