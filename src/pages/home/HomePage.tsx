@@ -5,7 +5,6 @@
 // - Animación: efecto flip 3D (ver utilidades en src/index.css)
 
 import { motion } from 'framer-motion'
-import BackgroundPaths from '@/shared/components/BackgroundPaths'
 import { useEffect, useMemo, useState } from 'react'
 import Logo from '@/shared/components/Logo'
 
@@ -40,9 +39,6 @@ const HomePage = () => {
 
     return (
         <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-4 text-center">
-            {/* Fondo animado */}
-            <BackgroundPaths />
-            
             {/* Contenedor relativo para superponer elementos respecto a la foto */}
             <div className="relative">
                 {/* Logo centrado encima de la foto */}

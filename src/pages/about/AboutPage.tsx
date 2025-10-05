@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-import BackgroundPaths from '@/shared/components/BackgroundPaths'
 import AboutSection from './components/AboutSection'
 import Timeline from './components/Timeline'
 import { useAboutData } from '@/hooks/useAboutData'
@@ -42,8 +41,6 @@ export default function AboutPage() {
 
     return (
         <div className="relative min-h-screen">
-            <BackgroundPaths />
-
             <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
                 {/* Header */}
                 <motion.div
