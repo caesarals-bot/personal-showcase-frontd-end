@@ -1,14 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
-import type {
-    BlogPost,
-    BlogFilters,
-    BlogPagination,
-    BlogLoadingState,
-    Category,
-    Tag,
-    Author,
-    User
-} from '@/types/blog.types'
+import { useState, useEffect } from 'react'
+import { useBlogFilters } from './useBlogFilters'
+import { useBlogPagination } from './useBlogPagination'
+import { useBlogInteractions } from './useBlogInteractions'
+import { useAuth } from './useAuth'
+import type { BlogPost, Category, Tag, Author, BlogLoadingState } from '@/types/blog.types'
 
 // Datos de ejemplo para el blog
 const mockAuthors: Author[] = [
@@ -136,178 +131,57 @@ const mockPosts: BlogPost[] = [
 
 export function useBlogData() {
     const [loading, setLoading] = useState<BlogLoadingState>('idle')
-    const [error, setError] = useState<string | null>(null)
-    const [filters, setFilters] = useState<BlogFilters>({
-        sortBy: 'publishedAt',
-        sortOrder: 'desc'
+    const [dataError, setDataError] = useState<string | null>(null)
+
+    // Hooks modulares
+    const auth = useAuth()
+    const filters = useBlogFilters({
+        posts: mockPosts,
+        categories: mockCategories,
+        tags: mockTags
     })
-    const [currentPage, setCurrentPage] = useState(1)
-    const postsPerPage = 6
-    const [userLikes, setUserLikes] = useState<string[]>([])
-    const [currentUser, setCurrentUser] = useState<User | null>(null)
-
+    const pagination = useBlogPagination({
+        posts: filters.filteredPosts
+    })
+    const interactions = useBlogInteractions()
     // Simular usuario logueado
-    useEffect(() => {
-        const mockUser: User = {
-            id: 'user-1',
-            name: 'Usuario Demo',
-            email: 'demo@example.com',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-            isVerified: true,
-            role: 'user',
-            createdAt: '2024-01-01T00:00:00Z'
-        }
-        setCurrentUser(mockUser)
-        setUserLikes(['1', '4']) // Posts que el usuario ha likeado
-    }, [])
-
-    // Simular carga de datos
+    // Solo maneja la carga de datos
     useEffect(() => {
         const fetchData = async () => {
             setLoading('loading')
-            setError(null)
-
             try {
-                // Simular delay de red
                 await new Promise(resolve => setTimeout(resolve, 800))
                 setLoading('success')
             } catch (err) {
-                setError('Error al cargar los artículos del blog')
+                setDataError('Error al cargar datos')
                 setLoading('error')
             }
         }
-
         fetchData()
-    }, [filters])
-
-    // Filtrar y ordenar posts
-    const filteredPosts = useMemo(() => {
-        let filtered = [...mockPosts]
-
-        // Filtrar por categoría
-        if (filters.category) {
-            filtered = filtered.filter(post => post.category.slug === filters.category)
-        }
-
-        // Filtrar por tags
-        if (filters.tags && filters.tags.length > 0) {
-            filtered = filtered.filter(post =>
-                post.tags.some(tag => filters.tags!.includes(tag.slug))
-            )
-        }
-
-        // Filtrar por búsqueda
-        if (filters.search) {
-            const searchTerm = filters.search.toLowerCase()
-            filtered = filtered.filter(post =>
-                post.title.toLowerCase().includes(searchTerm) ||
-                post.excerpt.toLowerCase().includes(searchTerm) ||
-                post.tags.some(tag => tag.name.toLowerCase().includes(searchTerm))
-            )
-        }
-
-        // Ordenar
-        filtered.sort((a, b) => {
-            const aValue = a[filters.sortBy || 'publishedAt']
-            const bValue = b[filters.sortBy || 'publishedAt']
-
-            if (filters.sortOrder === 'desc') {
-                return bValue > aValue ? 1 : -1
-            } else {
-                return aValue > bValue ? 1 : -1
-            }
-        })
-
-        return filtered
-    }, [filters])
-
-    // Paginación
-    const pagination = useMemo((): BlogPagination => {
-        const total = filteredPosts.length
-        const totalPages = Math.ceil(total / postsPerPage)
-
-        return {
-            page: currentPage,
-            limit: postsPerPage,
-            total,
-            totalPages,
-            hasNext: currentPage < totalPages,
-            hasPrev: currentPage > 1
-        }
-    }, [filteredPosts.length, currentPage])
-
-    // Posts de la página actual
-    const currentPosts = useMemo(() => {
-        const startIndex = (currentPage - 1) * postsPerPage
-        const endIndex = startIndex + postsPerPage
-        return filteredPosts.slice(startIndex, endIndex)
-    }, [filteredPosts, currentPage])
-
-    // Posts destacados
-    const featuredPosts = useMemo(() => {
-        return mockPosts.filter(post => post.isFeatured).slice(0, 3)
     }, [])
 
-    // Funciones para actualizar filtros
-    const updateFilters = (newFilters: Partial<BlogFilters>) => {
-        setFilters(prev => ({ ...prev, ...newFilters }))
-        setCurrentPage(1) // Reset a la primera página
-    }
-
-    const clearFilters = () => {
-        setFilters({
-            sortBy: 'publishedAt',
-            sortOrder: 'desc'
-        })
-        setCurrentPage(1)
-    }
-
-    const goToPage = (page: number) => {
-        setCurrentPage(page)
-    }
-    const handleLike = async (postId: string) => {
-        if (!currentUser) {
-            alert('Debes iniciar sesión para dar like')
-            return
-        }
-
-        const isLiked = userLikes.includes(postId)
-
-        if (isLiked) {
-            setUserLikes(prev => prev.filter(id => id !== postId))
-        } else {
-            setUserLikes(prev => [...prev, postId])
-        }
-    }
+    // Reset paginación cuando cambian filtros
+    useEffect(() => {
+        pagination.resetPagination()
+    }, [filters.filters])
 
     return {
+        // Estados básicos
+        loading,
+        dataError,
+
         // Datos
-        posts: currentPosts,
-        allPosts: filteredPosts,
-        featuredPosts,
+        posts: pagination.currentPosts,
+        allPosts: filters.filteredPosts,
+        featuredPosts: mockPosts.filter(p => p.isFeatured),
         categories: mockCategories,
         tags: mockTags,
         authors: mockAuthors,
 
-        // Estado
-        loading,
-        error,
-        filters,
-        pagination,
-
-        // Acciones
-        updateFilters,
-        clearFilters,
-        goToPage,
-
-        // Utilidades
-        totalPosts: filteredPosts.length,
-        hasFilters: Object.keys(filters).some(key =>
-            key !== 'sortBy' && key !== 'sortOrder' && filters[key as keyof BlogFilters]
-        ),
-        currentUser,
-        userLikes,
-        handleLike,
-        isPostLiked: (postId: string) => userLikes.includes(postId)
+        // Hooks modulares expuestos
+        ...filters,
+        ...pagination,
+        ...interactions,
+        ...auth
     }
 }

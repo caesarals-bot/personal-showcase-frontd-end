@@ -1,10 +1,10 @@
 // Navbar principal con shadcn/ui
 // - Fijo en la parte superior con fondo transparente y blur
 // - Menú de escritorio con NavigationMenu (shadcn)
-// - Menú móvil desplegable (hamburguesa) sin dependencias extra
-// NOTA: Se usan <a href> por la restricción de no importar desde 'react-router-dom'
+// - Menú móvil desplegable (hamburguesa) con React Router Links
 
 import { useState } from 'react'
+import { Link } from 'react-router'
 import {
     NavigationMenu,
     NavigationMenuList,
@@ -21,9 +21,9 @@ const NavbarShadcn = () => {
         <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Marca/Logo: enlaza a inicio */}
-                <a href="/" aria-label="Ir al inicio" className="flex items-center">
+                <Link to="/" aria-label="Ir al inicio" className="flex items-center">
                     <Logo align="left" color="#000000" width={150} height={40} />
-                </a>
+                </Link>
 
                 {/* Botón hamburguesa (visible en móvil) */}
                 <button
@@ -52,37 +52,30 @@ const NavbarShadcn = () => {
                         <NavigationMenuList>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                    <Link to="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                         Inicio
-                                    </a>
+                                    </Link>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                    <Link to="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                         Sobre mí
-                                    </a>
+                                    </Link>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
-                                        Portafolio
-                                    </a>
-                                </NavigationMenuLink>
-                            </NavigationMenuItem>
-                            <NavigationMenuItem>
-                                <NavigationMenuLink asChild>
-                                    <a href="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                    <Link to="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                         Blog
-                                    </a>
+                                    </Link>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                             <NavigationMenuItem>
                                 <NavigationMenuLink asChild>
-                                    <a href="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                    <Link to="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                         Contáctame
-                                    </a>
+                                    </Link>
                                 </NavigationMenuLink>
                             </NavigationMenuItem>
                         </NavigationMenuList>
@@ -96,29 +89,24 @@ const NavbarShadcn = () => {
                     <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <ul className="space-y-1 py-2">
                             <li>
-                                <a href="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                     Inicio
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
-                                    Portafolio
-                                </a>
-                            </li>
-                            <li>
-                                <a href="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                     Sobre mí
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                     Blog
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                     Contáctame
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </nav>

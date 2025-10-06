@@ -4,14 +4,12 @@ import SocialIcon from './SocialIcon'
 
 interface ContactInfoProps {
     position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
-    showEmail?: boolean
     showSocials?: boolean
     variant?: 'floating' | 'inline'
 }
 
 export default function ContactInfo({
     position = 'top-left',
-    showEmail = false,
     showSocials = true,
     variant = 'floating'
 }: ContactInfoProps) {

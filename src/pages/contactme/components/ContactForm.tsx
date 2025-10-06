@@ -67,7 +67,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   }
 
   // Simulación de envío de email (reemplazar con implementación real)
-  const simulateEmailSend = async (data: ContactFormData): Promise<ContactFormResponse> => {
+  const simulateEmailSend = async (_data: ContactFormData): Promise<ContactFormResponse> => {
     // Simular delay de red
     await new Promise(resolve => setTimeout(resolve, 2000))
 

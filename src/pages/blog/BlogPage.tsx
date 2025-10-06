@@ -15,15 +15,20 @@ const BlogPage = () => {
         categories,
         tags,
         loading,
-        error,
+        dataError,
+        // Filtros
         filters,
-        pagination,
-        updateFilters,
+        hasActiveFilters,
+        filterStats,
+        handleCategoryFilter,
+        handleTagFilter,
+        handleSearchChange,
         clearFilters,
+        // Paginación
+        pagination,
         goToPage,
-        totalPosts,
-        hasFilters,
-        currentUser,
+        // Interacciones
+        user,
         handleLike,
         isPostLiked
     } = useBlogData()
@@ -32,23 +37,6 @@ const BlogPage = () => {
         window.location.href = '/contactme'
     }
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        updateFilters({ search: e.target.value })
-    }
-
-    const handleCategoryFilter = (categorySlug: string) => {
-        const newCategory = filters.category === categorySlug ? undefined : categorySlug
-        updateFilters({ category: newCategory })
-    }
-
-    const handleTagFilter = (tagSlug: string) => {
-        const currentTags = filters.tags || []
-        const newTags = currentTags.includes(tagSlug)
-            ? currentTags.filter(t => t !== tagSlug)
-            : [...currentTags, tagSlug]
-
-        updateFilters({ tags: newTags.length > 0 ? newTags : undefined })
-    }
 
     if (loading === 'loading') {
         return (
@@ -65,7 +53,7 @@ const BlogPage = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center space-y-4">
-                    <p className="text-red-500">{error}</p>
+                    <p className="text-red-500">{dataError}</p>
                     <Button onClick={() => window.location.reload()}>
                         Intentar nuevamente
                     </Button>
@@ -143,7 +131,7 @@ const BlogPage = () => {
                                         variant={index === 0 ? 'featured' : 'default'}
                                         onLike={handleLike}
                                         isLiked={isPostLiked(post.id)}
-                                        currentUser={currentUser}
+                                        currentUser={user}
                                     />
                                 </motion.div>
                             ))}
@@ -172,7 +160,7 @@ const BlogPage = () => {
                                 <Input
                                     placeholder="Buscar artículos..."
                                     value={filters.search || ''}
-                                    onChange={handleSearchChange}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
                                     className="pl-10"
                                 />
                             </div>
@@ -230,7 +218,7 @@ const BlogPage = () => {
                             </div>
 
                             {/* Botón para limpiar filtros */}
-                            {hasFilters && (
+                            {hasActiveFilters && (
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -254,11 +242,11 @@ const BlogPage = () => {
                         <div className="flex items-center gap-3">
                             <Calendar className="h-5 w-5 text-primary" />
                             <h2 className="text-2xl font-bold tracking-tight">
-                                {hasFilters ? 'Resultados' : 'Todos los Artículos'}
+                            {hasActiveFilters ? 'Resultados' : 'Todos los Artículos'}
                             </h2>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {totalPosts} {totalPosts === 1 ? 'artículo' : 'artículos'}
+                        {filterStats.filteredPosts} {filterStats.filteredPosts === 1 ? 'artículo' : 'artículos'}
                         </p>
                     </div>
 
@@ -276,7 +264,7 @@ const BlogPage = () => {
                                         post={post}
                                         onLike={handleLike}
                                         isLiked={isPostLiked(post.id)}
-                                        currentUser={currentUser}
+                                        currentUser={user}
                                     />
                                 </motion.div>
                             ))}
@@ -295,7 +283,7 @@ const BlogPage = () => {
                             <p className="text-muted-foreground mb-4">
                                 Intenta ajustar los filtros o buscar con otros términos.
                             </p>
-                            {hasFilters && (
+                            {hasActiveFilters && (
                                 <Button variant="outline" onClick={clearFilters}>
                                     Limpiar filtros
                                 </Button>

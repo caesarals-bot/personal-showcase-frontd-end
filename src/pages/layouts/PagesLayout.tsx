@@ -19,7 +19,7 @@ const PagesLayout = () => {
             <ContactInfo 
                 position="top-left" 
                 variant="floating"
-                showEmail={true}
+                // showEmail={true}
                 showSocials={true}
             />
 

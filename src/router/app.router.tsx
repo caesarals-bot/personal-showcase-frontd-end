@@ -1,6 +1,5 @@
 import { createBrowserRouter } from "react-router";
 import HomePage from "../pages/home/HomePage";
-import PorftfoliPage from "../pages/portfolio/PorftfoliPage";
 import ContactMePage from "../pages/contactme/ContactMePage";
 import BlogPage from "../pages/blog/BlogPage";
 import AboutPage from "../pages/about/AboutPage";
@@ -16,10 +15,6 @@ export const appRouter = createBrowserRouter([
             {
                 index: true,
                 element: <HomePage />,
-            },
-            {
-                path: 'portfolio',
-                element: <PorftfoliPage />,
             },
             {
                 path: 'contactame',

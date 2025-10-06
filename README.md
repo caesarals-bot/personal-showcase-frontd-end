@@ -94,6 +94,37 @@ Alias configurado: `@/` -> `src/` (ver `tsconfig.json` y `vite.config.ts`).
 - Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`...)
 - Ramas: `feat/*`, `fix/*`, `chore/*`
 
+## 🔥 Firebase Integration (Roadmap)
+
+### **Base de Datos Firestore**
+Collections: ├── users/ # Perfiles de usuario y autenticación ├── posts/ # Posts del blog con metadata ├── categories/ # Categorías con colores y descripciones ├── tags/ # Tags para filtrado ├── interactions/ # Likes, comentarios, shares ├── analytics/ # Métricas y estadísticas └── settings/ # Configuración del sitio
+
+
+### **Funcionalidades Firebase Planificadas**
+- **Firebase Auth** - Autenticación completa
+- **Firestore** - Base de datos en tiempo real
+- **Firebase Storage** - Almacenamiento de imágenes
+- **Cloud Functions** - Lógica del servidor
+- **Firebase Analytics** - Métricas de uso
+
+## 🎨 Funcionalidades del Blog
+
+### **Componente de Lectura Flotante (Planificado)**
+```typescript
+interface FloatingReaderProps {
+  post: BlogPost
+  isOpen: boolean
+  onClose: () => void
+}
+
+// Características:
+- Modal/drawer responsive
+- Navegación entre posts
+- Tabla de contenidos
+- Progreso de lectura
+- Compartir social
+- Comentarios inline
+
 ## Calidad de código
 - TypeScript estricto (recomendado)
 - ESLint integrado (`npm run lint`)
