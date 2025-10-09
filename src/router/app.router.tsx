@@ -4,10 +4,10 @@ import ContactMePage from "../pages/contactme/ContactMePage";
 import BlogPage from "../pages/blog/BlogPage";
 import AboutPage from "../pages/about/AboutPage";
 import AdminPage from "@/admin/pages/AdminPage";
+import AdminLayout from "@/admin/layouts/AdminLayout";
 import PagesLayout from "@/pages/layouts/PagesLayout";
 import { LoginPage } from "@/auth/pages/LoginPage";
 import { RegisterPage } from "@/auth/pages/RegisterPage";
-
 
 export const appRouter = createBrowserRouter([
     {
@@ -49,7 +49,14 @@ export const appRouter = createBrowserRouter([
     
     {
         path: '/admin',
-        element: <AdminPage />,
+        element: <AdminLayout />,
+        children: [
+            {
+                index: true,
+                element: <AdminPage />,
+            },
+            // TODO: Agregar rutas para posts, categories, tags, etc.
+        ]
     },
     {
         path: '*',
