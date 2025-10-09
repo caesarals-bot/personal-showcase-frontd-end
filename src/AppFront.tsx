@@ -2,12 +2,15 @@
 import './App.css'
 import { RouterProvider } from 'react-router'
 import { appRouter } from './router/app.router'
+import { AuthProvider } from './contexts/AuthContext'
 
-function App() {
+function AppFront() {
 
   return (
-    <RouterProvider router={appRouter} />
+    <AuthProvider>
+      <RouterProvider router={appRouter} />
+    </AuthProvider>
   )
 }
 
-export default App
+export default AppFront

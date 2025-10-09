@@ -1,67 +1,81 @@
 import { useState, useEffect } from 'react'
-import type { User, AuthState } from '@/types/blog.types'
+import type { User, AuthState } from '../types/blog.types'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '../firebase/config'
+import { loginUser, logoutUser, registerUser } from '../services/authService'
+import { getUserRole } from '../services/roleService'
 
-// Hook simplificado sin Context - solo datos mock
+// Constante para modo desarrollo (debe coincidir con authService.ts)
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
+
+// Hook actualizado para usar Firebase Auth o modo desarrollo
 export function useAuth(): AuthState & {
     login: (email: string, password: string) => Promise<void>
     logout: () => Promise<void>
-    register: (userData: Omit<User, 'id' | 'createdAt' | 'isVerified' | 'role'>) => Promise<void>
+    register: (userData: { email: string, name: string, password: string }) => Promise<void>
 } {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
-        const initAuth = async () => {
-            try {
-                setIsLoading(true)
-                await new Promise(resolve => setTimeout(resolve, 800))
-                const mockUser: User = {
-                    id: 'user-1',
-                    name: 'César Londoño',
-                    email: 'cesar@example.com',
-                    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-                    bio: 'Desarrollador Full Stack',
-                    isVerified: true,
-                    role: 'admin',
-                    createdAt: '2024-01-01T00:00:00Z',
-                    social: {
-                        github: 'cesarlondono',
-                        linkedin: 'cesar-londono',
-                        twitter: '@cesarlondono'
+        // En modo desarrollo, verificar si hay un usuario en localStorage
+        if (DEV_MODE) {
+            const storedUser = localStorage.getItem('mockUser');
+            if (storedUser) {
+                try {
+                    // Validar que sea un string JSON válido antes de parsear
+                    if (storedUser.startsWith('{') || storedUser.startsWith('[')) {
+                        const userData = JSON.parse(storedUser) as User;
+                        setUser(userData);
+                    } else {
+                        console.warn('⚠️ localStorage contenía datos inválidos. Limpiando...');
+                        localStorage.removeItem('mockUser');
                     }
+                } catch (err) {
+                    console.error('Error al parsear usuario almacenado:', err);
+                    localStorage.removeItem('mockUser');
                 }
-                setUser(mockUser)
-                setError(null)
-            } catch (err) {
-                setError('Error al verificar autenticación')
-                setUser(null)
-            } finally {
-                setIsLoading(false)
             }
+            setIsLoading(false);
+            return () => {}; // No hay nada que limpiar en modo desarrollo
         }
 
-        initAuth()
+        // Código original para Firebase
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            setIsLoading(true)
+            if (firebaseUser) {
+                // Obtener rol desde Firestore
+                const role = await getUserRole(firebaseUser.uid);
+                
+                const userData: User = {
+                    id: firebaseUser.uid,
+                    displayName: firebaseUser.displayName || 'Usuario',
+                    email: firebaseUser.email || '',
+                    avatar: firebaseUser.photoURL || undefined,
+                    isVerified: firebaseUser.emailVerified,
+                    isActive: true,
+                    role,
+                    createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+                }
+                setUser(userData)
+                setError(null)
+            } else {
+                setUser(null)
+            }
+            setIsLoading(false)
+        })
+
+        // Limpiar el listener cuando el componente se desmonte
+        return () => unsubscribe()
     }, [])
 
     const login = async (email: string, password: string) => {
         try {
             setIsLoading(true)
             setError(null)
-            await new Promise(resolve => setTimeout(resolve, 1000))
-            if (!email || !password) {
-                throw new Error('Email y contraseña son requeridos')
-            }
-            const loggedUser: User = {
-                id: 'user-1',
-                name: 'César Londoño',
-                email,
-                avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-                isVerified: true,
-                role: 'user',
-                createdAt: new Date().toISOString()
-            }
-            setUser(loggedUser)
+            const userData = await loginUser(email, password)
+            setUser(userData)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al iniciar sesión')
             throw err
@@ -70,18 +84,11 @@ export function useAuth(): AuthState & {
         }
     }
 
-    const register = async (userData: Omit<User, 'id' | 'createdAt' | 'isVerified' | 'role'>) => {
+    const register = async (userData: { email: string, name: string, password: string }) => {
         try {
             setIsLoading(true)
             setError(null)
-            await new Promise(resolve => setTimeout(resolve, 1500))
-            const newUser: User = {
-                ...userData,
-                id: `user-${Date.now()}`,
-                createdAt: new Date().toISOString(),
-                isVerified: false,
-                role: 'user'
-            }
+            const newUser = await registerUser(userData.email, userData.password, userData.name)
             setUser(newUser)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al registrarse')
@@ -94,7 +101,7 @@ export function useAuth(): AuthState & {
     const logout = async () => {
         try {
             setIsLoading(true)
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await logoutUser()
             setUser(null)
             setError(null)
         } catch (err) {

@@ -81,17 +81,23 @@ export interface CommentAuthor {
 // Sistema de autenticación
 export interface User {
     id: string
-    name: string
     email: string
+    displayName: string        // Nombre completo público
+    firstName?: string          // Nombre
+    lastName?: string           // Apellido
+    userName?: string           // Alias único
     avatar?: string
     bio?: string
     isVerified: boolean
-    role: 'user' | 'admin' | 'moderator'
+    isActive?: boolean
+    role: 'admin' | 'user' | 'guest'
     createdAt: string
-    social?: {
+    updatedAt?: string
+    socialLinks?: {
         twitter?: string
         linkedin?: string
         github?: string
+        website?: string
     }
 }
 

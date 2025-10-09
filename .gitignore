@@ -33,10 +33,15 @@ src/data/
 .env.local
 .env.production
 .env.development
-firebase-config.ts
-firebase/
-.firebaserc
-firebase.json
+# firebase-config.ts
+# firebase/
+# .firebaserc
+# firebase.json
+
+# # Firebase
+# .firebase/
+# firebase-debug.log
+# firestore-debug.log
 
 # Archivos de configuración personal
 config/personal/
