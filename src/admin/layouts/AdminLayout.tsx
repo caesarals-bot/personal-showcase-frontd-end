@@ -21,7 +21,7 @@ import {
   Tags,
   Users,
   UserCircle,
-  Briefcase,
+  Clock,
   Settings,
   Menu,
   X,
@@ -71,10 +71,10 @@ const navItems: AdminNavItem[] = [
     path: '/admin/profile'
   },
   {
-    id: 'portfolio',
-    label: 'Portfolio',
-    icon: 'Briefcase',
-    path: '/admin/portfolio'
+    id: 'timeline',
+    label: 'Timeline',
+    icon: 'Clock',
+    path: '/admin/timeline'
   },
   {
     id: 'settings',
@@ -94,7 +94,7 @@ const iconMap: Record<string, any> = {
   Tags,
   Users,
   UserCircle,
-  Briefcase,
+  Clock,
   Settings
 }
 
