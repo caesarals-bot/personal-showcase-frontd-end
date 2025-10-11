@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import type { User, AuthState } from '../types/blog.types'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase/config'
-import { loginUser, logoutUser, registerUser } from '../services/authService'
-import { getUserRole } from '../services/roleService'
+import { loginUser, logoutUser, registerUser, loginWithGoogle } from '../services/authService'
+// import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS en desarrollo
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -11,6 +11,7 @@ const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 // Hook actualizado para usar Firebase Auth o modo desarrollo
 export function useAuth(): AuthState & {
     login: (email: string, password: string) => Promise<void>
+    loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     register: (userData: { email: string, name: string, password: string }) => Promise<void>
 } {
@@ -45,8 +46,9 @@ export function useAuth(): AuthState & {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setIsLoading(true)
             if (firebaseUser) {
-                // Obtener rol desde Firestore
-                const role = await getUserRole(firebaseUser.uid);
+                // Determinar rol basado en email (sin Firestore por ahora)
+                const { shouldBeAdmin } = await import('../services/roleService');
+                const role = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
                 
                 const userData: User = {
                     id: firebaseUser.uid,
@@ -98,6 +100,20 @@ export function useAuth(): AuthState & {
         }
     }
 
+    const loginGoogle = async () => {
+        try {
+            setIsLoading(true)
+            setError(null)
+            const userData = await loginWithGoogle()
+            setUser(userData)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google')
+            throw err
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     const logout = async () => {
         try {
             setIsLoading(true)
@@ -117,6 +133,7 @@ export function useAuth(): AuthState & {
         isLoading,
         error,
         login,
+        loginWithGoogle: loginGoogle,
         logout,
         register
     }

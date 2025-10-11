@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   updateProfile,
   sendPasswordResetEmail,
@@ -8,10 +10,11 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import type { User } from '../types/blog.types';
-import { getUserRole, createUserDocument, shouldBeAdmin } from './roleService';
+import { /* getUserRole, createUserDocument, */ shouldBeAdmin } from './roleService'; // Firestore deshabilitado temporalmente
 
 // Función para convertir un usuario de Firebase a nuestro tipo User
-const mapFirebaseUser = async (firebaseUser: FirebaseUser): Promise<User> => {
+// NOTA: Comentada temporalmente para evitar CORS - se reemplazó por código inline
+/* const mapFirebaseUser = async (firebaseUser: FirebaseUser): Promise<User> => {
   // Obtener rol desde Firestore (con fallback si falla por CORS)
   let role: 'admin' | 'user' | 'guest' = 'user';
   try {
@@ -32,7 +35,7 @@ const mapFirebaseUser = async (firebaseUser: FirebaseUser): Promise<User> => {
     role,
     createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
   };
-};
+}; */
 
 // Modo de desarrollo para pruebas (sin Firebase)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';// Cambiar a false cuando Firebase esté configurado correctamente
@@ -74,8 +77,9 @@ export const registerUser = async (email: string, password: string, name: string
     // Determinar rol inicial
     const initialRole = shouldBeAdmin(email) ? 'admin' : 'user';
 
-    // ⚠️ TEMPORAL: Crear documento en Firestore (puede fallar por CORS en desarrollo)
-    try {
+    // ⚠️ DESHABILITADO: Firestore causa CORS en desarrollo
+    // TODO: Habilitar cuando usemos emuladores o en producción
+    /* try {
       await createUserDocument(
         userCredential.user.uid,
         email,
@@ -84,10 +88,20 @@ export const registerUser = async (email: string, password: string, name: string
       );
     } catch (firestoreError) {
       console.warn('⚠️ No se pudo crear documento en Firestore (CORS). El usuario se creó en Auth correctamente.', firestoreError);
-      // Continuar sin fallar - el usuario existe en Auth
-    }
+    } */
+    console.log('✅ Usuario creado en Firebase Auth (Firestore deshabilitado temporalmente)');
     
-    return await mapFirebaseUser(userCredential.user);
+    // Crear usuario manualmente sin llamar a getUserRole (evita CORS)
+    return {
+      id: userCredential.user.uid,
+      displayName: name,
+      email: email,
+      avatar: userCredential.user.photoURL || undefined,
+      isVerified: userCredential.user.emailVerified,
+      isActive: true,
+      role: initialRole,
+      createdAt: userCredential.user.metadata.creationTime || new Date().toISOString()
+    };
   } catch (error) {
     console.error('Error al registrar usuario:', error);
     // Si el error es auth/operation-not-allowed, dar un mensaje más claro
@@ -134,7 +148,21 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
     // Código original para Firebase
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return await mapFirebaseUser(userCredential.user);
+    
+    // Determinar rol basado en email (Firestore deshabilitado temporalmente)
+    const role = shouldBeAdmin(userCredential.user.email || '') ? 'admin' : 'user';
+    console.log('✅ Usuario autenticado (Firestore deshabilitado temporalmente)');
+    
+    return {
+      id: userCredential.user.uid,
+      displayName: userCredential.user.displayName || 'Usuario',
+      email: userCredential.user.email || '',
+      avatar: userCredential.user.photoURL || undefined,
+      isVerified: userCredential.user.emailVerified,
+      isActive: true,
+      role,
+      createdAt: userCredential.user.metadata.creationTime || new Date().toISOString()
+    };
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
     // Si el error es auth/operation-not-allowed, dar un mensaje más claro
@@ -179,4 +207,58 @@ export const resetPassword = async (email: string): Promise<void> => {
 // Obtener usuario actual
 export const getCurrentUser = (): FirebaseUser | null => {
   return auth.currentUser;
+};
+
+// Login con Google
+export const loginWithGoogle = async (): Promise<User> => {
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account' // Siempre mostrar selector de cuenta
+    });
+
+    const userCredential = await signInWithPopup(auth, provider);
+    const firebaseUser = userCredential.user;
+
+    // Determinar rol inicial (admin si es el email configurado)
+    const initialRole = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
+
+    // ⚠️ DESHABILITADO: Firestore causa CORS en desarrollo
+    // TODO: Habilitar cuando usemos emuladores o en producción
+    /* try {
+      await createUserDocument(
+        firebaseUser.uid,
+        firebaseUser.email || '',
+        firebaseUser.displayName || 'Usuario de Google',
+        initialRole
+      );
+    } catch (firestoreError) {
+      console.warn('⚠️ No se pudo crear/actualizar documento en Firestore. El usuario se autenticó correctamente.', firestoreError);
+    } */
+    console.log('✅ Usuario autenticado con Google (Firestore deshabilitado temporalmente)');
+
+    // Retornar usuario sin llamar a getUserRole (evita CORS)
+    return {
+      id: firebaseUser.uid,
+      displayName: firebaseUser.displayName || 'Usuario de Google',
+      email: firebaseUser.email || '',
+      avatar: firebaseUser.photoURL || undefined,
+      isVerified: firebaseUser.emailVerified,
+      isActive: true,
+      role: initialRole,
+      createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
+    };
+  } catch (error: any) {
+    console.error('Error al iniciar sesión con Google:', error);
+    
+    // Manejar errores específicos
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('Inicio de sesión cancelado');
+    }
+    if (error.code === 'auth/popup-blocked') {
+      throw new Error('El popup fue bloqueado. Permite popups para este sitio.');
+    }
+    
+    throw new Error('Error al iniciar sesión con Google');
+  }
 };

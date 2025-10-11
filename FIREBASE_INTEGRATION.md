@@ -19,14 +19,37 @@
 
 ## 🎯 Estado Actual del Proyecto
 
+### Progreso General
+
+| Fase | Estado | Descripción |
+|------|--------|-------------|
+| Fase 1: Configuración Base | ✅ COMPLETADO | Firebase configurado y funcionando |
+| Fase 2: Authentication | ✅ COMPLETADO | Email/Password y Google Sign-In |
+| Fase 3: Firestore Database | ⚠️ DESHABILITADO | CORS en desarrollo - Ver Troubleshooting |
+| Fase 4: Migración de Servicios | ⏳ PENDIENTE | Esperando solución de Firestore |
+| Fase 5: Testing | ⏳ PENDIENTE | Authentication probado exitosamente |
+
+### Progreso de Fase 2: Firebase Authentication
+
+| Paso | Estado | Descripción |
+|------|--------|-------------|
+| 2.1 Habilitar Authentication | ✅ COMPLETADO | Email/Password y Google habilitados |
+| 2.2 Crear authService.ts | ✅ COMPLETADO | Registro, login, logout, Google Sign-In |
+| 2.3 Actualizar useAuth.ts | ✅ COMPLETADO | Hook funcionando con Firebase Auth |
+| 2.4 Actualizar LoginForm | ✅ COMPLETADO | Botón de Google agregado |
+| 2.5 Actualizar RegisterForm | ✅ COMPLETADO | Botón de Google agregado |
+| 2.6 Probar Authentication | ✅ COMPLETADO | Registro y login funcionando |
+
 ### Archivos Existentes Relacionados con Firebase
 
 | Archivo | Estado | Descripción |
 |---------|--------|-------------|
-| `src/firebase/config.ts` | ⚠️ Parcial | Configuración básica con emuladores |
+| `src/firebase/config.ts` | ⚠️ Parcial | Configuración con emuladores (simplificar) |
 | `firebase.json` | ✅ Existe | Configuración de emuladores |
 | `src/services/userService.ts` | 📦 Local | Sistema en memoria, sin Firebase |
 | `src/hooks/useAuth.ts` | ⚠️ Mixto | Mezcla Firebase + modo desarrollo |
+| `.env.local` | ✅ Configurado | Variables de entorno (proteger en .gitignore) |
+| `package.json` | ✅ Actualizado | Firebase 12.3.0 instalado |
 
 ### Sistema Actual (Sin Firebase)
 
@@ -145,7 +168,7 @@ const firebaseConfig = {
 
 ---
 
-### Paso 1.3: Instalar Dependencias de Firebase
+### Paso 1.3: Instalar Dependencias de Firebase ✅ COMPLETADO
 
 **Objetivo**: Agregar el SDK de Firebase al proyecto.
 
@@ -157,63 +180,78 @@ npm install firebase
 npm list firebase
 ```
 
-**Salida esperada**:
+**✅ Estado Actual**:
 ```
-personal-showcase@1.0.0
-└── firebase@10.x.x
+frontend-showcase@0.0.0
+└── firebase@12.3.0 ✅ INSTALADO
 ```
 
-**✅ Prueba**: Verificar que `firebase` aparece en `package.json`.
+**✅ Prueba**: Verificado - Firebase está en `package.json` línea 28.
 
 ---
 
-### Paso 1.4: Configurar Variables de Entorno
+### Paso 1.4: Configurar Variables de Entorno ✅ COMPLETADO
 
 **Objetivo**: Almacenar credenciales de forma segura.
 
-1. Crear archivo `.env.local` en la raíz del proyecto:
+**✅ Estado Actual**: Archivo `.env.local` ya existe con las siguientes variables:
 
 ```bash
-# .env.local
-VITE_FIREBASE_API_KEY=tu-api-key-aqui
+# .env.local (YA CONFIGURADO)
+VITE_FIREBASE_API_KEY=********
 VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=tu-proyecto-id
 VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
 VITE_FIREBASE_APP_ID=1:123456789012:web:abcdef123456
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX (opcional)
 ```
 
-2. Verificar que `.env.local` está en `.gitignore`:
+**⚠️ Nota sobre .gitignore**: 
+Actualmente las líneas de `.env.local` están comentadas en `.gitignore` (líneas 32-35).
 
+**🔒 IMPORTANTE - Restaurar protección**:
 ```bash
-# Verificar
-cat .gitignore | grep .env.local
+# Descomentar estas líneas en .gitignore:
+.env
+.env.local
+.env.production
+.env.development
 ```
 
 **✅ Prueba**: 
 ```bash
-# Intentar ver las variables
+# Verificar que las variables se cargan
 npm run dev
-# En la consola del navegador, ejecutar:
-console.log(import.meta.env.VITE_FIREBASE_API_KEY)
-# Debería mostrar tu API key
+# En la consola del navegador:
+console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)
+# Debería mostrar tu project ID
 ```
 
 ---
 
-### Paso 1.5: Crear Archivo de Configuración Firebase (Limpio)
+### Paso 1.5: Simplificar Archivo de Configuración Firebase ⚠️ REQUIERE AJUSTE
 
-**Objetivo**: Configuración mínima y funcional.
+**Objetivo**: Configuración mínima sin emuladores (por ahora).
 
-Crear `src/config/firebase.ts`:
+**📁 Estado Actual**: Ya existe `src/firebase/config.ts` pero tiene:
+- ✅ Configuración básica correcta
+- ✅ Validación de variables
+- ⚠️ Emuladores configurados (pueden causar errores si no están corriendo)
+- ⚠️ Storage y Analytics (no necesarios inicialmente)
+
+**🔧 Acción Requerida**: Simplificar el archivo existente.
+
+**Opción A - Simplificar (Recomendado para empezar)**:
+
+Reemplazar `src/firebase/config.ts` con versión simplificada:
 
 ```typescript
-// src/config/firebase.ts
+// src/firebase/config.ts - VERSIÓN SIMPLIFICADA
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
-// Configuración desde variables de entorno
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -235,21 +273,29 @@ const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 
-console.log('✅ Firebase inicializado correctamente')
+console.log('✅ Firebase inicializado:', firebaseConfig.projectId)
 ```
+
+**Opción B - Mantener emuladores (Para desarrollo avanzado)**:
+
+Si quieres usar emuladores locales, primero debes:
+1. Instalar Firebase CLI: `npm install -g firebase-tools`
+2. Iniciar emuladores: `firebase emulators:start`
+3. Mantener el archivo actual
 
 **✅ Prueba**:
 ```bash
 npm run dev
 # En la consola del navegador deberías ver:
-# ✅ Firebase inicializado correctamente
+# ✅ Firebase inicializado: tu-project-id
+# (Sin errores de emuladores)
 ```
 
 **🎯 Checkpoint 1**: Commit de progreso
 
 ```bash
 git add .
-git commit -m "feat: configurar Firebase base (auth + firestore)"
+git commit -m "feat: simplificar configuración Firebase (sin emuladores)"
 ```
 
 ---
@@ -867,6 +913,144 @@ Firebase tiene un plan gratuito generoso:
 
 ---
 
+## 🐛 Troubleshooting - Problemas Resueltos
+
+### Problema: Bucle Infinito en Registro/Login + Error CORS
+
+**Fecha**: 11 de octubre de 2025
+
+#### **Síntomas**
+- ✅ Usuario se crea correctamente en Firebase Authentication
+- ❌ Botón de registro/login queda en bucle infinito (loading permanente)
+- ❌ Error CORS en consola: `Access to fetch at 'https://firestore.googleapis.com/...' has been blocked by CORS policy`
+- ❌ Múltiples reintentos de conexión a Firestore
+- ❌ Aplicación no redirige después del registro
+
+#### **Causa Raíz**
+
+El problema tenía **dos causas interrelacionadas**:
+
+1. **CORS en Firestore desde localhost**:
+   - Firestore en producción tiene restricciones CORS cuando se accede desde `localhost`
+   - El SDK de Firebase usa `credentials: include` que no es compatible con `Access-Control-Allow-Origin: *`
+   - Los emuladores también presentaban el mismo problema CORS
+
+2. **Bucle infinito por reintentos**:
+   - `authService.ts` intentaba crear documento en Firestore con `createUserDocument()`
+   - `useAuth.ts` intentaba leer rol con `getUserRole()`
+   - Ambas operaciones fallaban por CORS
+   - Firestore SDK reintentaba automáticamente la conexión
+   - Cada reintento disparaba nuevos errores, creando un bucle infinito
+
+#### **Stack Trace del Error**
+
+```
+roleService.ts:38 POST https://firestore.googleapis.com/.../Write/channel
+net::ERR_FAILED 200 (OK)
+
+createUserDocument @ roleService.ts:38
+registerUser @ authService.ts:82
+onSubmit @ RegisterForm.tsx:71
+```
+
+#### **Solución Aplicada**
+
+**Deshabilitar temporalmente Firestore en desarrollo**:
+
+1. **En `authService.ts`**:
+   ```typescript
+   // ⚠️ DESHABILITADO: Firestore causa CORS en desarrollo
+   // TODO: Habilitar cuando usemos emuladores o en producción
+   /* try {
+     await createUserDocument(
+       userCredential.user.uid,
+       email,
+       name,
+       initialRole
+     );
+   } catch (firestoreError) {
+     console.warn('⚠️ No se pudo crear documento en Firestore (CORS)');
+   } */
+   console.log('✅ Usuario creado en Firebase Auth (Firestore deshabilitado temporalmente)');
+   ```
+
+2. **En `useAuth.ts`**:
+   ```typescript
+   // Determinar rol basado en email (sin Firestore por ahora)
+   const { shouldBeAdmin } = await import('../services/roleService');
+   const role = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
+   ```
+
+3. **Imports comentados**:
+   ```typescript
+   // import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS
+   import { /* createUserDocument, */ shouldBeAdmin } from './roleService';
+   ```
+
+#### **Archivos Modificados**
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/services/authService.ts` | Comentadas llamadas a `createUserDocument()` en `registerUser()`, `loginUser()`, `loginWithGoogle()` |
+| `src/hooks/useAuth.ts` | Eliminada llamada a `getUserRole()`, rol determinado por email |
+| `src/services/roleService.ts` | Sin cambios (funciones comentadas pero disponibles) |
+
+#### **Estado Actual del Sistema**
+
+| Componente | Estado | Método |
+|------------|--------|--------|
+| Firebase Auth | ✅ Funcionando | Usuarios se crean y autentican correctamente |
+| Registro Email/Password | ✅ Funcionando | Sin bucle, redirige correctamente |
+| Login Email/Password | ✅ Funcionando | Autenticación exitosa |
+| Google Sign-In | ✅ Listo | Botones implementados |
+| Firestore | ❌ Deshabilitado | Comentado temporalmente por CORS |
+| Roles | ✅ Funcionando | Basado en `shouldBeAdmin(email)` |
+| Persistencia | ✅ Funcionando | Firebase Auth nativo |
+
+#### **Resultado**
+
+- ✅ Usuario se crea en **1-2 segundos**
+- ✅ Redirige correctamente a `/blog`
+- ✅ Navbar muestra usuario y botón de admin
+- ✅ Botón de logout funcional
+- ✅ **Sin bucle infinito**
+- ✅ **Sin errores CORS** (Firestore deshabilitado)
+- ⚠️ Documentos de usuario NO se crean en Firestore (temporal)
+
+#### **Próximos Pasos**
+
+Para habilitar Firestore en el futuro:
+
+**Opción 1: Usar Firebase Emulators (Recomendado para desarrollo)**
+```bash
+# Instalar Firebase CLI
+npm install -g firebase-tools
+
+# Iniciar emuladores
+firebase emulators:start
+
+# Descomentar código de Firestore en authService.ts y useAuth.ts
+```
+
+**Opción 2: Configurar CORS en producción**
+- Desplegar la aplicación en Firebase Hosting
+- CORS no será problema en dominio de producción
+- Descomentar código de Firestore
+
+**Opción 3: Proxy en desarrollo (No recomendado)**
+- Configurar proxy en `vite.config.ts`
+- Puede causar otros problemas
+
+#### **Lecciones Aprendidas**
+
+1. **CORS es un problema común** en desarrollo con Firebase
+2. **Los emuladores son la mejor solución** para desarrollo local
+3. **Separar Auth de Firestore** permite desarrollo incremental
+4. **Try-catch no es suficiente** si el SDK reintenta automáticamente
+5. **Comentar código es mejor que eliminarlo** durante troubleshooting
+
+---
+
 **Última actualización**: 11 de octubre de 2025  
-**Versión**: 1.0  
-**Estado**: 🚧 En desarrollo - Authentication completado
+**Versión**: 1.1  
+**Estado**: ✅ Authentication funcionando - Firestore deshabilitado temporalmente
