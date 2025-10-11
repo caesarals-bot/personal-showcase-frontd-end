@@ -6,8 +6,39 @@
 import type { Tag } from '@/types/blog.types';
 import { MOCK_TAGS } from '@/data/tags.data';
 
-// Base de datos en memoria (copia de los datos iniciales)
-let tagsDB: Tag[] = [...MOCK_TAGS];
+// Clave para localStorage
+const TAGS_STORAGE_KEY = 'tags_db';
+
+// Base de datos en memoria
+let tagsDB: Tag[] = [];
+
+// Función para persistir la base de datos en localStorage
+const persistTagsDB = () => {
+  try {
+    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(tagsDB));
+  } catch (error) {
+    console.error('Error al guardar tags en localStorage:', error);
+  }
+};
+
+// Función para inicializar la base de datos desde localStorage o mocks
+const initializeTagsDB = () => {
+  try {
+    const storedTags = localStorage.getItem(TAGS_STORAGE_KEY);
+    if (storedTags) {
+      tagsDB = JSON.parse(storedTags);
+    } else {
+      tagsDB = [...MOCK_TAGS];
+      persistTagsDB();
+    }
+  } catch (error) {
+    console.error('Error al cargar tags desde localStorage:', error);
+    tagsDB = [...MOCK_TAGS];
+  }
+};
+
+// Inicializar la base de datos al cargar el módulo
+initializeTagsDB();
 
 // Simulación de delay de red para hacer la experiencia más realista
 const DELAY_MS = 300;
@@ -54,7 +85,8 @@ export async function createTag(data: Omit<Tag, 'id'>): Promise<Tag> {
     ...data,
   };
 
-  tagsDB.push(newTag);
+  tagsDB.unshift(newTag);
+  persistTagsDB();
   console.log('[TagService] Tag creado:', newTag);
   return newTag;
 }
@@ -83,6 +115,7 @@ export async function updateTag(id: string, data: Partial<Omit<Tag, 'id'>>): Pro
     ...data,
   };
 
+  persistTagsDB();
   console.log('[TagService] Tag actualizado:', tagsDB[index]);
   return tagsDB[index];
 }
@@ -99,6 +132,8 @@ export async function deleteTag(id: string): Promise<void> {
   }
 
   const deleted = tagsDB.splice(index, 1)[0];
+  persistTagsDB();
+  console.log('[TagService] Tag eliminado:', deleted);
 }
 
 /**
@@ -128,5 +163,6 @@ export function getTagRandomColor(): string {
  */
 export function resetTagsDB(): void {
   tagsDB = [...MOCK_TAGS];
-  console.log('[TagService] Base de datos reseteada');
+  persistTagsDB();
+  console.log('[TagService] Base de datos reseteada a los valores iniciales.');
 }

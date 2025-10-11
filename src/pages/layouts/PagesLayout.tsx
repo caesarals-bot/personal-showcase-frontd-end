@@ -1,6 +1,6 @@
 // Layout raíz de páginas: renderiza el header (shadcn) y el contenido de la ruta actual.
 // pt-16 compensa la altura del header fijo (h-16) para que el contenido no quede oculto.
-import { Outlet } from "react-router"
+import { Outlet } from "react-router-dom"
 import NavbarShadcn from "./NavbarShadcn"
 import ContactInfo from "@/shared/components/ContactInfo"
 import BackgroundPaths from "@/shared/components/BackgroundPaths"

@@ -24,24 +24,24 @@ dist-ssr
 *.sw?
 
 # Información personal sensible
-# src/data/
-# !src/data/*.example.ts
-# !src/data/index.ts
+src/data/
+!src/data/*.example.ts
+!src/data/index.ts
 
 # Configuraciones de Firebase (cuando se implemente)
 .env
 .env.local
 .env.production
 .env.development
-# firebase-config.ts
-# firebase/
-# .firebaserc
-# firebase.json
+firebase-config.ts
+firebase/
+.firebaserc
+firebase.json
 
-# # Firebase
-# .firebase/
-# firebase-debug.log
-# firestore-debug.log
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
 
 # Archivos de configuración personal
 config/personal/

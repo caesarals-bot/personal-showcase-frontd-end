@@ -74,9 +74,9 @@ const mockRecentPosts: BlogPost[] = [
 ]
 
 const AdminPage = () => {
-  const [stats, setStats] = useState<DashboardStatsType>(mockStats)
-  const [recentPosts, setRecentPosts] = useState<BlogPost[]>(mockRecentPosts)
-  const [isLoading, setIsLoading] = useState(false)
+  const [stats] = useState<DashboardStatsType>(mockStats)
+  const [recentPosts] = useState<BlogPost[]>(mockRecentPosts)
+  const [isLoading] = useState(false)
 
   useEffect(() => {
     // TODO: Cargar datos reales desde Firebase

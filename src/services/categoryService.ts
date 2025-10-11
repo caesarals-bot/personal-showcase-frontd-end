@@ -6,8 +6,39 @@
 import type { Category } from '@/types/blog.types';
 import { MOCK_CATEGORIES } from '@/data/categories.data';
 
+// Clave para localStorage
+const CATEGORIES_STORAGE_KEY = 'categories_db';
+
 // Base de datos en memoria
-let categoriesDB: Category[] = [...MOCK_CATEGORIES];
+let categoriesDB: Category[] = [];
+
+// Función para persistir la base de datos en localStorage
+const persistCategoriesDB = () => {
+  try {
+    localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(categoriesDB));
+  } catch (error) {
+    console.error('Error al guardar categorías en localStorage:', error);
+  }
+};
+
+// Función para inicializar la base de datos desde localStorage o mocks
+const initializeCategoriesDB = () => {
+  try {
+    const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
+    if (storedCategories) {
+      categoriesDB = JSON.parse(storedCategories);
+    } else {
+      categoriesDB = [...MOCK_CATEGORIES];
+      persistCategoriesDB();
+    }
+  } catch (error) {
+    console.error('Error al cargar categorías desde localStorage:', error);
+    categoriesDB = [...MOCK_CATEGORIES];
+  }
+};
+
+// Inicializar la base de datos al cargar el módulo
+initializeCategoriesDB();
 
 // Colores disponibles para categorías
 const CATEGORY_COLORS = [
@@ -70,7 +101,8 @@ export async function createCategory(
     icon: icon || 'folder',
   };
 
-  categoriesDB.push(newCategory);
+  categoriesDB.unshift(newCategory);
+  persistCategoriesDB();
   console.log('[CategoryService] Categoría creada:', newCategory);
   return newCategory.id;
 }
@@ -107,6 +139,7 @@ export async function updateCategory(
     ...updates,
   };
 
+  persistCategoriesDB();
   console.log('[CategoryService] Categoría actualizada:', categoriesDB[index]);
 }
 
@@ -122,6 +155,7 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 
   const deleted = categoriesDB.splice(index, 1)[0];
+  persistCategoriesDB();
   console.log('[CategoryService] Categoría eliminada:', deleted);
 }
 
@@ -166,5 +200,6 @@ export function getCategoryRandomColor(): string {
  */
 export function resetCategoriesDB(): void {
   categoriesDB = [...MOCK_CATEGORIES];
-  console.log('[CategoryService] Base de datos reseteada');
+  persistCategoriesDB();
+  console.log('[CategoryService] Base de datos reseteada a los valores iniciales.');
 }

@@ -26,7 +26,7 @@ export interface LogoProps {
 }
 
 // Ruta del SVG en /public
-const LOGO_SRC = "/text4.svg.2025_10_02_13_35_57.0.svg"
+const LOGO_SRC = "/logocesar.svg"
 
 const Logo: React.FC<LogoProps> = ({
     align = 'left',

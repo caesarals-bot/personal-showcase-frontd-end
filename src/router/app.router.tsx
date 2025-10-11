@@ -1,7 +1,8 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter } from "react-router-dom";
 import HomePage from "../pages/home/HomePage";
 import ContactMePage from "../pages/contactme/ContactMePage";
 import BlogPage from "../pages/blog/BlogPage";
+import PostPage from "../pages/blog/PostPage";
 import AboutPage from "../pages/about/AboutPage";
 import AdminPage from "@/admin/pages/AdminPage";
 import PostsPage from "@/admin/pages/PostsPage";
@@ -34,7 +35,16 @@ export const appRouter = createBrowserRouter([
             },
             {
                 path: 'blog',
-                element: <BlogPage />,
+                children: [
+                    {
+                        index: true,
+                        element: <BlogPage />,
+                    },
+                    {
+                        path: ':slug',
+                        element: <PostPage />,
+                    }
+                ]
             },
         ]
     },

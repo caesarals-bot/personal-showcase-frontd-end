@@ -8,8 +8,39 @@ import { MOCK_POSTS } from '@/data/posts.data';
 import { getCategoryById } from './categoryService';
 import { getTagById } from './tagService';
 
+// Clave para localStorage
+const POSTS_STORAGE_KEY = 'posts_db';
+
 // Base de datos en memoria
-let postsDB: BlogPost[] = [...MOCK_POSTS];
+let postsDB: BlogPost[] = [];
+
+// Función para persistir la base de datos en localStorage
+const persistPostsDB = () => {
+  try {
+    localStorage.setItem(POSTS_STORAGE_KEY, JSON.stringify(postsDB));
+  } catch (error) {
+    console.error('Error al guardar posts en localStorage:', error);
+  }
+};
+
+// Función para inicializar la base de datos desde localStorage o mocks
+const initializePostsDB = () => {
+  try {
+    const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
+    if (storedPosts) {
+      postsDB = JSON.parse(storedPosts);
+    } else {
+      postsDB = [...MOCK_POSTS];
+      persistPostsDB();
+    }
+  } catch (error) {
+    console.error('Error al cargar posts desde localStorage:', error);
+    postsDB = [...MOCK_POSTS];
+  }
+};
+
+// Inicializar la base de datos al cargar el módulo
+initializePostsDB();
 
 // Simulación de delay de red
 const DELAY_MS = 300;
@@ -177,7 +208,8 @@ export async function createPost(data: {
     commentsCount: 0,
   };
   
-  postsDB.push(newPost);
+  postsDB.unshift(newPost); // Añadir al principio para que aparezca primero
+  persistPostsDB();
   console.log('[PostService] Post creado:', newPost);
   return newPost;
 }
@@ -252,6 +284,7 @@ export async function updatePost(
     updatedAt: new Date().toISOString(),
   };
   
+  persistPostsDB();
   console.log('[PostService] Post actualizado:', postsDB[index]);
   return postsDB[index];
 }
@@ -268,6 +301,7 @@ export async function deletePost(id: string): Promise<void> {
   }
   
   const deleted = postsDB.splice(index, 1)[0];
+  persistPostsDB();
   console.log('[PostService] Post eliminado:', deleted);
 }
 
@@ -309,5 +343,6 @@ export function generatePostSlug(title: string): string {
  */
 export function resetPostsDB(): void {
   postsDB = [...MOCK_POSTS];
-  console.log('[PostService] Base de datos reseteada');
+  persistPostsDB();
+  console.log('[PostService] Base de datos reseteada a los valores iniciales.');
 }

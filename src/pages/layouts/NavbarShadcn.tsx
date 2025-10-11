@@ -4,11 +4,11 @@
 // - Menú móvil desplegable (hamburguesa) con React Router Links
 
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link } from 'react-router-dom'
 import { useAuthContext } from '@/contexts/AuthContext'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { LogOut, Shield } from 'lucide-react'
+import { LogOut, Shield, LayoutDashboard } from 'lucide-react'
 import {
     NavigationMenu,
     NavigationMenuList,
@@ -26,7 +26,7 @@ const NavbarShadcn = () => {
         await logout()
     }
 
-    const getInitials = (name: string | undefined) => {
+    const getInitials = (name: string | undefined | null) => {
         if (!name) return 'U';
         return name
             .split(' ')
@@ -79,7 +79,7 @@ const NavbarShadcn = () => {
                         </NavigationMenu>
                     </div>
 
-                    {isAuthenticated && user && (
+                    {isAuthenticated && user ? (
                         <div className="hidden md:flex items-center gap-2">
                             {user.role === 'admin' && (
                                 <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
@@ -87,9 +87,14 @@ const NavbarShadcn = () => {
                                     Admin
                                 </Badge>
                             )}
+                            <Link to="/admin" title="Panel de Administración">
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                    <LayoutDashboard className="h-4 w-4" />
+                                </Button>
+                            </Link>
                             <div className="relative group">
                                 <Avatar className="h-8 w-8 ring-2 ring-green-500/20 cursor-pointer">
-                                    <AvatarImage src={user.avatar} alt={user.displayName} />
+                                    <AvatarImage src={user.avatar || undefined} alt={user.displayName || 'Usuario'} />
                                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
                                         {getInitials(user.displayName)}
                                     </AvatarFallback>
@@ -97,7 +102,6 @@ const NavbarShadcn = () => {
                                 <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-popover text-popover-foreground text-xs rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
                                     {user.displayName}
                                     {user.role === 'admin' && <span className="text-purple-500 ml-1">(Admin)</span>}
-                                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-popover rotate-45"></div>
                                 </div>
                             </div>
                             <Button
@@ -110,7 +114,7 @@ const NavbarShadcn = () => {
                                 <LogOut className="h-4 w-4" />
                             </Button>
                         </div>
-                    )}
+                    ) : null}
 
                     <button
                         type="button"
@@ -138,22 +142,22 @@ const NavbarShadcn = () => {
                     <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <ul className="space-y-1 py-2">
                             <li>
-                                <Link to="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
                                     Inicio
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
                                     Sobre mí
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
                                     Blog
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                <Link to="/contactame" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
                                     Contáctame
                                 </Link>
                             </li>
@@ -163,7 +167,7 @@ const NavbarShadcn = () => {
                             <div className="border-t border-border/40 mt-2 pt-2">
                                 <div className="flex items-center gap-3 px-3 py-2">
                                     <Avatar className="h-10 w-10 ring-2 ring-green-500/20">
-                                        <AvatarImage src={user.avatar} alt={user.displayName} />
+                                        <AvatarImage src={user.avatar || undefined} alt={user.displayName || 'Usuario'} />
                                         <AvatarFallback className="bg-primary/10 text-primary">
                                             {getInitials(user.displayName)}
                                         </AvatarFallback>
@@ -180,15 +184,16 @@ const NavbarShadcn = () => {
                                         </div>
                                         <p className="text-xs text-muted-foreground">{user.email}</p>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={handleLogout}
-                                        className="text-muted-foreground"
-                                    >
+                                </div>
+                                <div className="mt-2 border-t border-border/40 pt-2">
+                                    <Link to="/admin" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
+                                        <LayoutDashboard className="h-4 w-4" />
+                                        <span>Panel de Administración</span>
+                                    </Link>
+                                    <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent cursor-pointer text-red-500" onClick={handleLogout}>
                                         <LogOut className="h-4 w-4" />
-                                        <span className="ml-2">Salir</span>
-                                    </Button>
+                                        <span>Cerrar Sesión</span>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -198,22 +203,16 @@ const NavbarShadcn = () => {
                                         variant="outline"
                                         size="sm"
                                         className="flex-1"
-                                        onClick={() => {
-                                            setOpen(false)
-                                            window.location.href = '/auth/login'
-                                        }}
+                                        asChild
                                     >
-                                        Iniciar Sesión
+                                        <Link to="/auth/login" onClick={() => setOpen(false)}>Iniciar Sesión</Link>
                                     </Button>
                                     <Button
                                         size="sm"
                                         className="flex-1"
-                                        onClick={() => {
-                                            setOpen(false)
-                                            window.location.href = '/auth/register'
-                                        }}
+                                        asChild
                                     >
-                                        Registrarse
+                                        <Link to="/auth/register" onClick={() => setOpen(false)}>Registrarse</Link>
                                     </Button>
                                 </div>
                             </div>

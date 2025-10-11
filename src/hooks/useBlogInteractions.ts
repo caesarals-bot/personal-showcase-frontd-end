@@ -7,7 +7,7 @@ export function useBlogInteractions() {
     // Mock user para evitar dependencia circular con useAuth
     const [currentUser] = useState<User | null>({
         id: 'user-1',
-        name: 'Usuario Demo',
+        displayName: 'Usuario Demo',
         email: 'demo@example.com',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
         isVerified: true,
@@ -90,7 +90,7 @@ export function useBlogInteractions() {
             // Simular llamada a API
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            console.log('Comentario agregado:', { postId, content, author: currentUser.name })
+            console.log('Comentario agregado:', { postId, content, author: currentUser.displayName })
         } catch (error) {
             console.error('Error al agregar comentario:', error)
             alert('Error al agregar comentario. Intenta nuevamente.')

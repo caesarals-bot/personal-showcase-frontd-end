@@ -1,9 +1,9 @@
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'
-import { Calendar, Clock, ArrowRight, Heart, Eye, MessageCircle } from 'lucide-react'
+import { Calendar, Clock, Heart, Eye, MessageCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
 import type { BlogCardProps } from '@/types/blog.types'
 
 export default function BlogCard({
@@ -60,14 +60,15 @@ export default function BlogCard({
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            whileHover={{ y: -5 }}
-            className={cardVariants[variant]}
-        >
-            <Card className="h-full overflow-hidden border-border/50 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg group">
+        <Link to={`/blog/${post.slug}`} className="no-underline h-full">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                whileHover={{ y: -5 }}
+                className={cardVariants[variant]}
+            >
+                <Card className="h-full overflow-hidden border-border/50 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg group">
                 {/* Imagen destacada */}
                 {post.featuredImage && (
                     <div className={`relative overflow-hidden ${imageVariants[variant]}`}>
@@ -237,22 +238,11 @@ export default function BlogCard({
                                 </div>
                             </div>
 
-                            {/* Botón de leer más */}
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="group/btn h-8 px-3 text-xs"
-                                asChild
-                            >
-                                <a href={`/blog/${post.slug}`}>
-                                    Leer más
-                                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                                </a>
-                            </Button>
-                        </div>
+                                                    </div>
                     )}
                 </CardContent>
             </Card>
-        </motion.div>
+            </motion.div>
+        </Link>
     )
 }
