@@ -4,6 +4,7 @@ import ContactMePage from "../pages/contactme/ContactMePage";
 import BlogPage from "../pages/blog/BlogPage";
 import PostPage from "../pages/blog/PostPage";
 import AboutPage from "../pages/about/AboutPage";
+import PortfolioPage from "../pages/portfolio/PorftfoliPage";
 import AdminPage from "@/admin/pages/AdminPage";
 import PostsPage from "@/admin/pages/PostsPage";
 import CategoriesPage from "@/admin/pages/CategoriesPage";
@@ -32,6 +33,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'about',
                 element: <AboutPage />,
+            },
+            {
+                path: 'portfolio',
+                element: <PortfolioPage />,
             },
             {
                 path: 'blog',

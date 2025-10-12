@@ -63,6 +63,13 @@ const NavbarShadcn = () => {
                                 </NavigationMenuItem>
                                 <NavigationMenuItem>
                                     <NavigationMenuLink asChild>
+                                        <Link to="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
+                                            Portfolio
+                                        </Link>
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem>
+                                    <NavigationMenuLink asChild>
                                         <Link to="/blog" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground">
                                             Blog
                                         </Link>
@@ -149,6 +156,11 @@ const NavbarShadcn = () => {
                             <li>
                                 <Link to="/about" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
                                     Sobre mí
+                                </Link>
+                            </li>
+                            <li>
+                                <Link to="/portfolio" className="block rounded-md px-3 py-2 text-sm font-medium hover:text-foreground" onClick={() => setOpen(false)}>
+                                    Portfolio
                                 </Link>
                             </li>
                             <li>
