@@ -17,13 +17,25 @@ import {
 } from '@/components/ui/navigation-menu'
 import { Button } from '@/components/ui/button'
 import Logo from '@/shared/components/Logo'
+import { ModeToggle } from '@/components/mode-toggle'
+import { useTheme } from '@/components/theme-provider'
 
 const NavbarShadcn = () => {
     const [open, setOpen] = useState(false)
     const { user, isAuthenticated, logout } = useAuthContext()
+    const { theme } = useTheme()
 
     const handleLogout = async () => {
         await logout()
+    }
+
+    // Determinar color del logo según el tema
+    const getLogoColor = () => {
+        if (theme === 'dark') return '#ffffff'
+        if (theme === 'light') return '#000000'
+        // Si es 'system', detectar preferencia del sistema
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+        return isDarkMode ? '#ffffff' : '#000000'
     }
 
     const getInitials = (name: string | undefined | null) => {
@@ -37,10 +49,10 @@ const NavbarShadcn = () => {
     }
 
     return (
-        <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/30 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-gradient-to-r from-muted/80 via-background/80 to-muted/80 backdrop-blur-md supports-[backdrop-filter]:bg-gradient-to-r supports-[backdrop-filter]:from-muted/60 supports-[backdrop-filter]:via-background/60 supports-[backdrop-filter]:to-muted/60">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link to="/" aria-label="Ir al inicio" className="flex items-center">
-                    <Logo align="left" color="#000000" width={150} height={40} />
+                    <Logo align="left" color={getLogoColor()} width={150} height={40} />
                 </Link>
 
                 <div className="flex items-center gap-4">
@@ -84,6 +96,11 @@ const NavbarShadcn = () => {
                                 </NavigationMenuItem>
                             </NavigationMenuList>
                         </NavigationMenu>
+                    </div>
+
+                    {/* Theme Toggle - Desktop */}
+                    <div className="hidden md:block">
+                        <ModeToggle />
                     </div>
 
                     {isAuthenticated && user ? (
@@ -174,6 +191,11 @@ const NavbarShadcn = () => {
                                 </Link>
                             </li>
                         </ul>
+
+                        {/* Theme Toggle - Mobile */}
+                        <div className="px-3 py-2">
+                            <ModeToggle />
+                        </div>
 
                         {isAuthenticated && user ? (
                             <div className="border-t border-border/40 mt-2 pt-2">

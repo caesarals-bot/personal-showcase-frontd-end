@@ -6,7 +6,7 @@ import ContactInfoDisplay from './components/ContactInfoDisplay'
 
 const ContactMePage = () => {
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
             <div className="container mx-auto px-4 py-8 lg:py-12">
                 {/* Header */}
                 <motion.div
@@ -58,7 +58,7 @@ const ContactMePage = () => {
                         className="lg:col-span-1"
                     >
                         <div className="sticky top-8">
-                            <ContactInfoDisplay className="rounded-2xl border border-border/30 bg-background p-6 backdrop-blur-sm shadow-sm lg:p-8" />
+                            <ContactInfoDisplay className="rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow lg:p-8" />
                         </div>
                     </motion.div>
 
@@ -69,7 +69,7 @@ const ContactMePage = () => {
                         transition={{ duration: 0.6, delay: 0.6 }}
                         className="lg:col-span-2"
                     >
-                        <div className="rounded-2xl border border-border/30 bg-background p-6 backdrop-blur-sm shadow-sm lg:p-8">
+                        <div className="rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow lg:p-8">
                             <div className="mb-6">
                                 <div className="mb-4 flex items-center gap-3">
                                     <div className="rounded-lg bg-primary/10 p-2">
@@ -97,7 +97,7 @@ const ContactMePage = () => {
                     transition={{ duration: 0.6, delay: 0.8 }}
                     className="mt-12 text-center"
                 >
-                    <div className="rounded-2xl border border-border/20 bg-background p-8 backdrop-blur-sm">
+                    <div className="rounded-2xl border border-border/50 bg-card/60 p-8 backdrop-blur-md shadow-md">
                         <h3 className="mb-4 text-xl font-bold tracking-tight md:text-2xl">
                             ¿Prefieres otro medio?
                         </h3>

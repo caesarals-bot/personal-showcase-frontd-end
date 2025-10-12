@@ -7,11 +7,21 @@
 import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import Logo from '@/shared/components/Logo'
+import { useTheme } from '@/components/theme-provider'
 
 const HomePage = () => {
     // Fases del texto: 0 = Desarrollador web, 1 = Ingeniero informático
     const [phase, setPhase] = useState<0 | 1>(0)
     const [anim, setAnim] = useState<'in' | 'out'>('in')
+    const { theme } = useTheme()
+
+    // Determinar color del logo según el tema
+    const getLogoColor = () => {
+        if (theme === 'dark') return '#ffffff'
+        if (theme === 'light') return '#000000'
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+        return isDarkMode ? '#ffffff' : '#000000'
+    }
 
     // Textos a alternar (bucle infinito)
     const texts = useMemo(() => [
@@ -48,7 +58,7 @@ const HomePage = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mx-auto mb-2 w-64 max-w-[90vw] sm:w-[30rem]"
                 >
-                    <Logo align="center" color="#000000" width={480} height={136} className="mb-2" />
+                    <Logo align="center" color={getLogoColor()} width={480} height={136} className="mb-2" />
                 </motion.div>
 
                 {/* Foto principal */}
