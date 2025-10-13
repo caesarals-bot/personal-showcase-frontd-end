@@ -47,7 +47,7 @@ import {
     Heart,
     MessageSquare,
 } from 'lucide-react';
-import type { BlogPost, Category, Tag } from '@/types/blog.types';
+import type { BlogPost, Category, Tag, PostStatus } from '@/types/blog.types';
 import {
     getPosts,
     createPost,
@@ -57,6 +57,9 @@ import {
 } from '@/services/postService';
 import { getCategories } from '@/services/categoryService';
 import { getTags } from '@/services/tagService';
+import { PostStatusSelector } from '@/components/PostStatusSelector';
+import { getStatusLabel, getStatusColor, getStatusIcon } from '@/utils/postStatus';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PostFormData {
     title: string;
@@ -66,17 +69,19 @@ interface PostFormData {
     categoryId: string;
     tagIds: string[];
     featuredImage?: string;
+    status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;
 }
 
 export default function PostsPage() {
+    const { user } = useAuth();
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [tags, setTags] = useState<Tag[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'all' | 'published' | 'draft'>('all');
+    const [filterStatus, setFilterStatus] = useState<PostStatus | 'all'>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
     const [formData, setFormData] = useState<PostFormData>({
@@ -87,6 +92,7 @@ export default function PostsPage() {
         categoryId: '',
         tagIds: [],
         featuredImage: '',
+        status: 'draft',
         isPublished: false,
         isFeatured: false,
     });
@@ -142,9 +148,10 @@ export default function PostsPage() {
             slug: '',
             excerpt: '',
             content: '',
-            categoryId: categories[0]?.id || '',
+            categoryId: '',
             tagIds: [],
             featuredImage: '',
+            status: 'draft',
             isPublished: false,
             isFeatured: false,
         });
@@ -204,6 +211,7 @@ export default function PostsPage() {
             categoryId: post.category.id,
             tagIds: post.tags.map(t => t.id),
             featuredImage: post.featuredImage,
+            status: post.status,
             isPublished: post.isPublished,
             isFeatured: post.isFeatured,
         });
@@ -286,9 +294,11 @@ export default function PostsPage() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="published">Publicados</SelectItem>
-                        <SelectItem value="draft">Borradores</SelectItem>
+                        <SelectItem value="all">📋 Todos</SelectItem>
+                        <SelectItem value="draft">📝 Borradores</SelectItem>
+                        <SelectItem value="review">👁️ En Revisión</SelectItem>
+                        <SelectItem value="published">✅ Publicados</SelectItem>
+                        <SelectItem value="archived">🗄️ Archivados</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -329,9 +339,19 @@ export default function PostsPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant={post.isPublished ? 'default' : 'secondary'}>
-                                            {post.isPublished ? 'Publicado' : 'Borrador'}
+                                        <Badge
+                                            style={{
+                                                backgroundColor: getStatusColor(post.status),
+                                                color: 'white',
+                                            }}
+                                        >
+                                            {getStatusIcon(post.status)} {getStatusLabel(post.status)}
                                         </Badge>
+                                        {post.isFeatured && (
+                                            <Badge variant="outline" className="ml-2">
+                                                ⭐ Destacado
+                                            </Badge>
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
@@ -496,23 +516,34 @@ export default function PostsPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.isPublished}
-                                    onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                                />
-                                <span className="text-sm">Publicar</span>
-                            </label>
+                        {/* Selector de Estado */}
+                        <PostStatusSelector
+                            currentStatus={formData.status}
+                            userRole={user?.role || 'guest'}
+                            isAuthor={true}
+                            onChange={(status) => {
+                                setFormData({ 
+                                    ...formData, 
+                                    status,
+                                    isPublished: status === 'published'
+                                });
+                            }}
+                        />
+
+                        {/* Destacado */}
+                        <div className="space-y-2">
                             <label className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
                                     checked={formData.isFeatured}
                                     onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                                    className="rounded"
                                 />
-                                <span className="text-sm">Destacado</span>
+                                <span className="text-sm font-medium">⭐ Marcar como destacado</span>
                             </label>
+                            <p className="text-xs text-muted-foreground ml-6">
+                                Los posts destacados aparecen en la parte superior del blog
+                            </p>
                         </div>
                     </div>
 

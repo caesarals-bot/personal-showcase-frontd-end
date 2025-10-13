@@ -1,5 +1,7 @@
 // Tipos para el sistema de blog
 
+export type PostStatus = 'draft' | 'review' | 'published' | 'archived'
+
 export interface BlogPost {
     id: string
     title: string
@@ -14,7 +16,8 @@ export interface BlogPost {
     tags: Tag[]
     featuredImage?: string
     gallery?: string[] // Galería de imágenes adicionales
-    isPublished: boolean
+    status: PostStatus // Estado del post: draft, review, published, archived
+    isPublished: boolean // DEPRECATED: Usar 'status' en su lugar
     isFeatured: boolean
     likes: number // Contador de likes
     views: number // Contador de vistas

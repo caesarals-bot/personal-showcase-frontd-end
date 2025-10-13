@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion'
-import { Calendar, Clock, Heart, Eye, MessageCircle } from 'lucide-react'
+import { Calendar, Clock, Heart, Eye, MessageCircle, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -60,15 +60,12 @@ export default function BlogCard({
     }
 
     return (
-        <Link to={`/blog/${post.slug}`} className="no-underline h-full">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                whileHover={{ y: -5 }}
-                className={cardVariants[variant]}
-            >
-                <Card className="h-full overflow-hidden border-border/50 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg group">
+        <motion.div
+            initial={false}
+            whileHover={{ y: -5 }}
+            className={cardVariants[variant]}
+        >
+            <Card className="h-full overflow-hidden border-border/50 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg group">
                 {/* Imagen destacada */}
                 {post.featuredImage && (
                     <div className={`relative overflow-hidden ${imageVariants[variant]}`}>
@@ -77,8 +74,8 @@ export default function BlogCard({
                             alt={post.title}
                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                             onError={(e) => {
-                                // Fallback si la imagen no carga
-                                e.currentTarget.src = `https://via.placeholder.com/600x400/f1f5f9/64748b?text=${encodeURIComponent(post.title)}`
+                                // Fallback si la imagen no carga (sin texto para evitar duplicación)
+                                e.currentTarget.src = `https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop`
                             }}
                         />
                         {/* Botón de like flotante */}
@@ -238,11 +235,20 @@ export default function BlogCard({
                                 </div>
                             </div>
 
-                                                    </div>
+                        </div>
                     )}
+
+                    {/* Botón Leer Más */}
+                    <div className="pt-2">
+                        <Link to={`/blog/${post.slug}`} className="no-underline">
+                            <div className="w-full py-2 px-4 rounded-md hover:bg-primary/10 transition-colors cursor-pointer flex items-center justify-center gap-2 group/btn">
+                                <span className="font-medium text-sm">Leer más</span>
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                            </div>
+                        </Link>
+                    </div>
                 </CardContent>
             </Card>
-            </motion.div>
-        </Link>
+        </motion.div>
     )
 }

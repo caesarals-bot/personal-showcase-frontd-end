@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react'
 import DashboardStats from '../components/DashboardStats'
 import RecentPosts from '../components/RecentPosts'
 import CategoriesOverview from '../components/CategoriesOverview'
+import PendingApproval from '../components/PendingApproval'
 import type { DashboardStats as DashboardStatsType } from '@/types/admin.types'
 import type { BlogPost } from '@/types/blog.types'
 
@@ -48,6 +49,7 @@ const mockRecentPosts: BlogPost[] = [
     readingTime: 5,
     category: { id: '1', name: 'React', slug: 'react', color: '#06B6D4' },
     tags: [],
+    status: 'published',
     isPublished: true,
     isFeatured: true,
     likes: 45,
@@ -65,6 +67,7 @@ const mockRecentPosts: BlogPost[] = [
     readingTime: 7,
     category: { id: '3', name: 'TypeScript', slug: 'typescript', color: '#3178C6' },
     tags: [],
+    status: 'published',
     isPublished: true,
     isFeatured: false,
     likes: 32,
@@ -95,6 +98,9 @@ const AdminPage = () => {
 
       {/* Estadísticas */}
       <DashboardStats stats={stats} isLoading={isLoading} />
+
+      {/* Posts Pendientes de Aprobación */}
+      <PendingApproval />
 
       {/* Grid de contenido */}
       <div className="grid gap-6 md:grid-cols-2">

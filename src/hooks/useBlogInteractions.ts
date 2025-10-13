@@ -1,19 +1,31 @@
-import { useState, useCallback, useMemo } from 'react'
-import type { BlogPost, User } from '@/types/blog.types'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import type { BlogPost } from '@/types/blog.types'
+import { useAuth } from '@/hooks/useAuth'
+import { likePost, unlikePost, getPostLikesCount } from '@/services/likeService'
 
 export function useBlogInteractions() {
-    const [userLikes, setUserLikes] = useState<string[]>(['1', '4']) // IDs de posts likeados
+    const { user: currentUser } = useAuth()
+    const [userLikes, setUserLikes] = useState<string[]>([])
     const [isLiking, setIsLiking] = useState<Record<string, boolean>>({})
-    // Mock user para evitar dependencia circular con useAuth
-    const [currentUser] = useState<User | null>({
-        id: 'user-1',
-        displayName: 'Usuario Demo',
-        email: 'demo@example.com',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-        isVerified: true,
-        role: 'user',
-        createdAt: '2024-01-01T00:00:00Z'
-    })
+    const [likesCount, setLikesCount] = useState<Record<string, number>>({})
+    // Cargar estado de likes del usuario
+    useEffect(() => {
+        const loadUserLikes = async () => {
+            if (!currentUser) return
+            
+            // Cargar likes del usuario desde localStorage
+            const stored = localStorage.getItem('blog_likes')
+            if (stored) {
+                const likes = JSON.parse(stored)
+                const userLikeIds = likes
+                    .filter((like: any) => like.userId === currentUser.id)
+                    .map((like: any) => like.postId)
+                setUserLikes(userLikeIds)
+            }
+        }
+        loadUserLikes()
+    }, [currentUser])
+
     // Función para dar/quitar like
     const toggleLike = useCallback(async (postId: string) => {
         if (!currentUser) {
@@ -33,14 +45,17 @@ export function useBlogInteractions() {
             // Optimistic update
             if (isCurrentlyLiked) {
                 setUserLikes(prev => prev.filter(id => id !== postId))
+                await unlikePost(postId, currentUser.id)
             } else {
                 setUserLikes(prev => [...prev, postId])
+                await likePost(postId, currentUser.id)
             }
 
-            // Simular llamada a API
-            await new Promise(resolve => setTimeout(resolve, 500))
+            // Actualizar contador
+            const newCount = await getPostLikesCount(postId)
+            setLikesCount(prev => ({ ...prev, [postId]: newCount }))
 
-        } catch (error) {
+        } catch (error: any) {
             // Revertir cambio optimista en caso de error
             if (userLikes.includes(postId)) {
                 setUserLikes(prev => prev.filter(id => id !== postId))
@@ -49,7 +64,7 @@ export function useBlogInteractions() {
             }
 
             console.error('Error al procesar like:', error)
-            alert('Error al procesar tu like. Intenta nuevamente.')
+            alert(error.message || 'Error al procesar tu like. Intenta nuevamente.')
         } finally {
             setIsLiking(prev => ({ ...prev, [postId]: false }))
         }
@@ -67,17 +82,13 @@ export function useBlogInteractions() {
 
     // Función para obtener el contador actualizado de likes
     const getLikesCount = useCallback((post: BlogPost) => {
-        const isLiked = isPostLiked(post.id)
-        const originallyLiked = ['1', '4'].includes(post.id) // Mock data original
-
-        if (isLiked && !originallyLiked) {
-            return post.likes + 1
-        } else if (!isLiked && originallyLiked) {
-            return post.likes - 1
+        // Si tenemos un contador actualizado, usarlo
+        if (likesCount[post.id] !== undefined) {
+            return likesCount[post.id]
         }
-
+        // Sino, usar el contador original del post
         return post.likes
-    }, [isPostLiked])
+    }, [likesCount])
 
     // Función para manejar comentarios (placeholder)
     const addComment = useCallback(async (postId: string, content: string) => {

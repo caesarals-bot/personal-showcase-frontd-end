@@ -29,6 +29,7 @@ import {
   Shield
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
+import { NotificationBell } from '@/admin/components/NotificationBell'
 
 /**
  * Items de navegación del panel de admin
@@ -236,6 +237,9 @@ export default function AdminLayout() {
 
             {/* Acciones del header */}
             <div className="flex items-center gap-2">
+              {/* Notificaciones */}
+              {user?.role === 'admin' && <NotificationBell />}
+              
               {user?.role === 'admin' && (
                 <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
                   <Shield className="h-3 w-3 mr-1" />

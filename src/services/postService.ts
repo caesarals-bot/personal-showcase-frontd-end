@@ -1,12 +1,24 @@
 /**
- * Post Service - Gestión local de posts (sin Firebase)
- * Operaciones CRUD en memoria usando datos de la carpeta data/
+ * Post Service - Gestión de posts con soporte Firebase/Local
+ * Operaciones CRUD que funcionan con Firestore o localStorage
  */
 
-import type { BlogPost, Tag } from '@/types/blog.types';
+import type { BlogPost, Tag, PostStatus } from '@/types/blog.types';
 import { MOCK_POSTS } from '@/data/posts.data';
 import { getCategoryById } from './categoryService';
 import { getTagById } from './tagService';
+import { 
+  collection, 
+  getDocs,
+  addDoc,
+  serverTimestamp
+} from 'firebase/firestore';
+import { db } from '@/firebase/config';
+
+// Flag para usar Firebase o localStorage
+const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
+
+console.log('🔥 PostService - Modo:', USE_FIREBASE ? 'FIREBASE' : 'LOCAL');
 
 // Clave para localStorage
 const POSTS_STORAGE_KEY = 'posts_db';
@@ -50,6 +62,112 @@ const delay = () => new Promise(resolve => setTimeout(resolve, DELAY_MS));
  * Obtener todos los posts
  */
 export async function getPosts(options?: {
+  published?: boolean;
+  featured?: boolean;
+  limit?: number;
+}): Promise<BlogPost[]> {
+  if (USE_FIREBASE) {
+    return getPostsFromFirestore(options);
+  }
+  return getPostsLocal(options);
+}
+
+/**
+ * Obtener posts desde Firestore
+ */
+async function getPostsFromFirestore(options?: {
+  published?: boolean;
+  featured?: boolean;
+  limit?: number;
+}): Promise<BlogPost[]> {
+  try {
+    const postsRef = collection(db, 'posts');
+    // Query sin orderBy para evitar problemas con campos faltantes
+    const snapshot = await getDocs(postsRef);
+    console.log('📊 Documentos encontrados en Firestore:', snapshot.docs.length);
+    console.log('🔍 Proyecto Firebase:', db.app.options.projectId);
+    
+    const posts: BlogPost[] = [];
+    
+    for (const docSnap of snapshot.docs) {
+      const data = docSnap.data();
+      console.log('📄 Post encontrado:', { id: docSnap.id, title: data.title, isPublished: data.isPublished });
+      
+      // Obtener categoría y tags populados
+      let category = null;
+      const tags: Tag[] = [];
+      
+      try {
+        category = await getCategoryById(data.categoryId);
+      } catch (error) {
+        console.warn('⚠️ No se pudo cargar categoría:', data.categoryId);
+      }
+      
+      if (data.tagIds && Array.isArray(data.tagIds)) {
+        for (const tagId of data.tagIds) {
+          try {
+            const tag = await getTagById(tagId);
+            if (tag) tags.push(tag);
+          } catch (error) {
+            console.warn('⚠️ No se pudo cargar tag:', tagId);
+          }
+        }
+      }
+      
+      posts.push({
+        id: docSnap.id,
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: data.content,
+        author: data.author || { id: '1', name: 'Admin', avatar: '/mia (1).png' },
+        publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt,
+        readingTime: data.readingTime,
+        category: category || { id: '', name: 'Sin categoría', slug: 'sin-categoria', color: '#999' },
+        tags,
+        featuredImage: data.featuredImage,
+        status: data.status || 'draft',
+        isPublished: data.isPublished,
+        isFeatured: data.isFeatured,
+        likes: data.likes || 0,
+        views: data.views || 0,
+        commentsCount: data.commentsCount || 0,
+      });
+    }
+    
+    // Filtrar y ordenar en el cliente
+    let filtered = posts;
+    
+    if (options?.published !== undefined) {
+      filtered = filtered.filter(post => post.isPublished === options.published);
+    }
+    
+    if (options?.featured !== undefined) {
+      filtered = filtered.filter(post => post.isFeatured === options.featured);
+    }
+    
+    // Ordenar por fecha de publicación (más recientes primero)
+    filtered.sort((a, b) => 
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+    
+    // Limitar resultados
+    if (options?.limit) {
+      filtered = filtered.slice(0, options.limit);
+    }
+    
+    console.log('✅ Posts cargados desde Firestore:', filtered.length);
+    return filtered;
+  } catch (error) {
+    console.error('❌ Error al cargar posts desde Firestore:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener posts desde localStorage (versión original)
+ */
+async function getPostsLocal(options?: {
   published?: boolean;
   featured?: boolean;
   limit?: number;
@@ -163,6 +281,123 @@ export async function createPost(data: {
   tagIds: string[];
   authorId: string;
   featuredImage?: string;
+  status: PostStatus;
+  isPublished: boolean;
+  isFeatured: boolean;
+}): Promise<BlogPost> {
+  if (USE_FIREBASE) {
+    return createPostInFirestore(data);
+  }
+  return createPostLocal(data);
+}
+
+/**
+ * Crear post en Firestore
+ */
+async function createPostInFirestore(data: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  categoryId: string;
+  tagIds: string[];
+  authorId: string;
+  featuredImage?: string;
+  status: PostStatus;
+  isPublished: boolean;
+  isFeatured: boolean;
+}): Promise<BlogPost> {
+  try {
+    // Validar que el slug no exista
+    const existingPosts = await getPosts();
+    const exists = existingPosts.some(post => post.slug === data.slug);
+    if (exists) {
+      throw new Error(`Ya existe un post con el slug: ${data.slug}`);
+    }
+    
+    // Obtener categoría y tags
+    const category = await getCategoryById(data.categoryId);
+    if (!category) {
+      throw new Error('Categoría no encontrada');
+    }
+    
+    const tags: Tag[] = [];
+    for (const tagId of data.tagIds) {
+      const tag = await getTagById(tagId);
+      if (tag) {
+        tags.push(tag);
+      }
+    }
+    
+    // Crear documento en Firestore
+    const postData = {
+      title: data.title.trim(),
+      slug: data.slug,
+      excerpt: data.excerpt.trim(),
+      content: data.content.trim(),
+      categoryId: data.categoryId,
+      tagIds: data.tagIds,
+      authorId: data.authorId,
+      author: {
+        id: data.authorId,
+        name: 'Admin User',
+        avatar: '/mia (1).png'
+      },
+      publishedAt: serverTimestamp(),
+      readingTime: calculateReadingTime(data.content),
+      featuredImage: data.featuredImage || '',
+      status: data.status,
+      isPublished: data.isPublished,
+      isFeatured: data.isFeatured,
+      likes: 0,
+      views: 0,
+      commentsCount: 0,
+    };
+    
+    const docRef = await addDoc(collection(db, 'posts'), postData);
+    console.log('✅ Post creado en Firestore:', docRef.id);
+    
+    // Retornar el post completo
+    const newPost: BlogPost = {
+      id: docRef.id,
+      title: data.title.trim(),
+      slug: data.slug,
+      excerpt: data.excerpt.trim(),
+      content: data.content.trim(),
+      author: postData.author,
+      publishedAt: new Date().toISOString(),
+      readingTime: calculateReadingTime(data.content),
+      category,
+      tags,
+      featuredImage: data.featuredImage,
+      status: data.status,
+      isPublished: data.isPublished,
+      isFeatured: data.isFeatured,
+      likes: 0,
+      views: 0,
+      commentsCount: 0,
+    };
+    
+    return newPost;
+  } catch (error) {
+    console.error('❌ Error al crear post en Firestore:', error);
+    throw error;
+  }
+}
+
+/**
+ * Crear post en localStorage (versión original)
+ */
+async function createPostLocal(data: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  categoryId: string;
+  tagIds: string[];
+  authorId: string;
+  featuredImage?: string;
+  status: PostStatus;
   isPublished: boolean;
   isFeatured: boolean;
 }): Promise<BlogPost> {
@@ -195,12 +430,13 @@ export async function createPost(data: {
     slug: data.slug,
     excerpt: data.excerpt.trim(),
     content: data.content.trim(),
-    author: postsDB[0].author, // Usamos el autor del primer post como default
+    author: postsDB[0]?.author || { id: '1', name: 'Admin', avatar: '/mia (1).png' },
     publishedAt: new Date().toISOString(),
     readingTime: calculateReadingTime(data.content),
     category,
     tags,
     featuredImage: data.featuredImage,
+    status: data.status,
     isPublished: data.isPublished,
     isFeatured: data.isFeatured,
     likes: 0,
@@ -208,7 +444,7 @@ export async function createPost(data: {
     commentsCount: 0,
   };
   
-  postsDB.unshift(newPost); // Añadir al principio para que aparezca primero
+  postsDB.unshift(newPost);
   persistPostsDB();
   console.log('[PostService] Post creado:', newPost);
   return newPost;
@@ -227,6 +463,7 @@ export async function updatePost(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;
   }>
@@ -309,9 +546,12 @@ export async function deletePost(id: string): Promise<void> {
  * Incrementar vistas de un post
  */
 export async function incrementPostViews(id: string): Promise<void> {
+  await delay();
   const post = postsDB.find(p => p.id === id);
   if (post) {
-    post.views++;
+    post.views = (post.views || 0) + 1;
+    persistPostsDB();
+    console.log(`👁️ Vista registrada para post ${id}. Total: ${post.views}`);
   }
 }
 
@@ -336,6 +576,30 @@ export function generatePostSlug(title: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim();
+}
+
+/**
+ * Actualizar el contador de comentarios de un post
+ */
+export async function updatePostCommentsCount(postId: string, count: number): Promise<void> {
+  await delay();
+  const post = postsDB.find(p => p.id === postId);
+  if (post) {
+    post.commentsCount = count;
+    persistPostsDB();
+  }
+}
+
+/**
+ * Actualizar el contador de likes de un post
+ */
+export async function updatePostLikesCount(postId: string, count: number): Promise<void> {
+  await delay();
+  const post = postsDB.find(p => p.id === postId);
+  if (post) {
+    post.likes = count;
+    persistPostsDB();
+  }
 }
 
 /**
