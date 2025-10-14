@@ -22,13 +22,11 @@ export class TimelineService {
             ...data,
         };
 
-        console.log('[TimelineService] Datos actualizados:', timelineDB);
         return { ...timelineDB, items: [...timelineDB.items] };
     }
 
     // Resetear a valores iniciales
     static resetTimelineData(): void {
         timelineDB = { ...timelineData, items: [...timelineData.items] };
-        console.log('[TimelineService] Datos reseteados');
     }
 }

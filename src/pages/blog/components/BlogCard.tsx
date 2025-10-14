@@ -65,7 +65,7 @@ export default function BlogCard({
             whileHover={{ y: -5 }}
             className={cardVariants[variant]}
         >
-            <Card className="h-full overflow-hidden border-border/50 bg-background/60 backdrop-blur-sm transition-all duration-300 hover:border-border hover:shadow-lg group">
+            <Card className="h-full overflow-hidden border-border dark:border-border bg-card dark:bg-card backdrop-blur-sm transition-all duration-300 hover:border-primary/30 dark:hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 group">
                 {/* Imagen destacada */}
                 {post.featuredImage && (
                     <div className={`relative overflow-hidden ${imageVariants[variant]}`}>
@@ -98,7 +98,7 @@ export default function BlogCard({
                             <div className="absolute top-4 left-4">
                                 <Badge
                                     variant="secondary"
-                                    className="bg-background/90 text-foreground backdrop-blur-sm"
+                                    className="bg-card/95 dark:bg-card/95 text-foreground backdrop-blur-sm border border-border dark:border-border font-medium"
                                     style={{
                                         borderColor: post.category.color,
                                         color: post.category.color
@@ -154,14 +154,18 @@ export default function BlogCard({
                                 <Badge
                                     key={tag.id}
                                     variant="secondary"
-                                    className="text-xs"
-                                    style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+                                    className="text-xs border dark:border-border font-medium"
+                                    style={{ 
+                                        backgroundColor: `${tag.color}20`, 
+                                        color: tag.color,
+                                        borderColor: `${tag.color}40`
+                                    }}
                                 >
                                     {tag.name}
                                 </Badge>
                             ))}
                             {post.tags.length > (variant === 'featured' ? 4 : 3) && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs border dark:border-border">
                                     +{post.tags.length - (variant === 'featured' ? 4 : 3)}
                                 </Badge>
                             )}

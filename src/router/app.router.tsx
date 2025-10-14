@@ -12,6 +12,7 @@ import TagsPage from "@/admin/pages/TagsPage";
 import UsersPage from "@/admin/pages/UsersPage";
 import ProfilePage from "@/admin/pages/ProfilePage";
 import TimelinePage from "@/admin/pages/TimelinePage";
+import FirestoreSetupPage from "@/admin/pages/FirestoreSetupPage";
 import AdminLayout from "@/admin/layouts/AdminLayout";
 import PagesLayout from "@/pages/layouts/PagesLayout";
 import { LoginPage } from "@/auth/pages/LoginPage";
@@ -99,6 +100,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'timeline',
                 element: <TimelinePage />,
+            },
+            {
+                path: 'firestore',
+                element: <FirestoreSetupPage />,
             },
         ]
     },

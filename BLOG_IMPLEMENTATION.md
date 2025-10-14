@@ -372,7 +372,7 @@ window.dispatchEvent(new Event('blog-reload'));
 
 ## 👥 Créditos
 
-- **Desarrollador:** César Landeño
+- **Desarrollador:** César Londoño
 - **Framework:** React + TypeScript + Vite
 - **UI:** Shadcn/ui + Tailwind CSS
 - **Animaciones:** Framer Motion

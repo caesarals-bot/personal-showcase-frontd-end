@@ -1,13 +1,48 @@
 import { motion } from 'framer-motion'
 import AboutSection from './components/AboutSection'
 import Timeline from './components/Timeline'
-import { useAboutData } from '@/hooks/useAboutData'
-import { useTimelineData } from '@/hooks/useTimelineData'
-
+import { useOfflineData } from '@/hooks/useOfflineData'
+import { AboutService } from '@/services/aboutService'
+import { TimelineService } from '@/services/timelineService'
+import { defaultAboutData } from '@/data/defaults/defaultAbout'
+import { defaultTimelineData } from '@/data/defaults/defaultTimeline'
+import OfflineBanner from '@/components/OfflineBanner'
+import SEO from '@/components/SEO'
 
 export default function AboutPage() {
-    const { data: aboutData, loading: aboutLoading, error: aboutError } = useAboutData()
-    const { data: timelineData, loading: timelineLoading, error: timelineError } = useTimelineData()
+    // Sistema offline para About data
+    const {
+        data: aboutData,
+        loading: aboutLoading,
+        source: aboutSource,
+        connectionState: aboutConnectionState,
+        refetch: refetchAbout
+    } = useOfflineData({
+        key: 'about-data',
+        fetchFn: AboutService.getAboutData,
+        defaultData: defaultAboutData,
+        cacheTTL: 24 * 60 * 60 * 1000, // 24 horas
+        cacheVersion: '1.0'
+    })
+
+    // Sistema offline para Timeline data
+    const {
+        data: timelineData,
+        loading: timelineLoading,
+        source: timelineSource,
+        refetch: refetchTimeline
+    } = useOfflineData({
+        key: 'timeline-data',
+        fetchFn: TimelineService.getTimelineData,
+        defaultData: defaultTimelineData,
+        cacheTTL: 24 * 60 * 60 * 1000, // 24 horas
+        cacheVersion: '1.0'
+    })
+
+    // Refetch combinado
+    const handleRefetch = async () => {
+        await Promise.all([refetchAbout(), refetchTimeline()])
+    }
 
     if (aboutLoading || timelineLoading) {
         return (
@@ -20,27 +55,29 @@ export default function AboutPage() {
         )
     }
 
-    if (aboutError || timelineError) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center text-red-500">
-                    <p>Error al cargar los datos</p>
-                    <p className="text-sm">{aboutError?.message || timelineError?.message}</p>
-                </div>
-            </div>
-        )
-    }
-
-    if (!aboutData || !timelineData) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <p>No hay datos disponibles</p>
-            </div>
-        )
-    }
+    // Determinar fuente de datos para el banner (priorizar la más crítica)
+    const dataSource = aboutSource === 'default' || timelineSource === 'default' ? 'default' : 
+                       aboutSource === 'cache' || timelineSource === 'cache' ? 'cache' : 
+                       aboutSource
 
     return (
-        <div className="relative min-h-screen">
+        <>
+            {/* SEO */}
+            <SEO
+                title="Sobre Mí"
+                description="Desarrollador apasionado por crear experiencias digitales que marquen la diferencia. Conoce mi trayectoria, habilidades y experiencia profesional."
+                keywords={['desarrollador', 'full stack', 'react', 'typescript', 'portfolio', 'experiencia']}
+                type="profile"
+            />
+
+            {/* Banner de estado offline */}
+            <OfflineBanner
+                connectionState={aboutConnectionState}
+                dataSource={dataSource}
+                onRetry={handleRefetch}
+            />
+
+            <div className="relative min-h-screen">
             <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
                 {/* Header */}
                 <motion.div
@@ -76,5 +113,6 @@ export default function AboutPage() {
                 </div>
             </div>
         </div>
+        </>
     )
 }

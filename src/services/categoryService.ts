@@ -103,7 +103,6 @@ export async function createCategory(
 
   categoriesDB.unshift(newCategory);
   persistCategoriesDB();
-  console.log('[CategoryService] Categoría creada:', newCategory);
   return newCategory.id;
 }
 
@@ -140,7 +139,6 @@ export async function updateCategory(
   };
 
   persistCategoriesDB();
-  console.log('[CategoryService] Categoría actualizada:', categoriesDB[index]);
 }
 
 /**
@@ -154,9 +152,8 @@ export async function deleteCategory(id: string): Promise<void> {
     throw new Error('Categoría no encontrada');
   }
 
-  const deleted = categoriesDB.splice(index, 1)[0];
+  categoriesDB.splice(index, 1);
   persistCategoriesDB();
-  console.log('[CategoryService] Categoría eliminada:', deleted);
 }
 
 /**
@@ -201,5 +198,4 @@ export function getCategoryRandomColor(): string {
 export function resetCategoriesDB(): void {
   categoriesDB = [...MOCK_CATEGORIES];
   persistCategoriesDB();
-  console.log('[CategoryService] Base de datos reseteada a los valores iniciales.');
 }

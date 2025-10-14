@@ -44,17 +44,19 @@ export default function ContactInfo({
             transition={{ duration: 0.5, delay: 0.2 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className={`${containerClass} block`}
+            className={`${containerClass} block group`}
             title="Go to Contact page"
         >
-            <div className="flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-background/80 p-3 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
+            <div className="flex flex-col items-center gap-1 rounded-xl border-2 border-border dark:border-primary/30 bg-card dark:bg-card/95 p-3 backdrop-blur-md shadow-lg hover:shadow-2xl dark:shadow-primary/10 dark:hover:shadow-primary/20 transition-all duration-300 cursor-pointer ring-0 hover:ring-2 hover:ring-primary/20 dark:hover:ring-primary/40">
                 {/* Redes sociales */}
                 {showSocials && visibleSocials.length > 0 && (
                     <div className="flex gap-1">
                         {visibleSocials.map((social) => (
-                            <div
+                            <motion.div
                                 key={social.id}
-                                className="flex items-center justify-center rounded-lg p-2"
+                                whileHover={{ scale: 1.15, y: -2 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center justify-center rounded-lg p-2 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors duration-200"
                                 style={{ color: social.color }}
                             >
                                 <SocialIcon
@@ -62,7 +64,7 @@ export default function ContactInfo({
                                     size={18}
                                     color={social.color || 'currentColor'}
                                 />
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 )}
@@ -72,7 +74,7 @@ export default function ContactInfo({
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3 }}
-                    className="oswald oswald-500 text-xs text-foreground/70 hidden sm:inline"
+                    className="oswald oswald-500 text-xs text-foreground/90 dark:text-foreground/95 hidden sm:inline group-hover:text-primary dark:group-hover:text-primary transition-colors duration-200"
                 >
                     Contact me
                 </motion.span>

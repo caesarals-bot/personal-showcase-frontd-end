@@ -84,14 +84,11 @@ async function getPostsFromFirestore(options?: {
     const postsRef = collection(db, 'posts');
     // Query sin orderBy para evitar problemas con campos faltantes
     const snapshot = await getDocs(postsRef);
-    console.log('📊 Documentos encontrados en Firestore:', snapshot.docs.length);
-    console.log('🔍 Proyecto Firebase:', db.app.options.projectId);
     
     const posts: BlogPost[] = [];
     
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
-      console.log('📄 Post encontrado:', { id: docSnap.id, title: data.title, isPublished: data.isPublished });
       
       // Obtener categoría y tags populados
       let category = null;
@@ -156,7 +153,6 @@ async function getPostsFromFirestore(options?: {
       filtered = filtered.slice(0, options.limit);
     }
     
-    console.log('✅ Posts cargados desde Firestore:', filtered.length);
     return filtered;
   } catch (error) {
     console.error('❌ Error al cargar posts desde Firestore:', error);
@@ -355,7 +351,6 @@ async function createPostInFirestore(data: {
     };
     
     const docRef = await addDoc(collection(db, 'posts'), postData);
-    console.log('✅ Post creado en Firestore:', docRef.id);
     
     // Retornar el post completo
     const newPost: BlogPost = {
@@ -446,7 +441,6 @@ async function createPostLocal(data: {
   
   postsDB.unshift(newPost);
   persistPostsDB();
-  console.log('[PostService] Post creado:', newPost);
   return newPost;
 }
 
@@ -522,7 +516,6 @@ export async function updatePost(
   };
   
   persistPostsDB();
-  console.log('[PostService] Post actualizado:', postsDB[index]);
   return postsDB[index];
 }
 
@@ -537,9 +530,8 @@ export async function deletePost(id: string): Promise<void> {
     throw new Error('Post no encontrado');
   }
   
-  const deleted = postsDB.splice(index, 1)[0];
+  postsDB.splice(index, 1);
   persistPostsDB();
-  console.log('[PostService] Post eliminado:', deleted);
 }
 
 /**
@@ -551,7 +543,6 @@ export async function incrementPostViews(id: string): Promise<void> {
   if (post) {
     post.views = (post.views || 0) + 1;
     persistPostsDB();
-    console.log(`👁️ Vista registrada para post ${id}. Total: ${post.views}`);
   }
 }
 
@@ -608,5 +599,4 @@ export async function updatePostLikesCount(postId: string, count: number): Promi
 export function resetPostsDB(): void {
   postsDB = [...MOCK_POSTS];
   persistPostsDB();
-  console.log('[PostService] Base de datos reseteada a los valores iniciales.');
 }

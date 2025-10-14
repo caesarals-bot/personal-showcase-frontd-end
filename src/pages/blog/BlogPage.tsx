@@ -146,7 +146,7 @@ const BlogPage = () => {
                     transition={{ duration: 0.6, delay: 0.7 }}
                     className="mb-8"
                 >
-                    <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+                    <Card className="border-border dark:border-border bg-card dark:bg-card backdrop-blur-sm">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Filter className="h-5 w-5" />
@@ -173,15 +173,17 @@ const BlogPage = () => {
                                         <Badge
                                             key={category.id}
                                             variant={filters.category === category.slug ? 'default' : 'secondary'}
-                                            className="cursor-pointer transition-colors hover:opacity-80"
+                                            className="cursor-pointer transition-all hover:opacity-80 hover:scale-105 border-2 font-medium"
                                             style={{
                                                 backgroundColor: filters.category === category.slug
                                                     ? category.color
-                                                    : `${category.color}20`,
+                                                    : `${category.color}15`,
                                                 color: filters.category === category.slug
                                                     ? 'white'
                                                     : category.color,
-                                                borderColor: category.color
+                                                borderColor: filters.category === category.slug
+                                                    ? category.color
+                                                    : `${category.color}60`
                                             }}
                                             onClick={() => handleCategoryFilter(category.slug)}
                                         >
@@ -199,15 +201,17 @@ const BlogPage = () => {
                                         <Badge
                                             key={tag.id}
                                             variant={(filters.tags || []).includes(tag.slug) ? 'default' : 'outline'}
-                                            className="cursor-pointer transition-colors hover:opacity-80"
+                                            className="cursor-pointer transition-all hover:opacity-80 hover:scale-105 border-2 font-medium"
                                             style={{
                                                 backgroundColor: (filters.tags || []).includes(tag.slug)
                                                     ? tag.color
-                                                    : 'transparent',
+                                                    : `${tag.color}10`,
                                                 color: (filters.tags || []).includes(tag.slug)
                                                     ? 'white'
                                                     : tag.color,
-                                                borderColor: tag.color
+                                                borderColor: (filters.tags || []).includes(tag.slug)
+                                                    ? tag.color
+                                                    : `${tag.color}60`
                                             }}
                                             onClick={() => handleTagFilter(tag.slug)}
                                         >

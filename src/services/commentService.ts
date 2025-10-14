@@ -74,7 +74,6 @@ export async function createComment(data: {
   commentsDB.push(newComment);
   persistCommentsDB();
   
-  console.log('[CommentService] Comentario creado:', newComment);
   return newComment;
 }
 
@@ -104,7 +103,6 @@ export async function updateComment(
   };
   
   persistCommentsDB();
-  console.log('[CommentService] Comentario actualizado');
   return commentsDB[index];
 }
 
@@ -123,7 +121,6 @@ export async function deleteComment(id: string): Promise<void> {
   );
   
   persistCommentsDB();
-  console.log('[CommentService] Comentario eliminado');
 }
 
 /**

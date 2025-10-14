@@ -45,7 +45,6 @@ export const registerUser = async (email: string, password: string, name: string
   try {
     // Si estamos en modo desarrollo, simular un registro exitoso
     if (DEV_MODE) {
-      console.log('Modo desarrollo: Simulando registro de usuario');
       // Simular un retraso para imitar la llamada a la API
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -89,7 +88,7 @@ export const registerUser = async (email: string, password: string, name: string
     } catch (firestoreError) {
       console.warn('⚠️ No se pudo crear documento en Firestore (CORS). El usuario se creó en Auth correctamente.', firestoreError);
     } */
-    console.log('✅ Usuario creado en Firebase Auth (Firestore deshabilitado temporalmente)');
+    // Usuario creado en Firebase Auth (Firestore deshabilitado temporalmente)
     
     // Crear usuario manualmente sin llamar a getUserRole (evita CORS)
     return {
@@ -117,7 +116,6 @@ export const loginUser = async (email: string, password: string): Promise<User> 
   try {
     // Si estamos en modo desarrollo, simular un inicio de sesión exitoso
     if (DEV_MODE) {
-      console.log('Modo desarrollo: Simulando inicio de sesión');
       // Simular un retraso para imitar la llamada a la API
       await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -151,7 +149,6 @@ export const loginUser = async (email: string, password: string): Promise<User> 
     
     // Determinar rol basado en email (Firestore deshabilitado temporalmente)
     const role = shouldBeAdmin(userCredential.user.email || '') ? 'admin' : 'user';
-    console.log('✅ Usuario autenticado (Firestore deshabilitado temporalmente)');
     
     return {
       id: userCredential.user.uid,
@@ -178,7 +175,6 @@ export const logoutUser = async (): Promise<void> => {
   try {
     // Si estamos en modo desarrollo, simular cierre de sesión
     if (DEV_MODE) {
-      console.log('Modo desarrollo: Simulando cierre de sesión');
       // Simular un retraso para imitar la llamada a la API
       await new Promise(resolve => setTimeout(resolve, 500));
       // Eliminar el usuario simulado del localStorage
@@ -235,7 +231,7 @@ export const loginWithGoogle = async (): Promise<User> => {
     } catch (firestoreError) {
       console.warn('⚠️ No se pudo crear/actualizar documento en Firestore. El usuario se autenticó correctamente.', firestoreError);
     } */
-    console.log('✅ Usuario autenticado con Google (Firestore deshabilitado temporalmente)');
+    // Usuario autenticado con Google (Firestore deshabilitado temporalmente)
 
     // Retornar usuario sin llamar a getUserRole (evita CORS)
     return {

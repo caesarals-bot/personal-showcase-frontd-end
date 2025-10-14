@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { useEffect, useMemo, useState } from 'react'
 import Logo from '@/shared/components/Logo'
 import { useTheme } from '@/components/theme-provider'
+import SEO from '@/components/SEO'
 
 const HomePage = () => {
     // Fases del texto: 0 = Desarrollador web, 1 = Ingeniero informático
@@ -48,7 +49,16 @@ const HomePage = () => {
     }, [anim])
 
     return (
-        <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-4 text-center">
+        <>
+            {/* SEO */}
+            <SEO
+                title="Inicio"
+                description="Portfolio personal de desarrollo web con blog interactivo. Creando experiencias digitales memorables que fusionan diseño y tecnología. React, TypeScript, Firebase."
+                keywords={['portfolio', 'desarrollo web', 'react', 'typescript', 'firebase', 'desarrollador full stack', 'ingeniero informático']}
+                type="website"
+            />
+
+            <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-4 text-center">
             {/* Contenedor relativo para superponer elementos respecto a la foto */}
             <div className="relative">
                 {/* Logo centrado encima de la foto */}
@@ -77,9 +87,9 @@ const HomePage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="relative mt-6 min-h-[2.25rem] flip-perspective"
+                className="relative mt-6 h-[2.5rem] flip-perspective overflow-hidden"
             >
-                <div className="inline-flex items-center gap-2">
+                <div className="inline-flex items-center gap-2 h-full">
                     {/* Corchete izquierdo */}
                     <span className="oswald oswald-500 text-2xl text-foreground/70">[</span>
 
@@ -120,6 +130,7 @@ const HomePage = () => {
                 />
             </motion.div>
         </section>
+        </>
     )
 }
 

@@ -67,7 +67,6 @@ export async function likePost(postId: string, userId: string): Promise<BlogLike
   likesDB.push(newLike);
   persistLikesDB();
   
-  console.log('[LikeService] Like agregado:', newLike);
   return newLike;
 }
 
@@ -90,8 +89,6 @@ export async function unlikePost(postId: string, userId: string): Promise<void> 
   
   likesDB.splice(index, 1);
   persistLikesDB();
-  
-  console.log('[LikeService] Like eliminado');
 }
 
 /**

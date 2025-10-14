@@ -72,7 +72,6 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
   };
 
   usersDB.push(newUser);
-  console.log('[UserService] Usuario creado:', newUser);
   return newUser;
 }
 
@@ -109,7 +108,6 @@ export async function updateUser(id: string, data: Partial<Omit<User, 'id' | 'cr
     updatedAt: new Date().toISOString(),
   };
 
-  console.log('[UserService] Usuario actualizado:', usersDB[index]);
   return usersDB[index];
 }
 
@@ -124,8 +122,7 @@ export async function deleteUser(id: string): Promise<void> {
     throw new Error('Usuario no encontrado');
   }
 
-  const deleted = usersDB.splice(index, 1)[0];
-  console.log('[UserService] Usuario eliminado:', deleted);
+  usersDB.splice(index, 1);
 }
 
 /**
@@ -142,7 +139,6 @@ export async function toggleUserActive(id: string): Promise<User> {
   user.isActive = !user.isActive;
   user.updatedAt = new Date().toISOString();
   
-  console.log('[UserService] Estado del usuario cambiado:', user);
   return user;
 }
 
@@ -174,5 +170,4 @@ export async function getUsersStats(): Promise<{
  */
 export function resetUsersDB(): void {
   usersDB = [...MOCK_USERS];
-  console.log('[UserService] Base de datos reseteada');
 }

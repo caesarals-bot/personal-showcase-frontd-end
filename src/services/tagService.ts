@@ -87,7 +87,6 @@ export async function createTag(data: Omit<Tag, 'id'>): Promise<Tag> {
 
   tagsDB.unshift(newTag);
   persistTagsDB();
-  console.log('[TagService] Tag creado:', newTag);
   return newTag;
 }
 
@@ -116,7 +115,6 @@ export async function updateTag(id: string, data: Partial<Omit<Tag, 'id'>>): Pro
   };
 
   persistTagsDB();
-  console.log('[TagService] Tag actualizado:', tagsDB[index]);
   return tagsDB[index];
 }
 
@@ -131,9 +129,8 @@ export async function deleteTag(id: string): Promise<void> {
     throw new Error('Tag no encontrado');
   }
 
-  const deleted = tagsDB.splice(index, 1)[0];
+  tagsDB.splice(index, 1);
   persistTagsDB();
-  console.log('[TagService] Tag eliminado:', deleted);
 }
 
 /**
@@ -164,5 +161,4 @@ export function getTagRandomColor(): string {
 export function resetTagsDB(): void {
   tagsDB = [...MOCK_TAGS];
   persistTagsDB();
-  console.log('[TagService] Base de datos reseteada a los valores iniciales.');
 }

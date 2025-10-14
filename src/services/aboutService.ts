@@ -24,13 +24,11 @@ export class AboutService {
       ...data,
     };
 
-    console.log('[AboutService] Datos actualizados:', aboutDataDB);
     return { ...aboutDataDB };
   }
 
   // Resetear a valores iniciales
   static resetAboutData(): void {
     aboutDataDB = { ...aboutData };
-    console.log('[AboutService] Datos reseteados');
   }
 }

@@ -26,7 +26,8 @@ import {
   Menu,
   X,
   LogOut,
-  Shield
+  Shield,
+  Database
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
@@ -78,6 +79,12 @@ const navItems: AdminNavItem[] = [
     path: '/admin/timeline'
   },
   {
+    id: 'firestore',
+    label: 'Firestore Setup',
+    icon: 'Database',
+    path: '/admin/firestore'
+  },
+  {
     id: 'settings',
     label: 'Configuración',
     icon: 'Settings',
@@ -96,6 +103,7 @@ const iconMap: Record<string, any> = {
   Users,
   UserCircle,
   Clock,
+  Database,
   Settings
 }
 
