@@ -5,8 +5,6 @@ import { useBlogInteractions } from './useBlogInteractions'
 import { useAuth } from './useAuth'
 import type { BlogPost, Category, Tag, Author, BlogLoadingState } from '@/types/blog.types'
 import { getPosts } from '@/services/postService'
-import { getCategories } from '@/services/categoryService'
-import { getTags } from '@/services/tagService'
 
 // Datos de ejemplo para el blog
 const mockAuthors: Author[] = [
@@ -46,27 +44,39 @@ export function useBlogData() {
     })
     const interactions = useBlogInteractions()
     
-    // Cargar datos desde el servicio
+    // Cargar datos desde el servicio (OPTIMIZADO)
     useEffect(() => {
         const fetchData = async () => {
             try {
+                console.time('🔄 Carga total del blog')
                 console.log('🔄 Cargando datos del blog...')
                 
-                // Cargar posts, categorías y tags en paralelo
-                const [postsData, categoriesData, tagsData] = await Promise.all([
-                    getPosts({ published: true }),
-                    getCategories(),
-                    getTags()
-                ])
+                // Cargar posts (que internamente ya carga categorías y tags)
+                // Luego cargar categorías y tags para los filtros
+                const postsData = await getPosts({ published: true })
+                
+                // Extraer categorías y tags únicos de los posts cargados
+                const uniqueCategories = new Map<string, Category>()
+                const uniqueTags = new Map<string, Tag>()
+                
+                postsData.forEach(post => {
+                    if (post.category) {
+                        uniqueCategories.set(post.category.id, post.category)
+                    }
+                    post.tags.forEach(tag => {
+                        uniqueTags.set(tag.id, tag)
+                    })
+                })
                 
                 setPosts(postsData)
-                setCategories(categoriesData)
-                setTags(tagsData)
+                setCategories(Array.from(uniqueCategories.values()))
+                setTags(Array.from(uniqueTags.values()))
                 
+                console.timeEnd('🔄 Carga total del blog')
                 console.log('✅ Datos cargados:', {
                     posts: postsData.length,
-                    categories: categoriesData.length,
-                    tags: tagsData.length
+                    categories: uniqueCategories.size,
+                    tags: uniqueTags.size
                 })
                 
                 setLoading('success')

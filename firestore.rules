@@ -16,8 +16,8 @@ service cloud.firestore {
     
     // Regla para la colección de usuarios
     match /users/{userId} {
-      // Permitir lectura a usuarios autenticados
-      allow read: if isAuthenticated();
+      // Solo puede leer su propio perfil o si es admin (seguridad mejorada)
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
       
       // Permitir crear documento solo si el UID coincide con el usuario autenticado
       allow create: if isAuthenticated() && request.auth.uid == userId;

@@ -1,22 +1,50 @@
 import { createBrowserRouter } from "react-router-dom";
-import HomePage from "../pages/home/HomePage";
-import ContactMePage from "../pages/contactme/ContactMePage";
-import BlogPage from "../pages/blog/BlogPage";
-import PostPage from "../pages/blog/PostPage";
-import AboutPage from "../pages/about/AboutPage";
-import PortfolioPage from "../pages/portfolio/PorftfoliPage";
-import AdminPage from "@/admin/pages/AdminPage";
-import PostsPage from "@/admin/pages/PostsPage";
-import CategoriesPage from "@/admin/pages/CategoriesPage";
-import TagsPage from "@/admin/pages/TagsPage";
-import UsersPage from "@/admin/pages/UsersPage";
-import ProfilePage from "@/admin/pages/ProfilePage";
-import TimelinePage from "@/admin/pages/TimelinePage";
-import FirestoreSetupPage from "@/admin/pages/FirestoreSetupPage";
+import { lazy, Suspense } from "react";
+
+// Layouts - Carga inmediata (necesarios para todas las rutas)
 import AdminLayout from "@/admin/layouts/AdminLayout";
 import PagesLayout from "@/pages/layouts/PagesLayout";
-import { LoginPage } from "@/auth/pages/LoginPage";
-import { RegisterPage } from "@/auth/pages/RegisterPage";
+
+// HomePage - Carga inmediata (primera impresión)
+import HomePage from "../pages/home/HomePage";
+
+// Lazy Loading - Páginas secundarias
+const ContactMePage = lazy(() => import("../pages/contactme/ContactMePage"));
+const BlogPage = lazy(() => import("../pages/blog/BlogPage"));
+const PostPage = lazy(() => import("../pages/blog/PostPage"));
+const AboutPage = lazy(() => import("../pages/about/AboutPage"));
+const PortfolioPage = lazy(() => import("../pages/portfolio/PorftfoliPage"));
+
+// Lazy Loading - Auth Pages
+const LoginPage = lazy(() => import("@/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => import("@/auth/pages/RegisterPage").then(m => ({ default: m.RegisterPage })));
+
+// Lazy Loading - Admin Pages (prioridad alta)
+const AdminPage = lazy(() => import("@/admin/pages/AdminPage"));
+const PostsPage = lazy(() => import("@/admin/pages/PostsPage"));
+const CategoriesPage = lazy(() => import("@/admin/pages/CategoriesPage"));
+const TagsPage = lazy(() => import("@/admin/pages/TagsPage"));
+const UsersPage = lazy(() => import("@/admin/pages/UsersPage"));
+const ProfilePage = lazy(() => import("@/admin/pages/ProfilePage"));
+const TimelinePage = lazy(() => import("@/admin/pages/TimelinePage"));
+const FirestoreSetupPage = lazy(() => import("@/admin/pages/FirestoreSetupPage"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="text-center space-y-4">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-foreground/20 border-t-foreground mx-auto" />
+      <p className="text-muted-foreground">Cargando...</p>
+    </div>
+  </div>
+);
+
+// Wrapper para Suspense
+const withSuspense = (Component: React.LazyExoticComponent<any>) => (
+  <Suspense fallback={<PageLoader />}>
+    <Component />
+  </Suspense>
+);
 
 export const appRouter = createBrowserRouter([
     {
@@ -25,30 +53,30 @@ export const appRouter = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <HomePage />,
+                element: <HomePage />, // Carga inmediata
             },
             {
                 path: 'contactame',
-                element: <ContactMePage />,
+                element: withSuspense(ContactMePage),
             },      
             {
                 path: 'about',
-                element: <AboutPage />,
+                element: withSuspense(AboutPage),
             },
             {
                 path: 'portfolio',
-                element: <PortfolioPage />,
+                element: withSuspense(PortfolioPage),
             },
             {
                 path: 'blog',
                 children: [
                     {
                         index: true,
-                        element: <BlogPage />,
+                        element: withSuspense(BlogPage),
                     },
                     {
                         path: ':slug',
-                        element: <PostPage />,
+                        element: withSuspense(PostPage),
                     }
                 ]
             },
@@ -60,11 +88,11 @@ export const appRouter = createBrowserRouter([
         children: [
             {
                 path: 'login',
-                element: <LoginPage />,
+                element: withSuspense(LoginPage),
             },
             {
                 path: 'register',
-                element: <RegisterPage />,
+                element: withSuspense(RegisterPage),
             },
         ]
     },
@@ -75,35 +103,35 @@ export const appRouter = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <AdminPage />,
+                element: withSuspense(AdminPage),
             },
             {
                 path: 'posts',
-                element: <PostsPage />,
+                element: withSuspense(PostsPage),
             },
             {
                 path: 'categories',
-                element: <CategoriesPage />,
+                element: withSuspense(CategoriesPage),
             },
             {
                 path: 'tags',
-                element: <TagsPage />,
+                element: withSuspense(TagsPage),
             },
             {
                 path: 'users',
-                element: <UsersPage />,
+                element: withSuspense(UsersPage),
             },
             {
                 path: 'profile',
-                element: <ProfilePage />,
+                element: withSuspense(ProfilePage),
             },
             {
                 path: 'timeline',
-                element: <TimelinePage />,
+                element: withSuspense(TimelinePage),
             },
             {
                 path: 'firestore',
-                element: <FirestoreSetupPage />,
+                element: withSuspense(FirestoreSetupPage),
             },
         ]
     },

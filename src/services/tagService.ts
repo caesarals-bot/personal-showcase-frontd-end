@@ -40,8 +40,8 @@ const initializeTagsDB = () => {
 // Inicializar la base de datos al cargar el módulo
 initializeTagsDB();
 
-// Simulación de delay de red para hacer la experiencia más realista
-const DELAY_MS = 300;
+// Simulación de delay de red (DESACTIVADO para Firebase)
+const DELAY_MS = 0; // Cambiado de 300 a 0 para mejor performance
 const delay = () => new Promise(resolve => setTimeout(resolve, DELAY_MS));
 
 /**

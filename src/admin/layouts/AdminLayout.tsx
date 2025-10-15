@@ -8,8 +8,8 @@
  * - Responsive (sidebar colapsable en móvil)
  */
 
-import { useState } from 'react'
-import { Link, Outlet, useLocation } from 'react-router'
+import { useState, useEffect } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { useAuthContext } from '@/contexts/AuthContext'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -110,11 +110,20 @@ const iconMap: Record<string, any> = {
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const location = useLocation()
-  const { user, logout } = useAuthContext()
+  const navigate = useNavigate()
+  const { user, logout, isLoading } = useAuthContext()
+
+  // Proteger rutas admin - redirigir si no está autenticado
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/', { replace: true })
+    }
+  }, [user, isLoading]) // navigate removido para evitar bucle infinito
 
   const handleLogout = async () => {
     await logout()
-    window.location.href = '/'
+    // El hook useAuth ya redirige, pero por si acaso
+    navigate('/', { replace: true })
   }
 
   const getInitials = (name: string | undefined) => {

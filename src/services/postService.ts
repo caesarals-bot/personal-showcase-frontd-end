@@ -3,14 +3,16 @@
  * Operaciones CRUD que funcionan con Firestore o localStorage
  */
 
-import type { BlogPost, Tag, PostStatus } from '@/types/blog.types';
+import type { BlogPost, Tag, PostStatus, Category } from '@/types/blog.types';
 import { MOCK_POSTS } from '@/data/posts.data';
-import { getCategoryById } from './categoryService';
-import { getTagById } from './tagService';
+import { getCategoryById, getCategories } from './categoryService';
+import { getTagById, getTags } from './tagService';
 import { 
   collection, 
   getDocs,
   addDoc,
+  updateDoc,
+  doc,
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -19,6 +21,29 @@ import { db } from '@/firebase/config';
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
 
 console.log('🔥 PostService - Modo:', USE_FIREBASE ? 'FIREBASE' : 'LOCAL');
+
+// Caché simple en memoria (5 minutos)
+interface CacheEntry {
+  data: BlogPost[];
+  timestamp: number;
+}
+
+let postsCache: CacheEntry | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+function isCacheValid(): boolean {
+  if (!postsCache) return false;
+  const now = Date.now();
+  return (now - postsCache.timestamp) < CACHE_DURATION;
+}
+
+function clearPostsCache(): void {
+  postsCache = null;
+  console.log('🗑️ Caché de posts limpiado');
+}
+
+// Exportar función para limpiar caché manualmente
+export { clearPostsCache };
 
 // Clave para localStorage
 const POSTS_STORAGE_KEY = 'posts_db';
@@ -54,8 +79,8 @@ const initializePostsDB = () => {
 // Inicializar la base de datos al cargar el módulo
 initializePostsDB();
 
-// Simulación de delay de red
-const DELAY_MS = 300;
+// Simulación de delay de red (DESACTIVADO para Firebase)
+const DELAY_MS = 0; // Cambiado de 300 a 0 para mejor performance
 const delay = () => new Promise(resolve => setTimeout(resolve, DELAY_MS));
 
 /**
@@ -73,7 +98,7 @@ export async function getPosts(options?: {
 }
 
 /**
- * Obtener posts desde Firestore
+ * Obtener posts desde Firestore (OPTIMIZADO con CACHÉ)
  */
 async function getPostsFromFirestore(options?: {
   published?: boolean;
@@ -81,37 +106,67 @@ async function getPostsFromFirestore(options?: {
   limit?: number;
 }): Promise<BlogPost[]> {
   try {
-    const postsRef = collection(db, 'posts');
-    // Query sin orderBy para evitar problemas con campos faltantes
-    const snapshot = await getDocs(postsRef);
-    
-    const posts: BlogPost[] = [];
-    
-    for (const docSnap of snapshot.docs) {
-      const data = docSnap.data();
+    // Verificar caché primero
+    if (isCacheValid() && postsCache) {
+      console.log('💾 Usando posts desde caché');
+      const cached = postsCache.data;
       
-      // Obtener categoría y tags populados
-      let category = null;
-      const tags: Tag[] = [];
-      
-      try {
-        category = await getCategoryById(data.categoryId);
-      } catch (error) {
-        console.warn('⚠️ No se pudo cargar categoría:', data.categoryId);
+      // Aplicar filtros al caché
+      let filtered = cached;
+      if (options?.published !== undefined) {
+        filtered = filtered.filter(post => post.isPublished === options.published);
+      }
+      if (options?.featured !== undefined) {
+        filtered = filtered.filter(post => post.isFeatured === options.featured);
+      }
+      if (options?.limit) {
+        filtered = filtered.slice(0, options.limit);
       }
       
+      return filtered;
+    }
+    
+    console.time('⚡ Carga de posts');
+    
+    const postsRef = collection(db, 'posts');
+    const snapshot = await getDocs(postsRef);
+    
+    console.log(`📦 ${snapshot.docs.length} posts encontrados`);
+    
+    // Pre-cargar TODAS las categorías y tags en paralelo (UNA SOLA VEZ)
+    console.time('⚡ Pre-carga categorías y tags');
+    const [allCategories, allTags] = await Promise.all([
+      getCategories(),
+      getTags()
+    ]);
+    console.timeEnd('⚡ Pre-carga categorías y tags');
+    
+    // Crear mapas para lookup rápido O(1)
+    const categoryMap = new Map<string, Category>(allCategories.map(cat => [cat.id, cat]));
+    const tagMap = new Map<string, Tag>(allTags.map(tag => [tag.id, tag]));
+    
+    // Procesar todos los posts en paralelo
+    console.time('⚡ Procesamiento de posts');
+    const postsPromises = snapshot.docs.map(async (docSnap) => {
+      const data = docSnap.data();
+      
+      // Lookup instantáneo en memoria (no más llamadas a Firestore)
+      const category = categoryMap.get(data.categoryId) || { 
+        id: '', 
+        name: 'Sin categoría', 
+        slug: 'sin-categoria', 
+        color: '#999' 
+      };
+      
+      const tags: Tag[] = [];
       if (data.tagIds && Array.isArray(data.tagIds)) {
         for (const tagId of data.tagIds) {
-          try {
-            const tag = await getTagById(tagId);
-            if (tag) tags.push(tag);
-          } catch (error) {
-            console.warn('⚠️ No se pudo cargar tag:', tagId);
-          }
+          const tag = tagMap.get(tagId);
+          if (tag) tags.push(tag);
         }
       }
       
-      posts.push({
+      return {
         id: docSnap.id,
         title: data.title,
         slug: data.slug,
@@ -120,7 +175,7 @@ async function getPostsFromFirestore(options?: {
         author: data.author || { id: '1', name: 'Admin', avatar: '/mia (1).png' },
         publishedAt: data.publishedAt?.toDate?.()?.toISOString() || data.publishedAt,
         readingTime: data.readingTime,
-        category: category || { id: '', name: 'Sin categoría', slug: 'sin-categoria', color: '#999' },
+        category,
         tags,
         featuredImage: data.featuredImage,
         status: data.status || 'draft',
@@ -129,10 +184,25 @@ async function getPostsFromFirestore(options?: {
         likes: data.likes || 0,
         views: data.views || 0,
         commentsCount: data.commentsCount || 0,
-      });
-    }
+      } as BlogPost;
+    });
     
-    // Filtrar y ordenar en el cliente
+    const posts = await Promise.all(postsPromises);
+    console.timeEnd('⚡ Procesamiento de posts');
+    
+    // Ordenar todos los posts antes de guardar en caché
+    posts.sort((a, b) => 
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+    
+    // Guardar en caché
+    postsCache = {
+      data: posts,
+      timestamp: Date.now()
+    };
+    console.log('💾 Posts guardados en caché (válido por 5 minutos)');
+    
+    // Filtrar según opciones
     let filtered = posts;
     
     if (options?.published !== undefined) {
@@ -143,15 +213,13 @@ async function getPostsFromFirestore(options?: {
       filtered = filtered.filter(post => post.isFeatured === options.featured);
     }
     
-    // Ordenar por fecha de publicación (más recientes primero)
-    filtered.sort((a, b) => 
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
-    
-    // Limitar resultados
+    // Limitar resultados (ya están ordenados)
     if (options?.limit) {
       filtered = filtered.slice(0, options.limit);
     }
+    
+    console.timeEnd('⚡ Carga de posts');
+    console.log(`✅ ${filtered.length} posts cargados y filtrados`);
     
     return filtered;
   } catch (error) {
@@ -199,6 +267,29 @@ async function getPostsLocal(options?: {
  * Obtener un post por ID
  */
 export async function getPostById(id: string): Promise<BlogPost | null> {
+  if (USE_FIREBASE) {
+    return getPostByIdFromFirestore(id);
+  }
+  return getPostByIdLocal(id);
+}
+
+/**
+ * Obtener post por ID desde Firestore
+ */
+async function getPostByIdFromFirestore(id: string): Promise<BlogPost | null> {
+  try {
+    const posts = await getPostsFromFirestore();
+    return posts.find(post => post.id === id) || null;
+  } catch (error) {
+    console.error('❌ Error al obtener post por ID desde Firestore:', error);
+    return null;
+  }
+}
+
+/**
+ * Obtener post por ID desde localStorage
+ */
+async function getPostByIdLocal(id: string): Promise<BlogPost | null> {
   await delay();
   return postsDB.find(post => post.id === id) || null;
 }
@@ -352,6 +443,9 @@ async function createPostInFirestore(data: {
     
     const docRef = await addDoc(collection(db, 'posts'), postData);
     
+    // Limpiar caché al crear post
+    clearPostsCache();
+    
     // Retornar el post completo
     const newPost: BlogPost = {
       id: docRef.id,
@@ -448,6 +542,88 @@ async function createPostLocal(data: {
  * Actualizar un post existente
  */
 export async function updatePost(
+  id: string,
+  updates: Partial<{
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    categoryId: string;
+    tagIds: string[];
+    featuredImage: string;
+    status: PostStatus;
+    isPublished: boolean;
+    isFeatured: boolean;
+  }>
+): Promise<BlogPost> {
+  if (USE_FIREBASE) {
+    return updatePostInFirestore(id, updates);
+  }
+  return updatePostLocal(id, updates);
+}
+
+/**
+ * Actualizar post en Firestore
+ */
+async function updatePostInFirestore(
+  id: string,
+  updates: Partial<{
+    title: string;
+    slug: string;
+    excerpt: string;
+    content: string;
+    categoryId: string;
+    tagIds: string[];
+    featuredImage: string;
+    status: PostStatus;
+    isPublished: boolean;
+    isFeatured: boolean;
+  }>
+): Promise<BlogPost> {
+  try {
+    // Preparar datos para actualizar
+    const updateData: any = {
+      updatedAt: serverTimestamp(),
+    };
+    
+    if (updates.title !== undefined) updateData.title = updates.title.trim();
+    if (updates.slug !== undefined) updateData.slug = updates.slug;
+    if (updates.excerpt !== undefined) updateData.excerpt = updates.excerpt.trim();
+    if (updates.content !== undefined) {
+      updateData.content = updates.content.trim();
+      updateData.readingTime = calculateReadingTime(updates.content);
+    }
+    if (updates.categoryId !== undefined) updateData.categoryId = updates.categoryId;
+    if (updates.tagIds !== undefined) updateData.tagIds = updates.tagIds;
+    if (updates.featuredImage !== undefined) updateData.featuredImage = updates.featuredImage;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.isPublished !== undefined) updateData.isPublished = updates.isPublished;
+    if (updates.isFeatured !== undefined) updateData.isFeatured = updates.isFeatured;
+    
+    // Actualizar en Firestore
+    const postRef = doc(db, 'posts', id);
+    await updateDoc(postRef, updateData);
+    
+    // Limpiar caché al actualizar post
+    clearPostsCache();
+    
+    // Obtener el post actualizado
+    const updatedPost = await getPostById(id);
+    if (!updatedPost) {
+      throw new Error('Post no encontrado después de actualizar');
+    }
+    
+    return updatedPost;
+  } catch (error) {
+    console.error('❌ Error al actualizar post en Firestore:', error);
+    throw error;
+  }
+}
+
+/**
+ * Actualizar post en localStorage (versión original)
+ */
+async function updatePostLocal(
   id: string,
   updates: Partial<{
     title: string;

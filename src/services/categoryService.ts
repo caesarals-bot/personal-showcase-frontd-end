@@ -45,8 +45,8 @@ const CATEGORY_COLORS = [
   '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316', '#84CC16'
 ];
 
-// Simulación de delay de red
-const DELAY_MS = 300;
+// Simulación de delay de red (DESACTIVADO para Firebase)
+const DELAY_MS = 0; // Cambiado de 300 a 0 para mejor performance
 const delay = () => new Promise(resolve => setTimeout(resolve, DELAY_MS));
 
 /**
