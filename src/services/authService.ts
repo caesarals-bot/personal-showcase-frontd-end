@@ -10,7 +10,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import type { User } from '../types/blog.types';
-import { /* getUserRole, createUserDocument, */ shouldBeAdmin } from './roleService'; // Firestore deshabilitado temporalmente
+import { createUserDocument, shouldBeAdmin } from './roleService';
 
 // Función para convertir un usuario de Firebase a nuestro tipo User
 // NOTA: Comentada temporalmente para evitar CORS - se reemplazó por código inline
@@ -76,9 +76,8 @@ export const registerUser = async (email: string, password: string, name: string
     // Determinar rol inicial
     const initialRole = shouldBeAdmin(email) ? 'admin' : 'user';
 
-    // ⚠️ DESHABILITADO: Firestore causa CORS en desarrollo
-    // TODO: Habilitar cuando usemos emuladores o en producción
-    /* try {
+    // Crear documento de usuario en Firestore
+    try {
       await createUserDocument(
         userCredential.user.uid,
         email,
@@ -86,9 +85,9 @@ export const registerUser = async (email: string, password: string, name: string
         initialRole
       );
     } catch (firestoreError) {
-      console.warn('⚠️ No se pudo crear documento en Firestore (CORS). El usuario se creó en Auth correctamente.', firestoreError);
-    } */
-    // Usuario creado en Firebase Auth (Firestore deshabilitado temporalmente)
+      console.error('⚠️ Error al crear documento en Firestore:', firestoreError);
+      // Continuar aunque falle Firestore - el usuario ya está en Auth
+    }
     
     // Crear usuario manualmente sin llamar a getUserRole (evita CORS)
     return {

@@ -24,6 +24,7 @@ import {
   type FormStatus,
   type ContactFormResponse,
 } from '@/types/contact-form.types'
+import { sendContactEmail } from '@/services/emailService'
 
 export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   const [status, setStatus] = useState<FormStatus>('idle')
@@ -47,9 +48,10 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
 
     try {
       // Si se proporciona una función onSubmit personalizada, la usamos
+      // Si no, usamos el servicio de EmailJS
       const result = onSubmit 
         ? await onSubmit(data)
-        : await simulateEmailSend(data)
+        : await sendContactEmail(data)
 
       setResponse(result)
       setStatus(result.success ? 'success' : 'error')
@@ -63,23 +65,6 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
         message: 'Error inesperado. Por favor intenta nuevamente.',
       })
       setStatus('error')
-    }
-  }
-
-  // Simulación de envío de email (reemplazar con implementación real)
-  const simulateEmailSend = async (_data: ContactFormData): Promise<ContactFormResponse> => {
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Simular éxito/error aleatorio para demo
-    const success = Math.random() > 0.2 // 80% de éxito
-
-    return {
-      success,
-      message: success 
-        ? '¡Mensaje enviado correctamente! Te responderé pronto.'
-        : 'Error al enviar el mensaje. Por favor intenta nuevamente.',
-      timestamp: new Date().toISOString(),
     }
   }
 

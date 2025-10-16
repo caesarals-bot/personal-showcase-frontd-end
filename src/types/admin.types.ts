@@ -101,7 +101,7 @@ export interface UpdateUserData {
   displayName?: string
   avatar?: string
   bio?: string
-  role?: 'admin' | 'user' | 'guest'
+  role?: 'admin' | 'collaborator' | 'user' | 'guest'
   isActive?: boolean
   socialLinks?: {
     github?: string
@@ -115,7 +115,7 @@ export interface UpdateUserData {
  * Filtros para listar usuarios
  */
 export interface UserFilters {
-  role?: 'admin' | 'user' | 'guest' | 'all'
+  role?: 'admin' | 'collaborator' | 'user' | 'guest' | 'all'
   isActive?: boolean
   search?: string
   sortBy?: 'createdAt' | 'displayName' | 'email'

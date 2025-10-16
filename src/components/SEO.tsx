@@ -21,11 +21,11 @@ interface SEOProps {
 }
 
 const DEFAULT_SEO = {
-    title: 'Portfolio Personal | Desarrollo Web',
-    description: 'Portfolio personal de desarrollo web con blog interactivo. Sistema de filtros, likes, comentarios y autenticación. Diseño moderno con modo dark y responsive design. Construido con React, TypeScript y Firebase.',
-    keywords: ['desarrollo web', 'react', 'typescript', 'firebase', 'portfolio', 'blog', 'frontend', 'fullstack'],
-    author: 'Desarrollador Web',
-    image: '/logocesar.svg',
+    title: 'César Londoño | Full Stack Developer',
+    description: 'Full Stack Developer especializado en React, Vue.js, Ruby on Rails y Firebase. Portfolio personal con blog técnico sobre desarrollo web, arquitectura de software y mejores prácticas.',
+    keywords: ['césar londoño', 'full stack developer', 'react', 'vue.js', 'ruby on rails', 'typescript', 'firebase', 'desarrollo web', 'portfolio', 'blog técnico'],
+    author: 'César Londoño',
+    image: '/comic-team-web.webp',
     type: 'website' as const
 }
 
@@ -46,7 +46,7 @@ export default function SEO({
 
     // Construir título completo
     const fullTitle = title 
-        ? `${title} | Portfolio Personal`
+        ? `${title} | César Londoño`
         : DEFAULT_SEO.title
 
     // Usar valores por defecto si no se proporcionan
@@ -85,7 +85,7 @@ export default function SEO({
         updateMetaTag('og:image', seoImage, true)
         updateMetaTag('og:url', seoUrl, true)
         updateMetaTag('og:type', type, true)
-        updateMetaTag('og:site_name', 'Portfolio Personal', true)
+        updateMetaTag('og:site_name', 'César Londoño - Full Stack Developer', true)
 
         // Twitter Card
         updateMetaTag('twitter:card', 'summary_large_image')

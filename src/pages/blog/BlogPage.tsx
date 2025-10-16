@@ -118,7 +118,7 @@ const BlogPage = () => {
                             <h2 className="text-2xl font-bold tracking-tight">Artículos Destacados</h2>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {featuredPosts.map((post, index) => (
                                 <motion.div
                                     key={post.id}
@@ -256,7 +256,7 @@ const BlogPage = () => {
 
                     {/* Grid de artículos */}
                     {posts.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {posts.map((post, index) => (
                                 <motion.div
                                     key={post.id}

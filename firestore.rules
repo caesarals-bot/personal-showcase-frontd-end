@@ -3,27 +3,27 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Función helper para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     // Función helper para verificar si el usuario es admin
     function isAdmin() {
       return request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // Función helper para verificar si el usuario está autenticado
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
     // Regla para la colección de usuarios
     match /users/{userId} {
-      // Solo puede leer su propio perfil o si es admin (seguridad mejorada)
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Cualquier usuario autenticado puede leer su propio documento
+      allow read: if isAuthenticated() && request.auth.uid == userId;
       
       // Permitir crear documento solo si el UID coincide con el usuario autenticado
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
-      // Permitir actualizar solo su propio documento o si es admin
-      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Permitir actualizar solo su propio documento
+      allow update: if isAuthenticated() && request.auth.uid == userId;
       
       // Solo admins pueden eliminar usuarios
       allow delete: if isAdmin();
@@ -31,17 +31,17 @@ service cloud.firestore {
     
     // Regla para posts del blog
     match /posts/{postId} {
-      // Todos pueden leer posts publicados
+      // LECTURA: Todos pueden leer posts (igual que profile/portfolio)
       allow read: if true;
       
-      // Solo usuarios autenticados pueden crear posts
+      // ESCRITURA: Solo usuarios autenticados pueden crear posts
       allow create: if isAuthenticated();
       
-      // Solo el autor o admin puede editar
+      // ACTUALIZAR: Solo el autor o admin puede editar
       allow update: if isAuthenticated() && 
         (resource.data.authorId == request.auth.uid || isAdmin());
       
-      // Solo el autor o admin puede eliminar
+      // ELIMINAR: Solo el autor o admin puede eliminar
       allow delete: if isAuthenticated() && 
         (resource.data.authorId == request.auth.uid || isAdmin());
     }
@@ -69,7 +69,7 @@ service cloud.firestore {
     // Regla para perfil (About page)
     match /profile/{profileId} {
       allow read: if true; // Todos pueden ver el perfil
-      allow write: if isAdmin();
+      allow write: if isAdmin(); // Solo admin puede modificar
     }
     
     // Regla para portfolio (proyectos)
@@ -82,6 +82,12 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read: if true; // Todos pueden leer la configuración
       allow write: if isAdmin();
+    }
+    
+    // Regla para timeline (experiencia, educación, etc.)
+    match /timeline/{itemId} {
+      allow read: if true; // Todos pueden ver la timeline
+      allow write: if isAdmin(); // Solo admin puede modificar
     }
     
     // Denegar todo lo demás por defecto

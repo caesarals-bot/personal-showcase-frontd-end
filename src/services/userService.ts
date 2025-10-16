@@ -1,12 +1,17 @@
 /**
- * User Service - Gestión local de usuarios (sin Firebase)
- * Operaciones CRUD en memoria usando datos de la carpeta data/
+ * User Service - Gestión de usuarios con Firebase
+ * Operaciones CRUD en Firestore
  */
 
+import { collection, doc, getDocs, getDoc, updateDoc } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import type { User } from '@/types/blog.types';
 import { MOCK_USERS } from '@/data/users.data';
 
-// Base de datos en memoria
+// Flag para usar Firebase
+const USE_FIREBASE = true;
+
+// Base de datos en memoria (fallback)
 let usersDB: User[] = [...MOCK_USERS];
 
 // Simulación de delay de red
@@ -17,8 +22,39 @@ const delay = () => new Promise(resolve => setTimeout(resolve, DELAY_MS));
  * Obtener todos los usuarios
  */
 export async function getUsers(): Promise<User[]> {
-  await delay();
-  return [...usersDB].sort((a, b) => a.displayName.localeCompare(b.displayName));
+  if (!USE_FIREBASE) {
+    await delay();
+    return [...usersDB].sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }
+
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await getDocs(usersRef);
+    
+    const users: User[] = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        email: data.email,
+        displayName: data.displayName || data.email?.split('@')[0] || 'Usuario',
+        firstName: data.firstName,
+        lastName: data.lastName,
+        userName: data.userName,
+        avatar: data.avatar,
+        bio: data.bio,
+        isVerified: data.isVerified || false,
+        isActive: data.isActive !== false,
+        role: data.role || 'user',
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+        socialLinks: data.socialLinks
+      };
+    });
+    
+    return users.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  } catch (error) {
+    return [];
+  }
 }
 
 /**
@@ -79,37 +115,68 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
  * Actualizar un usuario existente
  */
 export async function updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): Promise<User> {
-  await delay();
-  
-  const index = usersDB.findIndex(user => user.id === id);
-  if (index === -1) {
-    throw new Error('Usuario no encontrado');
-  }
-
-  // Si se actualiza el email, validar que no exista
-  if (data.email && data.email !== usersDB[index].email) {
-    const exists = usersDB.some(user => user.email === data.email);
-    if (exists) {
-      throw new Error(`Ya existe un usuario con el email: ${data.email}`);
+  if (!USE_FIREBASE) {
+    await delay();
+    
+    const index = usersDB.findIndex(user => user.id === id);
+    if (index === -1) {
+      throw new Error('Usuario no encontrado');
     }
+
+    usersDB[index] = {
+      ...usersDB[index],
+      ...data,
+      updatedAt: new Date().toISOString(),
+    };
+
+    return usersDB[index];
   }
 
-  // Si se actualiza el username, validar que no exista
-  if (data.userName && data.userName !== usersDB[index].userName) {
-    const exists = usersDB.some(user => user.userName === data.userName);
-    if (exists) {
-      throw new Error(`Ya existe un usuario con el username: ${data.userName}`);
+  try {
+    const userRef = doc(db, 'users', id);
+    await updateDoc(userRef, {
+      ...data,
+      updatedAt: new Date()
+    });
+    
+    const updatedDoc = await getDoc(userRef);
+    if (!updatedDoc.exists()) {
+      throw new Error('Usuario no encontrado');
     }
+    
+    const userData = updatedDoc.data();
+    return {
+      id: updatedDoc.id,
+      email: userData.email,
+      displayName: userData.displayName,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      userName: userData.userName,
+      avatar: userData.avatar,
+      bio: userData.bio,
+      isVerified: userData.isVerified,
+      isActive: userData.isActive,
+      role: userData.role,
+      createdAt: userData.createdAt?.toDate?.()?.toISOString() || userData.createdAt,
+      updatedAt: userData.updatedAt?.toDate?.()?.toISOString() || userData.updatedAt,
+      socialLinks: userData.socialLinks
+    };
+  } catch (error) {
+    throw error;
   }
-
-  usersDB[index] = {
-    ...usersDB[index],
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-
-  return usersDB[index];
 }
+
+/**
+ * Cambiar rol de un usuario (función específica para admin)
+ */
+export async function changeUserRole(userId: string, newRole: 'admin' | 'collaborator' | 'user' | 'guest'): Promise<void> {
+  try {
+    await updateUser(userId, { role: newRole });
+  } catch (error) {
+    throw error;
+  }
+}
+
 
 /**
  * Eliminar un usuario

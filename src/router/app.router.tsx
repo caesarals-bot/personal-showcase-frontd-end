@@ -28,6 +28,7 @@ const UsersPage = lazy(() => import("@/admin/pages/UsersPage"));
 const ProfilePage = lazy(() => import("@/admin/pages/ProfilePage"));
 const TimelinePage = lazy(() => import("@/admin/pages/TimelinePage"));
 const FirestoreSetupPage = lazy(() => import("@/admin/pages/FirestoreSetupPage"));
+const DataMigrationPage = lazy(() => import("@/admin/pages/DataMigrationPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -132,6 +133,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'firestore',
                 element: withSuspense(FirestoreSetupPage),
+            },
+            {
+                path: 'data-migration',
+                element: withSuspense(DataMigrationPage),
             },
         ]
     },

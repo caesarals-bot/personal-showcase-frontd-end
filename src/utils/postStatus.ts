@@ -6,21 +6,21 @@ import type { PostStatus } from '@/types/blog.types'
 
 export const POST_STATUS_LABELS: Record<PostStatus, string> = {
   draft: 'Borrador',
-  review: 'En Revisión',
+  pending_review: 'En Revisión',
   published: 'Publicado',
   archived: 'Archivado',
 }
 
 export const POST_STATUS_COLORS: Record<PostStatus, string> = {
   draft: '#94A3B8', // Gris
-  review: '#F59E0B', // Amarillo
+  pending_review: '#F59E0B', // Amarillo
   published: '#10B981', // Verde
   archived: '#6B7280', // Gris oscuro
 }
 
 export const POST_STATUS_ICONS: Record<PostStatus, string> = {
   draft: '📝',
-  review: '👁️',
+  pending_review: '👁️',
   published: '✅',
   archived: '🗄️',
 }
@@ -57,5 +57,5 @@ export function isPostPublic(status: PostStatus): boolean {
  * Verificar si un post es editable
  */
 export function isPostEditable(status: PostStatus): boolean {
-  return status === 'draft' || status === 'review'
+  return status === 'draft' || status === 'pending_review'
 }

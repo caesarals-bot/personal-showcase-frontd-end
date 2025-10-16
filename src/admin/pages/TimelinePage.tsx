@@ -39,7 +39,12 @@ import {
 } from '@/components/ui/select';
 import { Plus, Edit, Trash2, Clock, Briefcase, GraduationCap, Award, FolderKanban } from 'lucide-react';
 import type { TimelineItem } from '@/types/timeline.types';
-import { TimelineService } from '@/services/timelineService';
+import { 
+    getTimelineItems,
+    createTimelineItem,
+    updateTimelineItem,
+    deleteTimelineItem
+} from '@/services/timelineService';
 
 interface TimelineFormData {
     title: string;
@@ -75,8 +80,8 @@ export default function TimelinePage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const data = await TimelineService.getTimelineData();
-            setItems([...data.items]);
+            const items = await getTimelineItems();
+            setItems(items);
         } catch (error) {
             console.error('Error al cargar datos:', error);
         } finally {
@@ -103,17 +108,16 @@ export default function TimelinePage() {
     const handleCreate = async () => {
         try {
             const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s);
-            const newItem: TimelineItem = {
-                id: `timeline-${Date.now()}`,
+            
+            await createTimelineItem({
                 title: formData.title,
                 company: formData.company || undefined,
                 period: formData.period,
                 description: formData.description,
                 skills: skillsArray,
                 type: formData.type,
-            };
-            const updatedItems = [...items, newItem];
-            await TimelineService.updateTimelineData({ items: updatedItems });
+            });
+            
             setIsDialogOpen(false);
             resetForm();
             loadData();
@@ -128,18 +132,16 @@ export default function TimelinePage() {
         
         try {
             const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s);
-            const updatedItems = items.map(item => 
-                item.id === editingItem.id ? {
-                    ...item,
-                    title: formData.title,
-                    company: formData.company || undefined,
-                    period: formData.period,
-                    description: formData.description,
-                    skills: skillsArray,
-                    type: formData.type,
-                } : item
-            );
-            await TimelineService.updateTimelineData({ items: updatedItems });
+            
+            await updateTimelineItem(editingItem.id, {
+                title: formData.title,
+                company: formData.company || undefined,
+                period: formData.period,
+                description: formData.description,
+                skills: skillsArray,
+                type: formData.type,
+            });
+            
             setEditingItem(null);
             resetForm();
             loadData();
@@ -155,8 +157,7 @@ export default function TimelinePage() {
         }
 
         try {
-            const updatedItems = items.filter(i => i.id !== item.id);
-            await TimelineService.updateTimelineData({ items: updatedItems });
+            await deleteTimelineItem(item.id);
             loadData();
         } catch (error: any) {
             console.error('Error al eliminar item:', error);

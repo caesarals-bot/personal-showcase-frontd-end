@@ -20,8 +20,6 @@ import { db } from '@/firebase/config';
 // Flag para usar Firebase o localStorage
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
 
-console.log('🔥 PostService - Modo:', USE_FIREBASE ? 'FIREBASE' : 'LOCAL');
-
 // Caché simple en memoria (5 minutos)
 interface CacheEntry {
   data: BlogPost[];
@@ -39,7 +37,6 @@ function isCacheValid(): boolean {
 
 function clearPostsCache(): void {
   postsCache = null;
-  console.log('🗑️ Caché de posts limpiado');
 }
 
 // Exportar función para limpiar caché manualmente
@@ -108,7 +105,6 @@ async function getPostsFromFirestore(options?: {
   try {
     // Verificar caché primero
     if (isCacheValid() && postsCache) {
-      console.log('💾 Usando posts desde caché');
       const cached = postsCache.data;
       
       // Aplicar filtros al caché
@@ -131,10 +127,7 @@ async function getPostsFromFirestore(options?: {
     const postsRef = collection(db, 'posts');
     const snapshot = await getDocs(postsRef);
     
-    console.log(`📦 ${snapshot.docs.length} posts encontrados`);
-    
     // Pre-cargar TODAS las categorías y tags en paralelo (UNA SOLA VEZ)
-    console.time('⚡ Pre-carga categorías y tags');
     const [allCategories, allTags] = await Promise.all([
       getCategories(),
       getTags()
@@ -200,7 +193,6 @@ async function getPostsFromFirestore(options?: {
       data: posts,
       timestamp: Date.now()
     };
-    console.log('💾 Posts guardados en caché (válido por 5 minutos)');
     
     // Filtrar según opciones
     let filtered = posts;
@@ -218,12 +210,8 @@ async function getPostsFromFirestore(options?: {
       filtered = filtered.slice(0, options.limit);
     }
     
-    console.timeEnd('⚡ Carga de posts');
-    console.log(`✅ ${filtered.length} posts cargados y filtrados`);
-    
     return filtered;
   } catch (error) {
-    console.error('❌ Error al cargar posts desde Firestore:', error);
     throw error;
   }
 }
@@ -281,7 +269,6 @@ async function getPostByIdFromFirestore(id: string): Promise<BlogPost | null> {
     const posts = await getPostsFromFirestore();
     return posts.find(post => post.id === id) || null;
   } catch (error) {
-    console.error('❌ Error al obtener post por ID desde Firestore:', error);
     return null;
   }
 }
@@ -367,6 +354,8 @@ export async function createPost(data: {
   categoryId: string;
   tagIds: string[];
   authorId: string;
+  authorName: string;
+  authorAvatar?: string;
   featuredImage?: string;
   status: PostStatus;
   isPublished: boolean;
@@ -389,6 +378,8 @@ async function createPostInFirestore(data: {
   categoryId: string;
   tagIds: string[];
   authorId: string;
+  authorName: string;
+  authorAvatar?: string;
   featuredImage?: string;
   status: PostStatus;
   isPublished: boolean;
@@ -427,8 +418,8 @@ async function createPostInFirestore(data: {
       authorId: data.authorId,
       author: {
         id: data.authorId,
-        name: 'Admin User',
-        avatar: '/mia (1).png'
+        name: data.authorName,
+        avatar: data.authorAvatar || '/mia (1).png'
       },
       publishedAt: serverTimestamp(),
       readingTime: calculateReadingTime(data.content),
@@ -469,7 +460,6 @@ async function createPostInFirestore(data: {
     
     return newPost;
   } catch (error) {
-    console.error('❌ Error al crear post en Firestore:', error);
     throw error;
   }
 }
@@ -485,6 +475,8 @@ async function createPostLocal(data: {
   categoryId: string;
   tagIds: string[];
   authorId: string;
+  authorName: string;
+  authorAvatar?: string;
   featuredImage?: string;
   status: PostStatus;
   isPublished: boolean;
@@ -519,7 +511,7 @@ async function createPostLocal(data: {
     slug: data.slug,
     excerpt: data.excerpt.trim(),
     content: data.content.trim(),
-    author: postsDB[0]?.author || { id: '1', name: 'Admin', avatar: '/mia (1).png' },
+    author: { id: data.authorId, name: data.authorName, avatar: data.authorAvatar || '/mia (1).png' },
     publishedAt: new Date().toISOString(),
     readingTime: calculateReadingTime(data.content),
     category,
@@ -615,7 +607,6 @@ async function updatePostInFirestore(
     
     return updatedPost;
   } catch (error) {
-    console.error('❌ Error al actualizar post en Firestore:', error);
     throw error;
   }
 }

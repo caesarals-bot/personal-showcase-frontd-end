@@ -21,7 +21,7 @@ export default function PendingApproval() {
     setLoading(true);
     try {
       const posts = await getPosts();
-      const pending = posts.filter(p => p.status === 'review');
+      const pending = posts.filter(p => p.status === 'pending_review');
       setPendingPosts(pending);
     } catch (error) {
       console.error('Error al cargar posts pendientes:', error);

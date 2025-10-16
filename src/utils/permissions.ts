@@ -4,13 +4,13 @@
 
 import type { PostStatus } from '@/types/blog.types'
 
-export type UserRole = 'admin' | 'user' | 'guest'
+export type UserRole = 'admin' | 'collaborator' | 'user' | 'guest'
 
 /**
  * Verificar si el usuario puede crear posts
  */
 export function canCreatePost(role: UserRole): boolean {
-  return role === 'admin' || role === 'user'
+  return role === 'admin' || role === 'collaborator' || role === 'user'
 }
 
 /**
@@ -18,7 +18,7 @@ export function canCreatePost(role: UserRole): boolean {
  */
 export function canEditPost(role: UserRole, postAuthorId: string, currentUserId: string): boolean {
   if (role === 'admin') return true
-  if (role === 'user' && postAuthorId === currentUserId) return true
+  if ((role === 'collaborator' || role === 'user') && postAuthorId === currentUserId) return true
   return false
 }
 
@@ -62,16 +62,16 @@ export function getAllowedStatusTransitions(
 ): PostStatus[] {
   // Admin puede cambiar a cualquier estado
   if (role === 'admin') {
-    return ['draft', 'review', 'published', 'archived']
+    return ['draft', 'pending_review', 'published', 'archived']
   }
 
   // User solo puede cambiar sus propios posts
   if (role === 'user' && isAuthor) {
     switch (currentStatus) {
       case 'draft':
-        return ['draft', 'review'] // Puede guardar como borrador o enviar a revisión
-      case 'review':
-        return ['draft', 'review'] // Puede volver a borrador o mantener en revisión
+        return ['draft', 'pending_review'] // Puede guardar como borrador o enviar a revisión
+      case 'pending_review':
+        return ['draft', 'pending_review'] // Puede volver a borrador o mantener en revisión
       case 'published':
         return ['published'] // No puede cambiar posts publicados
       case 'archived':
@@ -125,7 +125,7 @@ export function getStatusHelpText(role: UserRole, status: PostStatus): string {
     switch (status) {
       case 'draft':
         return 'Borrador: El post está en edición y no es visible públicamente.'
-      case 'review':
+      case 'pending_review':
         return 'En Revisión: El post está listo para ser revisado antes de publicar.'
       case 'published':
         return 'Publicado: El post es visible en el blog público.'
@@ -138,7 +138,7 @@ export function getStatusHelpText(role: UserRole, status: PostStatus): string {
     switch (status) {
       case 'draft':
         return 'Borrador: Continúa editando. Cuando esté listo, envíalo a revisión.'
-      case 'review':
+      case 'pending_review':
         return 'En Revisión: Tu post está esperando aprobación del administrador.'
       case 'published':
         return 'Publicado: Tu post está visible en el blog. Solo el admin puede modificarlo.'
@@ -181,7 +181,7 @@ export function getAvailablePostActions(
 
   // Acciones específicas del admin
   if (role === 'admin') {
-    if (currentStatus === 'review') {
+    if (currentStatus === 'pending_review') {
       actions.push({
         id: 'approve',
         label: 'Aprobar y Publicar',
@@ -229,7 +229,7 @@ export function getAvailablePostActions(
       })
     }
 
-    if (currentStatus === 'review') {
+    if (currentStatus === 'pending_review') {
       actions.push({
         id: 'back-to-draft',
         label: 'Volver a Borrador',

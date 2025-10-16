@@ -40,7 +40,6 @@ class CacheService {
 
             return true
         } catch (error) {
-            console.error('Error al guardar en caché:', error)
             return false
         }
     }
@@ -62,21 +61,18 @@ class CacheService {
             // Verificar versión
             const expectedVersion = options.version || this.DEFAULT_VERSION
             if (entry.version !== expectedVersion) {
-                console.warn(`Versión de caché obsoleta para ${key}. Esperada: ${expectedVersion}, Actual: ${entry.version}`)
                 this.removeCache(key)
                 return null
             }
 
             // Verificar expiración
             if (Date.now() > entry.expiresAt) {
-                console.info(`Caché expirado para ${key}`)
                 this.removeCache(key)
                 return null
             }
 
             return entry.data
         } catch (error) {
-            console.error('Error al leer caché:', error)
             return null
         }
     }
@@ -109,7 +105,6 @@ class CacheService {
                 expiresAt: entry.expiresAt
             }
         } catch (error) {
-            console.error('Error al obtener info de caché:', error)
             return null
         }
     }
@@ -123,7 +118,6 @@ class CacheService {
             localStorage.removeItem(cacheKey)
             return true
         } catch (error) {
-            console.error('Error al remover caché:', error)
             return false
         }
     }
@@ -140,10 +134,8 @@ class CacheService {
                 localStorage.removeItem(key)
             })
 
-            console.info(`Se limpiaron ${cacheKeys.length} entradas de caché`)
             return true
         } catch (error) {
-            console.error('Error al limpiar caché:', error)
             return false
         }
     }
@@ -175,13 +167,8 @@ class CacheService {
                 }
             })
 
-            if (clearedCount > 0) {
-                console.info(`Se limpiaron ${clearedCount} entradas de caché expiradas`)
-            }
-
             return clearedCount
         } catch (error) {
-            console.error('Error al limpiar caché expirado:', error)
             return 0
         }
     }
@@ -204,7 +191,6 @@ class CacheService {
 
             return totalSize
         } catch (error) {
-            console.error('Error al calcular tamaño de caché:', error)
             return 0
         }
     }

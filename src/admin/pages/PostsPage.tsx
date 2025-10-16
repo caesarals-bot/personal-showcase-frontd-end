@@ -160,9 +160,20 @@ export default function PostsPage() {
 
     const handleCreate = async () => {
         try {
+            if (!user) {
+                alert('❌ Debes estar autenticado para crear un post');
+                return;
+            }
+
+            // Obtener solo el primer nombre
+            const fullName = user.displayName || user.email?.split('@')[0] || 'Usuario';
+            const firstName = fullName.split(' ')[0]; // Toma solo la primera palabra
+
             await createPost({
                 ...formData,
-                authorId: 'mock-author-id',
+                authorId: user.id,
+                authorName: firstName,
+                authorAvatar: user.avatar,
             });
             setIsCreateDialogOpen(false);
             resetForm();
@@ -493,13 +504,13 @@ export default function PostsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Tags (Nota: selección múltiple próximamente)</Label>
-                            <div className="flex flex-wrap gap-2">
-                                {tags.slice(0, 5).map((tag) => (
+                            <Label>Tags (Selección múltiple)</Label>
+                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md">
+                                {tags.map((tag) => (
                                     <Badge 
                                         key={tag.id}
                                         style={{ backgroundColor: tag.color, color: 'white' }}
-                                        className="cursor-pointer"
+                                        className="cursor-pointer hover:opacity-80 transition-opacity"
                                         onClick={() => {
                                             const isSelected = formData.tagIds.includes(tag.id);
                                             setFormData({
@@ -513,7 +524,13 @@ export default function PostsPage() {
                                         {tag.name} {formData.tagIds.includes(tag.id) ? '✓' : ''}
                                     </Badge>
                                 ))}
+                                {tags.length === 0 && (
+                                    <p className="text-sm text-muted-foreground">No hay tags disponibles</p>
+                                )}
                             </div>
+                            <p className="text-xs text-muted-foreground">
+                                {formData.tagIds.length} tag(s) seleccionado(s)
+                            </p>
                         </div>
 
                         {/* Selector de Estado */}

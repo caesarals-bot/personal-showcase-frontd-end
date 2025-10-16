@@ -72,7 +72,12 @@ export function LikeButton({
       onLikeChange?.(newCount);
     } catch (error: any) {
       console.error('Error al dar like:', error);
-      alert(error.message);
+      // Mensaje más descriptivo
+      if (error.message?.includes('permission') || error.message?.includes('Missing or insufficient permissions')) {
+        alert('No tienes permisos para dar like. Asegúrate de estar registrado correctamente.');
+      } else {
+        alert(`Error: ${error.message || 'No se pudo dar like'}`);
+      }
     } finally {
       setLoading(false);
     }

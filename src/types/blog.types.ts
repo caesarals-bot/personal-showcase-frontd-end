@@ -1,6 +1,6 @@
 // Tipos para el sistema de blog
 
-export type PostStatus = 'draft' | 'review' | 'published' | 'archived'
+export type PostStatus = 'draft' | 'pending_review' | 'published' | 'archived'
 
 export interface BlogPost {
     id: string
@@ -93,7 +93,7 @@ export interface User {
     bio?: string
     isVerified: boolean
     isActive?: boolean
-    role: 'admin' | 'user' | 'guest'
+    role: 'admin' | 'collaborator' | 'user' | 'guest'
     createdAt: string
     updatedAt?: string
     socialLinks?: {

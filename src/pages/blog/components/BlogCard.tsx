@@ -54,9 +54,9 @@ export default function BlogCard({
     }
 
     const imageVariants = {
-        default: "h-32",
-        featured: "h-40 md:h-48",
-        compact: "h-28"
+        default: "h-28",
+        featured: "h-36 md:h-40",
+        compact: "h-24"
     }
 
     return (
@@ -118,9 +118,9 @@ export default function BlogCard({
                     )}
                 </div>
 
-                <CardHeader className={`space-y-2 ${variant === 'featured' ? 'p-4' : 'p-3'}`}>
+                <CardHeader className={`space-y-1.5 ${variant === 'featured' ? 'p-3' : 'p-2.5'}`}>
                     {/* Título */}
-                    <CardTitle className={`line-clamp-2 transition-colors group-hover:text-primary ${variant === 'featured' ? 'text-lg md:text-xl' : 'text-base'
+                    <CardTitle className={`line-clamp-2 transition-colors group-hover:text-primary ${variant === 'featured' ? 'text-base md:text-lg' : 'text-sm'
                         }`}>
                         {post.title}
                     </CardTitle>
@@ -157,7 +157,7 @@ export default function BlogCard({
                     )}
                 </CardHeader>
 
-                <CardContent className="space-y-3 pb-3">
+                <CardContent className="space-y-2 pb-2.5 px-2.5">
                     {/* Metadatos */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-3">

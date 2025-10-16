@@ -1,84 +1,61 @@
 # 📅 Plan de Trabajo - 16 de Octubre 2025
 
-## 🎯 Objetivo Principal
-Implementar Portfolio 3D Cards y completar integración Firebase para Profile/Timeline
+## 🎯 Objetivos Principales
+1. Corregir bugs críticos identificados en testing
+2. Completar integración Firebase (Profile/Timeline/Usuarios)
+3. Implementar sistema de colaboradores
+4. Portfolio 3D Cards (si hay tiempo)
+
+## 🚨 PENDIENTES CRÍTICOS (Identificados en Testing)
+
+### **Bugs Encontrados**:
+1. 🔴 **Crear Post** - No se ven todos los tags/categorías
+2. 🟡 **Timeline** - No conectado a Firebase (colección no existe)
+3. 🟡 **About/Profile** - No conectado a Firebase (colección no existe)
+4. 🟡 **Usuarios Admin** - No carga desde Firebase
+5. 🟡 **Contacto** - Info hardcoded, debería venir de profile
+6. 🟡 **Colaboradores** - Falta sistema de revisión de posts
+7. 🟢 **Comentarios** - Sistema no implementado
+8. 🟢 **Likes** - No persiste en Firebase
+9. 🟢 **Notificaciones** - Email cuando envían mensaje
 
 ---
 
-## ⏰ Cronograma Estimado (4 horas)
+## ⏰ Cronograma ACTUALIZADO (7-8 horas)
 
-### **Sesión 1: Portfolio 3D Cards** (2 horas) 🎨
+### **Sesión 1: Fixes Críticos** (2 horas) 🔴
 
-#### **09:00 - 09:30** | Preparación (30 min)
-- [ ] Revisar documentación `PORTFOLIO_3D_CARDS.md`
-- [ ] Agregar animaciones a `src/index.css` o `src/App.css`
-  ```css
-  @keyframes gradient-rotate { ... }
-  @keyframes scan-line { ... }
-  .animate-gradient-rotate { ... }
-  .animate-scan-line { ... }
-  .delay-100, .delay-200, .delay-300 { ... }
-  ```
-- [ ] Crear `src/types/portfolio.types.ts`
-  ```typescript
-  export interface Project {
-    id: string;
-    title: string;
-    description: string;
-    images: string[];
-    tags: string[];
-    githubUrl?: string;
-    liveUrl?: string;
-    featured?: boolean;
-    order?: number;
-  }
-  ```
-- [ ] Verificar componentes shadcn/ui disponibles
+#### **09:00 - 09:30** | Fix Crear Post - Tags/Categorías (30 min)
+**Problema**: Al crear post no se muestran todas las categorías/tags disponibles
 
-#### **09:30 - 10:15** | Componente ProjectCard (45 min)
-- [ ] Crear `src/components/ProjectCard.tsx`
-- [ ] Copiar código de referencia
-- [ ] Ajustar imports y paths
-- [ ] Testing del componente aislado
-- [ ] Verificar todos los efectos:
-  - Transformación 3D
-  - Borde animado
-  - Parallax en imagen
-  - LEDs pulsantes
-  - Efecto de escaneo
-  - Spotlight radial
-  - Shine effects
+**Solución**:
+- [ ] Modificar `CreatePostPage.tsx` o `EditPostPage.tsx`
+- [ ] Cargar TODAS las categorías con `getCategories()`
+- [ ] Cargar TODOS los tags con `getTags()`
+- [ ] No filtrar por posts existentes
+- [ ] Testing: Verificar que se muestren todos
 
-#### **10:15 - 10:45** | Datos y Assets (30 min)
-- [ ] Crear `src/data/projects.data.ts`
-- [ ] Agregar tus proyectos reales:
-  - Título y descripción
-  - Múltiples imágenes (mínimo 2-3 por proyecto)
-  - Tags tecnológicos
-  - Links a GitHub y demo
-- [ ] Preparar imágenes:
-  - Crear carpeta `public/projects/`
-  - Optimizar imágenes (max 800x600)
-  - Usar placeholders de Unsplash temporalmente
-- [ ] Agregar al menos 3 proyectos destacados
+```typescript
+// src/admin/pages/CreatePostPage.tsx
+useEffect(() => {
+  const loadData = async () => {
+    const [allCategories, allTags] = await Promise.all([
+      getCategories(), // ✅ TODAS las categorías
+      getTags()        // ✅ TODOS los tags
+    ]);
+    setCategories(allCategories);
+    setTags(allTags);
+  };
+  loadData();
+}, []);
+```
 
-#### **10:45 - 11:00** | Integración (15 min)
-- [ ] Actualizar `src/pages/portfolio/PorftfoliPage.tsx`
-- [ ] Importar ProjectCard y datos
-- [ ] Implementar grid de proyectos
-- [ ] Agregar header de página
-- [ ] Testing visual completo
+#### **09:30 - 10:30** | Timeline a Firebase (1 hora)
 
----
+**Problema**: Colección `timeline` no existe, datos hardcoded
 
-### **Sesión 2: Firebase Profile & Timeline** (1.5 horas) 🔥
-
-#### **11:00 - 11:30** | Servicios Firebase (30 min)
-- [ ] Crear `src/services/profileService.ts`
-  ```typescript
-  export async function getProfile(): Promise<Profile | null>
-  export async function updateProfile(data: Partial<Profile>): Promise<void>
-  ```
+**Pasos**:
+- [ ] Crear colección `timeline` en Firestore Console
 - [ ] Crear `src/services/timelineService.ts`
   ```typescript
   export async function getTimelineItems(): Promise<TimelineItem[]>
@@ -86,18 +63,136 @@ Implementar Portfolio 3D Cards y completar integración Firebase para Profile/Ti
   export async function updateTimelineItem(id, data): Promise<void>
   export async function deleteTimelineItem(id): Promise<void>
   ```
-- [ ] Testing de servicios con console.logs
+- [ ] Migrar datos actuales a Firestore (manual)
+- [ ] Conectar `TimelinePage` (admin) a Firebase
+- [ ] Conectar `AboutPage` (frontend) a Firebase
+- [ ] Testing: CRUD completo
 
-#### **11:30 - 12:00** | Migración de Datos (30 min)
-- [ ] Crear documento `profile/about` en Firestore
+**Estructura de documento**:
+```javascript
+timeline/{itemId}
+{
+  type: "education" | "experience" | "certification",
+  title: string,
+  institution: string,
+  startDate: timestamp,
+  endDate: timestamp | null,
+  isCurrent: boolean,
+  description: string,
+  tags: string[],
+  order: number
+}
+```
+
+#### **10:30 - 11:00** | Contacto Dinámico (30 min)
+
+**Problema**: Email/teléfono hardcoded, debería venir de profile
+
+**Pasos**:
+- [ ] Agregar campos de contacto a `profile/about`
   ```javascript
-  {
-    fullName: "Tu Nombre",
-    title: "Full Stack Developer",
-    bio: "Tu biografía...",
-    email: "tu@email.com",
-    location: "Tu ubicación",
-    skills: ["React", "TypeScript", ...],
+  contact: {
+    email: string,
+    phone: string,
+    whatsapp: string
+  }
+  ```
+- [ ] Actualizar `ContactMePage.tsx` para cargar desde Firebase
+- [ ] Actualizar `ProfilePage` (admin) para editar contacto
+- [ ] Testing: Verificar que se actualice dinámicamente
+
+---
+
+### **Sesión 2: Profile y Usuarios** (1.5 horas) 🔥
+
+#### **11:00 - 11:45** | Profile/About a Firebase (45 min)
+
+**Problema**: Colección `profile` no existe, datos hardcoded
+
+**Pasos**:
+- [ ] Crear documento `profile/about` en Firestore
+- [ ] Crear `src/services/profileService.ts`
+  ```typescript
+  export async function getProfile(): Promise<Profile | null>
+  export async function updateProfile(data: Partial<Profile>): Promise<void>
+  ```
+- [ ] Migrar datos actuales (bio, skills, etc.)
+- [ ] Conectar `ProfilePage` (admin) a Firebase
+- [ ] Conectar `AboutPage` (frontend) a Firebase
+- [ ] Testing: Editar y ver cambios
+
+**Estructura**:
+```javascript
+profile/about
+{
+  fullName: string,
+  title: string,
+  bio: string,
+  email: string,
+  phone: string,
+  location: string,
+  skills: string[],
+  languages: [{name: string, level: string}],
+  contact: {email, phone, whatsapp},
+  social: {github, linkedin, twitter}
+}
+```
+
+#### **11:45 - 12:30** | Usuarios desde Firebase (45 min)
+
+**Problema**: `UsersPage` usa datos mock, no carga desde Firestore
+
+**Pasos**:
+- [ ] Modificar `src/admin/pages/UsersPage.tsx`
+- [ ] Cargar usuarios desde Firestore
+  ```typescript
+  const usersRef = collection(db, 'users');
+  const snapshot = await getDocs(usersRef);
+  ```
+- [ ] Implementar cambio de rol (admin/collaborator/user)
+- [ ] Implementar activar/desactivar usuario
+- [ ] Testing: Verificar que se vean usuarios reales
+
+---
+
+### **Sesión 3: Sistema de Colaboradores** (2 horas) 👥
+
+#### **12:30 - 13:00** | Roles y Estados (30 min)
+
+**Objetivo**: Permitir que colaboradores creen posts en estado "pending_review"
+
+**Pasos**:
+- [ ] Agregar tipo de rol en `user.types.ts`
+  ```typescript
+  export type UserRole = 'admin' | 'collaborator' | 'user';
+  ```
+- [ ] Agregar estado en `blog.types.ts`
+  ```typescript
+  export type PostStatus = 'draft' | 'pending_review' | 'published' | 'archived';
+  ```
+- [ ] Actualizar Firestore rules
+  ```javascript
+  // Colaboradores pueden crear posts pending_review
+  allow create: if isAuthenticated() && 
+    (request.resource.data.status == 'pending_review' || isAdmin());
+  ```
+
+#### **13:00 - 14:00** | Página de Revisión (1 hora)
+
+- [ ] Crear `src/admin/pages/PendingPostsPage.tsx`
+- [ ] Listar posts con status "pending_review"
+- [ ] Botones: Aprobar / Rechazar / Editar
+- [ ] Al aprobar: cambiar status a "published"
+- [ ] Al rechazar: agregar comentario de rechazo
+- [ ] Agregar ruta en router admin
+- [ ] Testing: Crear post como collaborator y aprobar como admin
+
+#### **14:00 - 14:30** | Notificaciones (30 min)
+
+- [ ] Crear componente `PendingApproval` badge
+- [ ] Mostrar contador en sidebar admin
+- [ ] Actualizar en tiempo real (opcional)
+- [ ] Testing completo del flujo
     languages: [{name: "Español", level: "Nativo"}],
     interests: ["Desarrollo web", ...]
   }

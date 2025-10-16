@@ -87,7 +87,7 @@ export function PostStatusSelector({
         >
           {getStatusIcon(currentStatus)} {getStatusLabel(currentStatus)}
         </Badge>
-        {userRole === 'user' && currentStatus === 'review' && (
+        {userRole === 'user' && currentStatus === 'pending_review' && (
           <Badge variant="outline" className="text-amber-600 border-amber-600">
             ⏳ Esperando aprobación
           </Badge>
@@ -114,7 +114,7 @@ export function PostStatusSelector({
       )}
 
       {/* Info para admin */}
-      {userRole === 'admin' && currentStatus === 'review' && (
+      {userRole === 'admin' && currentStatus === 'pending_review' && (
         <Alert className="border-amber-500 bg-amber-50">
           <Info className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-sm text-amber-800">

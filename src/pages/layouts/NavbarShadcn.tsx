@@ -106,16 +106,18 @@ const NavbarShadcn = () => {
                     {isAuthenticated && user ? (
                         <div className="hidden md:flex items-center gap-2">
                             {user.role === 'admin' && (
-                                <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
-                                    <Shield className="h-3 w-3 mr-1" />
-                                    Admin
-                                </Badge>
+                                <>
+                                    <Badge variant="default" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0">
+                                        <Shield className="h-3 w-3 mr-1" />
+                                        Admin
+                                    </Badge>
+                                    <Link to="/admin" title="Panel de Administración">
+                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                            <LayoutDashboard className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                </>
                             )}
-                            <Link to="/admin" title="Panel de Administración">
-                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                                    <LayoutDashboard className="h-4 w-4" />
-                                </Button>
-                            </Link>
                             <div className="relative group">
                                 <Avatar className="h-8 w-8 ring-2 ring-green-500/20 cursor-pointer">
                                     <AvatarImage src={user.avatar || undefined} alt={user.displayName || 'Usuario'} />
@@ -220,10 +222,12 @@ const NavbarShadcn = () => {
                                     </div>
                                 </div>
                                 <div className="mt-2 border-t border-border/40 pt-2">
-                                    <Link to="/admin" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
-                                        <LayoutDashboard className="h-4 w-4" />
-                                        <span>Panel de Administración</span>
-                                    </Link>
+                                    {user.role === 'admin' && (
+                                        <Link to="/admin" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent" onClick={() => setOpen(false)}>
+                                            <LayoutDashboard className="h-4 w-4" />
+                                            <span>Panel de Administración</span>
+                                        </Link>
+                                    )}
                                     <div className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md hover:bg-accent cursor-pointer text-red-500" onClick={handleLogout}>
                                         <LogOut className="h-4 w-4" />
                                         <span>Cerrar Sesión</span>

@@ -27,7 +27,8 @@ import {
   X,
   LogOut,
   Shield,
-  Database
+  Database,
+  Download
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
@@ -85,6 +86,12 @@ const navItems: AdminNavItem[] = [
     path: '/admin/firestore'
   },
   {
+    id: 'data-migration',
+    label: 'Migrar Datos',
+    icon: 'Download',
+    path: '/admin/data-migration'
+  },
+  {
     id: 'settings',
     label: 'Configuración',
     icon: 'Settings',
@@ -104,6 +111,7 @@ const iconMap: Record<string, any> = {
   UserCircle,
   Clock,
   Database,
+  Download,
   Settings
 }
 
@@ -113,12 +121,22 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const { user, logout, isLoading } = useAuthContext()
 
-  // Proteger rutas admin - redirigir si no está autenticado
+  // Proteger rutas admin - solo permitir acceso a admins
   useEffect(() => {
-    if (!isLoading && !user) {
-      navigate('/', { replace: true })
+    if (!isLoading) {
+      // Si no está autenticado, redirigir al login
+      if (!user) {
+        navigate('/login', { replace: true })
+        return
+      }
+      
+      // Si está autenticado pero NO es admin, redirigir al home
+      if (user.role !== 'admin') {
+        navigate('/', { replace: true })
+        return
+      }
     }
-  }, [user, isLoading]) // navigate removido para evitar bucle infinito
+  }, [user, isLoading, navigate])
 
   const handleLogout = async () => {
     await logout()
@@ -134,6 +152,32 @@ export default function AdminLayout() {
       .join('')
       .toUpperCase()
       .slice(0, 2)
+  }
+
+  // Mostrar loading mientras verifica permisos
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-primary mx-auto mb-4 animate-pulse" />
+          <p className="text-muted-foreground">Verificando permisos...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no es admin, no mostrar nada (el useEffect redirigirá)
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <Shield className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Acceso Denegado</h2>
+          <p className="text-muted-foreground mb-4">No tienes permisos para acceder al panel de administración.</p>
+          <Button onClick={() => navigate('/')}>Volver al Inicio</Button>
+        </div>
+      </div>
+    )
   }
 
   return (

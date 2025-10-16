@@ -28,106 +28,143 @@ settings/
 ```
 
 ### 2. `profile` (Información personal - About Me)
-```
+```javascript
 profile/
-  └── about/
-      ├── id: string
-      ├── fullName: string
-      ├── title: string (ej: "Full Stack Developer")
-      ├── bio: string (biografía larga)
-      ├── email: string
-      ├── phone?: string
-      ├── location: string
-      ├── avatar: string (URL)
-      ├── resume?: string (URL del CV)
-      ├── skills: string[] (array de habilidades)
-      ├── languages: {
-      │   ├── name: string
-      │   └── level: string (ej: "Nativo", "Avanzado")
-      │ }[]
-      ├── interests: string[]
+  └── about/  // Documento único con ID "about"
+      ├── id: "about"
+      ├── fullName: string           // Ej: "César Londoño"
+      ├── title: string              // Ej: "Full Stack Developer"
+      ├── bio: string                // Biografía larga (2-3 párrafos)
+      ├── avatar?: string            // URL de la foto de perfil
+      ├── resume?: string            // URL del CV en PDF
+      ├── skills: string[]          // ["React", "TypeScript", "Node.js"]
+      ├── languages?: [
+      │     {
+      │       name: string,          // "Español", "Inglés"
+      │       level: string          // "Nativo", "Avanzado", "Intermedio"
+      │     }
+      │   ]
+      ├── interests?: string[]      // ["Open Source", "IA", "Música"]
+      ├── contact: {                // 🔥 IMPORTANTE: Info de contacto
+      │     ├── email: string,       // Email principal
+      │     ├── phone?: string,      // Teléfono (opcional)
+      │     ├── whatsapp?: string,   // Número de WhatsApp
+      │     └── location?: string   // "Bogotá, Colombia"
+      │   }
+      ├── social: {                 // 🔥 IMPORTANTE: Redes sociales
+      │     ├── github?: string,     // URL completa: "https://github.com/usuario"
+      │     ├── linkedin?: string,   // URL completa: "https://linkedin.com/in/usuario"
+      │     ├── twitter?: string,    // URL completa: "https://twitter.com/usuario"
+      │     ├── instagram?: string,  // URL completa (opcional)
+      │     └── website?: string     // Sitio web personal (opcional)
+      │   }
+      ├── createdAt: timestamp
       └── updatedAt: timestamp
 ```
 
-### 3. `timeline` (Línea de tiempo - Educación y Experiencia)
+**Ejemplo completo de documento profile/about:**
+```javascript
+{
+  id: "about",
+  fullName: "César Londoño",
+  title: "Full Stack Developer & Tech Enthusiast",
+  bio: "Desarrollador apasionado por crear experiencias digitales excepcionales. Con más de 5 años de experiencia en desarrollo web, me especializo en React, TypeScript y Node.js. Me encanta resolver problemas complejos y aprender nuevas tecnologías.",
+  avatar: "https://tu-storage.com/avatar.jpg",
+  resume: "https://tu-storage.com/cv.pdf",
+  skills: [
+    "React",
+    "TypeScript",
+    "Node.js",
+    "Firebase",
+    "TailwindCSS",
+    "Git",
+    "PostgreSQL"
+  ],
+  languages: [
+    { name: "Español", level: "Nativo" },
+    { name: "Inglés", level: "Avanzado" }
+  ],
+  interests: [
+    "Open Source",
+    "Inteligencia Artificial",
+    "Música",
+    "Fotografía"
+  ],
+  contact: {
+    email: "cesar@example.com",
+    phone: "+57 300 123 4567",
+    whatsapp: "+57 300 123 4567",
+    location: "Bogotá, Colombia"
+  },
+  social: {
+    github: "https://github.com/caesarals",
+    linkedin: "https://linkedin.com/in/cesarlondono",
+    twitter: "https://twitter.com/cesarlondono",
+    instagram: "https://instagram.com/cesarlondono"
+  },
+  createdAt: "2025-10-16T12:00:00Z",
+  updatedAt: "2025-10-16T12:00:00Z"
+}
 ```
+
+### 3. `timeline` (Línea de tiempo - Educación y Experiencia)
+```javascript
 timeline/
-  ├── {timelineId}/
-      ├── id: string
-      ├── type: "education" | "experience" | "certification" | "achievement"
-      ├── title: string (ej: "Ingeniería en Sistemas")
-      ├── institution: string (ej: "Universidad XYZ")
-      ├── location?: string
-      ├── description: string
-      ├── startDate: timestamp
-      ├── endDate: timestamp | null (null si es actual)
-      ├── isCurrent: boolean
-      ├── icon?: string (nombre del icono Lucide)
-      ├── color?: string (color hex)
-      ├── tags?: string[] (tecnologías, áreas)
-      ├── achievements?: string[] (logros específicos)
-      ├── order: number (para ordenar manualmente)
+  ├── {timelineId}/  // ID autogenerado por Firestore
+      ├── title: string              // Ej: "Full Stack Developer"
+      ├── company?: string           // Ej: "Tech Company Inc." (para work)
+      ├── period: string             // Ej: "2023 - Presente" o "2020 - 2022"
+      ├── description: string        // Descripción detallada
+      ├── skills: string[]          // ["React", "Node.js", "AWS"]
+      ├── type: string              // "work" | "education" | "certification" | "project"
+      ├── icon?: string             // Nombre del icono (opcional)
+      ├── color?: string            // Color hex (opcional)
       └── createdAt: timestamp
 ```
 
-**Ejemplo de documentos:**
+**Ejemplos de documentos timeline:**
 ```javascript
-// Educación
+// Trabajo actual
 {
-  id: "edu-001",
-  type: "education",
-  title: "Ingeniería en Sistemas",
-  institution: "Universidad Nacional",
-  location: "Santiago, Chile",
-  description: "Especialización en desarrollo web y bases de datos",
-  startDate: "2018-03-01",
-  endDate: "2022-12-15",
-  isCurrent: false,
-  icon: "GraduationCap",
-  color: "#3B82F6",
-  tags: ["Programación", "Bases de Datos", "Redes"],
-  achievements: [
-    "Promedio 4.5/5.0",
-    "Proyecto de grado destacado"
-  ],
-  order: 1
+  title: "Full Stack Developer",
+  company: "Tech Company Inc.",
+  period: "2023 - Presente",
+  description: "Desarrollo de aplicaciones web escalables usando React, Node.js y Firebase. Lideré la implementación del nuevo sistema de autenticación que redujo el tiempo de login en 60%.",
+  skills: ["React", "TypeScript", "Node.js", "Firebase", "AWS"],
+  type: "work",
+  createdAt: "2025-10-16T12:00:00Z"
 }
 
-// Experiencia
+// Educación
 {
-  id: "exp-001",
-  type: "experience",
-  title: "Full Stack Developer",
-  institution: "Tech Company Inc.",
-  location: "Remote",
-  description: "Desarrollo de aplicaciones web con React y Node.js",
-  startDate: "2023-01-15",
-  endDate: null,
-  isCurrent: true,
-  icon: "Briefcase",
-  color: "#10B981",
-  tags: ["React", "Node.js", "TypeScript", "Firebase"],
-  achievements: [
-    "Implementé sistema de autenticación",
-    "Reduje tiempo de carga en 60%"
-  ],
-  order: 1
+  title: "Ingeniería en Sistemas",
+  company: "Universidad Nacional",
+  period: "2018 - 2022",
+  description: "Especialización en desarrollo de software y bases de datos. Proyecto de grado: Sistema de gestión hospitalaria con React y PostgreSQL.",
+  skills: ["Programación", "Bases de Datos", "Algoritmos", "Redes"],
+  type: "education",
+  createdAt: "2025-10-16T12:00:00Z"
 }
 
 // Certificación
 {
-  id: "cert-001",
-  type: "certification",
   title: "AWS Certified Developer",
-  institution: "Amazon Web Services",
-  description: "Certificación en desarrollo cloud con AWS",
-  startDate: "2023-06-01",
-  endDate: "2023-06-01",
-  isCurrent: false,
-  icon: "Award",
-  color: "#F59E0B",
-  tags: ["AWS", "Cloud", "DevOps"],
-  order: 3
+  company: "Amazon Web Services",
+  period: "2023",
+  description: "Certificación profesional en desarrollo de aplicaciones cloud con AWS. Incluye Lambda, DynamoDB, S3, y API Gateway.",
+  skills: ["AWS", "Cloud", "Serverless", "DevOps"],
+  type: "certification",
+  createdAt: "2025-10-16T12:00:00Z"
+}
+
+// Proyecto personal
+{
+  title: "Blog Engine Open Source",
+  period: "2024",
+  description: "Motor de blog construido con React y Firebase. Más de 500 estrellas en GitHub y usado por 100+ desarrolladores.",
+  skills: ["React", "Firebase", "TypeScript", "TailwindCSS"],
+  type: "project",
+  createdAt: "2025-10-16T12:00:00Z"
 }
 ```
 

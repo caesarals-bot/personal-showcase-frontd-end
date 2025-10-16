@@ -3,6 +3,16 @@
  */
 
 import type { BlogLike } from '@/types/blog.types';
+import { 
+  collection, 
+  addDoc, 
+  deleteDoc, 
+  getDocs, 
+  query, 
+  where, 
+  doc 
+} from 'firebase/firestore';
+import { db } from '@/firebase/config';
 
 // Modo de desarrollo
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -31,8 +41,20 @@ loadLikesDB();
  */
 export async function hasUserLikedPost(postId: string, userId: string): Promise<boolean> {
   if (USE_FIREBASE) {
-    // TODO: Implementar con Firebase
-    return false;
+    try {
+      const likesRef = collection(db, 'interactions');
+      const q = query(
+        likesRef, 
+        where('type', '==', 'like'),
+        where('postId', '==', postId),
+        where('userId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    } catch (error) {
+      console.error('Error al verificar like:', error);
+      return false;
+    }
   }
   
   return likesDB.some(like => like.postId === postId && like.userId === userId);
@@ -43,8 +65,32 @@ export async function hasUserLikedPost(postId: string, userId: string): Promise<
  */
 export async function likePost(postId: string, userId: string): Promise<BlogLike> {
   if (USE_FIREBASE) {
-    // TODO: Implementar con Firebase
-    throw new Error('Firebase no implementado aún');
+    try {
+      // Verificar si ya dio like
+      const hasLiked = await hasUserLikedPost(postId, userId);
+      if (hasLiked) {
+        throw new Error('Ya diste like a este post');
+      }
+      
+      // Crear documento en Firestore
+      const likesRef = collection(db, 'interactions');
+      const docRef = await addDoc(likesRef, {
+        type: 'like',
+        postId,
+        userId,
+        createdAt: new Date().toISOString()
+      });
+      
+      return {
+        id: docRef.id,
+        postId,
+        userId,
+        createdAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error al dar like:', error);
+      throw error;
+    }
   }
   
   // Verificar si ya dio like
@@ -75,8 +121,28 @@ export async function likePost(postId: string, userId: string): Promise<BlogLike
  */
 export async function unlikePost(postId: string, userId: string): Promise<void> {
   if (USE_FIREBASE) {
-    // TODO: Implementar con Firebase
-    throw new Error('Firebase no implementado aún');
+    try {
+      const likesRef = collection(db, 'interactions');
+      const q = query(
+        likesRef,
+        where('type', '==', 'like'),
+        where('postId', '==', postId),
+        where('userId', '==', userId)
+      );
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        throw new Error('No has dado like a este post');
+      }
+      
+      // Eliminar el documento
+      const likeDoc = snapshot.docs[0];
+      await deleteDoc(doc(db, 'interactions', likeDoc.id));
+    } catch (error) {
+      console.error('Error al quitar like:', error);
+      throw error;
+    }
+    return;
   }
   
   const index = likesDB.findIndex(
@@ -96,8 +162,19 @@ export async function unlikePost(postId: string, userId: string): Promise<void> 
  */
 export async function getPostLikesCount(postId: string): Promise<number> {
   if (USE_FIREBASE) {
-    // TODO: Implementar con Firebase
-    return 0;
+    try {
+      const likesRef = collection(db, 'interactions');
+      const q = query(
+        likesRef,
+        where('type', '==', 'like'),
+        where('postId', '==', postId)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    } catch (error) {
+      console.error('Error al obtener likes:', error);
+      return 0;
+    }
   }
   
   return likesDB.filter(like => like.postId === postId).length;
@@ -108,8 +185,25 @@ export async function getPostLikesCount(postId: string): Promise<number> {
  */
 export async function getPostLikes(postId: string): Promise<BlogLike[]> {
   if (USE_FIREBASE) {
-    // TODO: Implementar con Firebase
-    return [];
+    try {
+      const likesRef = collection(db, 'interactions');
+      const q = query(
+        likesRef,
+        where('type', '==', 'like'),
+        where('postId', '==', postId)
+      );
+      const snapshot = await getDocs(q);
+      
+      return snapshot.docs.map(doc => ({
+        id: doc.id,
+        postId: doc.data().postId,
+        userId: doc.data().userId,
+        createdAt: doc.data().createdAt
+      }));
+    } catch (error) {
+      console.error('Error al obtener likes:', error);
+      return [];
+    }
   }
   
   return likesDB.filter(like => like.postId === postId);

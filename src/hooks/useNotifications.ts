@@ -27,7 +27,7 @@ export function useNotifications() {
       const posts = await getPosts();
       
       // Posts en revisión
-      const reviewPosts = posts.filter(p => p.status === 'review');
+      const reviewPosts = posts.filter(p => p.status === 'pending_review');
       const reviewNotifications: Notification[] = reviewPosts.map(post => ({
         id: `review-${post.id}`,
         type: 'post_review',

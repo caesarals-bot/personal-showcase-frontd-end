@@ -67,7 +67,7 @@ interface UserFormData {
     userName: string;
     avatar?: string;
     bio?: string;
-    role: 'admin' | 'user' | 'guest';
+    role: 'admin' | 'collaborator' | 'user' | 'guest';
     isVerified: boolean;
     isActive: boolean;
 }
@@ -77,7 +77,7 @@ export default function UsersPage() {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'user' | 'guest'>('all');
+    const [filterRole, setFilterRole] = useState<'all' | 'admin' | 'collaborator' | 'user' | 'guest'>('all');
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [formData, setFormData] = useState<UserFormData>({
@@ -303,6 +303,7 @@ export default function UsersPage() {
                     <SelectContent>
                         <SelectItem value="all">Todos los roles</SelectItem>
                         <SelectItem value="admin">Administradores</SelectItem>
+                        <SelectItem value="collaborator">Colaboradores</SelectItem>
                         <SelectItem value="user">Usuarios</SelectItem>
                         <SelectItem value="guest">Invitados</SelectItem>
                     </SelectContent>
@@ -522,6 +523,7 @@ export default function UsersPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="admin">Administrador</SelectItem>
+                                    <SelectItem value="collaborator">Colaborador</SelectItem>
                                     <SelectItem value="user">Usuario</SelectItem>
                                     <SelectItem value="guest">Invitado</SelectItem>
                                 </SelectContent>
