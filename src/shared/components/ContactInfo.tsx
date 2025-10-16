@@ -14,17 +14,18 @@ export default function ContactInfo({
     showSocials = true,
     variant = 'floating'
 }: ContactInfoProps) {
-    const { data, loading, error } = useContactData()
+    const { data, loading } = useContactData()
 
     // Ocultar en la página de contacto
     if (typeof window !== 'undefined' && window.location.pathname === '/contactame') {
         return null
     }
 
-    if (loading || error || !data) return null
+    // No mostrar mientras carga
+    if (loading) return null
 
-    const { contactInfo } = data
-    const visibleSocials = contactInfo.socialLinks.filter(link => link.isVisible)
+    // Si hay datos, usar las redes sociales de Firebase
+    const visibleSocials = data?.contactInfo?.socialLinks?.filter(link => link.isVisible) || []
 
     const positionClasses = {
         'top-left': 'top-19 sm:top-20 left-4 sm:left-6 lg:left-8',
