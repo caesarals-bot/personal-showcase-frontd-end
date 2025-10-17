@@ -3,7 +3,7 @@ import { Mail, MessageCircle, Users, Lightbulb, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import { useAuthContext } from '@/contexts/AuthContext'
 interface CollaborationSectionProps {
     onContactClick: () => void
@@ -11,14 +11,17 @@ interface CollaborationSectionProps {
 
 export default function CollaborationSection({ onContactClick }: CollaborationSectionProps) {
     const navigate = useNavigate()
+    const location = useLocation()
     const { isAuthenticated, user } = useAuthContext()
 
     const handleLoginClick = () => {
-        navigate('/auth/login')
+        // Guardar la ubicación actual para redirigir después del login
+        navigate('/auth/login', { state: { from: location } })
     }
 
     const handleRegisterClick = () => {
-        navigate('/auth/register')
+        // Guardar la ubicación actual para redirigir después del registro
+        navigate('/auth/register', { state: { from: location } })
     }
 
     return (

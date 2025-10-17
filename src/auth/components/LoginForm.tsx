@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { loginUser, loginWithGoogle } from '@/services/authService';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Lock, LogIn } from 'lucide-react';
@@ -27,6 +27,10 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obtener la URL de origen (de donde vino el usuario)
+  const from = (location.state as any)?.from?.pathname || '/';
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -62,7 +66,8 @@ export function LoginForm() {
     try {
       await loginUser(data.email, data.password);
       setLoginSuccess(true);
-      navigate('/');
+      // Redirigir a la página de origen o al home
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     } finally {
@@ -77,7 +82,8 @@ export function LoginForm() {
     try {
       await loginWithGoogle();
       setLoginSuccess(true);
-      navigate('/');
+      // Redirigir a la página de origen o al home
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google');
     } finally {

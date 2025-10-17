@@ -19,6 +19,7 @@ export default function PostPage() {
     const navigate = useNavigate();
     const [post, setPost] = useState<BlogPost | null>(null);
     const [loading, setLoading] = useState(true);
+    const [likesCount, setLikesCount] = useState(0);
 
     useEffect(() => {
         const loadPost = async () => {
@@ -39,6 +40,7 @@ export default function PostPage() {
                 }
 
                 setPost(foundPost);
+                setLikesCount(foundPost.likes || 0);
                 
                 // Incrementar contador de vistas
                 await incrementPostViews(foundPost.id);
@@ -282,9 +284,10 @@ export default function PostPage() {
                         <p className="text-muted-foreground">¿Te gustó este artículo?</p>
                         <LikeButton
                             postId={post.id}
-                            initialLikes={post.likes}
+                            initialLikes={likesCount}
                             size="lg"
                             showCount={true}
+                            onLikeChange={(newCount) => setLikesCount(newCount)}
                         />
                     </motion.div>
 

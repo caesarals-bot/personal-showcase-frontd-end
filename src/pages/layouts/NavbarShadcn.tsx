@@ -140,7 +140,23 @@ const NavbarShadcn = () => {
                                 <LogOut className="h-4 w-4" />
                             </Button>
                         </div>
-                    ) : null}
+                    ) : (
+                        <div className="hidden md:flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                            >
+                                <Link to="/auth/login">Iniciar Sesión</Link>
+                            </Button>
+                            <Button
+                                size="sm"
+                                asChild
+                            >
+                                <Link to="/auth/register">Registrarse</Link>
+                            </Button>
+                        </div>
+                    )}
 
                     <button
                         type="button"

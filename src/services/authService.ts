@@ -218,9 +218,8 @@ export const loginWithGoogle = async (): Promise<User> => {
     // Determinar rol inicial (admin si es el email configurado)
     const initialRole = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
 
-    // ⚠️ DESHABILITADO: Firestore causa CORS en desarrollo
-    // TODO: Habilitar cuando usemos emuladores o en producción
-    /* try {
+    // Crear documento de usuario en Firestore
+    try {
       await createUserDocument(
         firebaseUser.uid,
         firebaseUser.email || '',
@@ -229,8 +228,7 @@ export const loginWithGoogle = async (): Promise<User> => {
       );
     } catch (firestoreError) {
       console.warn('⚠️ No se pudo crear/actualizar documento en Firestore. El usuario se autenticó correctamente.', firestoreError);
-    } */
-    // Usuario autenticado con Google (Firestore deshabilitado temporalmente)
+    }
 
     // Retornar usuario sin llamar a getUserRole (evita CORS)
     return {

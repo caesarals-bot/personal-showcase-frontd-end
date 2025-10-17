@@ -50,16 +50,21 @@ export function LikeButton({
       return;
     }
 
+    // OPTIMISTIC UPDATE: Actualizar UI inmediatamente
+    const previousLiked = liked;
+    const previousCount = likesCount;
+    
+    setLiked(!liked);
+    setLikesCount(liked ? likesCount - 1 : likesCount + 1);
     setLoading(true);
+
     try {
-      if (liked) {
+      if (previousLiked) {
         // Quitar like
         await unlikePost(postId, user.id);
-        setLiked(false);
       } else {
         // Dar like
         await likePost(postId, user.id);
-        setLiked(true);
       }
       
       // Obtener el contador real actualizado
@@ -72,6 +77,11 @@ export function LikeButton({
       onLikeChange?.(newCount);
     } catch (error: any) {
       console.error('Error al dar like:', error);
+      
+      // REVERTIR cambios si hay error
+      setLiked(previousLiked);
+      setLikesCount(previousCount);
+      
       // Mensaje más descriptivo
       if (error.message?.includes('permission') || error.message?.includes('Missing or insufficient permissions')) {
         alert('No tienes permisos para dar like. Asegúrate de estar registrado correctamente.');
