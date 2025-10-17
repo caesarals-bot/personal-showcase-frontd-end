@@ -30,19 +30,27 @@ export function LikeButton({
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [loading, setLoading] = useState(false);
 
-  // Cargar estado inicial
+  // Cargar estado inicial - se ejecuta cada vez que cambia el postId o el user
   useEffect(() => {
     const loadInitialState = async () => {
-      if (user) {
-        const hasLiked = await hasUserLikedPost(postId, user.id);
-        setLiked(hasLiked);
+      try {
+        // Obtener contador real
+        const realCount = await getPostLikesCount(postId);
+        setLikesCount(realCount);
+        
+        // Verificar si el usuario ya dio like
+        if (user?.id) {
+          const hasLiked = await hasUserLikedPost(postId, user.id);
+          setLiked(hasLiked);
+        } else {
+          setLiked(false);
+        }
+      } catch (error) {
+        console.error('Error al cargar estado inicial del like:', error);
       }
-      // Obtener contador real
-      const realCount = await getPostLikesCount(postId);
-      setLikesCount(realCount);
     };
     loadInitialState();
-  }, [postId, user]);
+  }, [postId, user?.id]); // Usar user?.id para detectar cambios de autenticación
 
   const handleLike = async () => {
     if (!user) {

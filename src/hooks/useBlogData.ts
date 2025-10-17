@@ -52,7 +52,6 @@ export function useBlogData() {
                 console.log('🔄 Cargando datos del blog...')
                 
                 // Cargar posts (que internamente ya carga categorías y tags)
-                // Luego cargar categorías y tags para los filtros
                 const postsData = await getPosts({ published: true })
                 
                 // Extraer categorías y tags únicos de los posts cargados

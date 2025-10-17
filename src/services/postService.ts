@@ -13,7 +13,8 @@ import {
   addDoc,
   updateDoc,
   doc,
-  serverTimestamp
+  serverTimestamp,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 
@@ -705,6 +706,21 @@ export async function deletePost(id: string): Promise<void> {
  * Incrementar vistas de un post
  */
 export async function incrementPostViews(id: string): Promise<void> {
+  if (USE_FIREBASE) {
+    try {
+      const postRef = doc(db, 'posts', id);
+      await updateDoc(postRef, {
+        views: increment(1)
+      });
+      console.log(`✅ Vista incrementada para post: ${id}`);
+    } catch (error) {
+      console.error('Error al incrementar vistas:', error);
+      // No lanzar error para no interrumpir la experiencia del usuario
+    }
+    return;
+  }
+  
+  // Modo local
   await delay();
   const post = postsDB.find(p => p.id === id);
   if (post) {

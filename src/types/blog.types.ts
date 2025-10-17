@@ -152,6 +152,8 @@ export interface BlogCardProps {
     onLike?: (postId: string) => void
     isLiked?: boolean
     currentUser?: User | null
+    likesCount?: number // Contador actualizado de likes
+    commentsCount?: number // Contador actualizado de comentarios
 }
 
 export interface BlogFiltersProps {

@@ -30,7 +30,9 @@ const BlogPage = () => {
         // Interacciones
         user,
         handleLike,
-        isPostLiked
+        isPostLiked,
+        getLikesCount,
+        getCommentsCount
     } = useBlogData()
 
     const handleContactClick = () => {
@@ -132,6 +134,8 @@ const BlogPage = () => {
                                         onLike={handleLike}
                                         isLiked={isPostLiked(post.id)}
                                         currentUser={user}
+                                        likesCount={getLikesCount(post)}
+                                        commentsCount={getCommentsCount(post)}
                                     />
                                 </motion.div>
                             ))}
@@ -269,6 +273,8 @@ const BlogPage = () => {
                                         onLike={handleLike}
                                         isLiked={isPostLiked(post.id)}
                                         currentUser={user}
+                                        likesCount={getLikesCount(post)}
+                                        commentsCount={getCommentsCount(post)}
                                     />
                                 </motion.div>
                             ))}

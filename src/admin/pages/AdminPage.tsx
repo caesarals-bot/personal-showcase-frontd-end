@@ -18,6 +18,8 @@ import type { BlogPost } from '@/types/blog.types'
 import { getPosts } from '@/services/postService'
 import { getCategories } from '@/services/categoryService'
 import { getUsers } from '@/services/userService'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/firebase/config'
 
 // Stats iniciales vacíos
 const initialStats: DashboardStatsType = {
@@ -54,13 +56,48 @@ const AdminPage = () => {
         getUsers()
       ])
 
-      // Calcular estadísticas
+      // Calcular estadísticas básicas
       const publishedPosts = posts.filter(p => p.status === 'published')
       const draftPosts = posts.filter(p => p.status === 'draft')
-      const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0)
-      const totalLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0)
-      const totalComments = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0)
       const activeUsers = users.filter(u => u.isActive).length
+
+      // Calcular vistas totales desde los posts
+      const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0)
+
+      // Calcular likes totales desde Firestore interactions
+      let totalLikes = 0
+      let totalComments = 0
+      
+      const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true'
+      
+      if (USE_FIREBASE) {
+        try {
+          // Contar likes desde interactions
+          const likesQuery = query(
+            collection(db, 'interactions'),
+            where('type', '==', 'like')
+          )
+          const likesSnapshot = await getDocs(likesQuery)
+          totalLikes = likesSnapshot.size
+
+          // Contar comentarios desde interactions
+          const commentsQuery = query(
+            collection(db, 'interactions'),
+            where('type', '==', 'comment')
+          )
+          const commentsSnapshot = await getDocs(commentsQuery)
+          totalComments = commentsSnapshot.size
+        } catch (error) {
+          console.error('Error al obtener estadísticas de Firestore:', error)
+          // Fallback: usar datos de los posts
+          totalLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0)
+          totalComments = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0)
+        }
+      } else {
+        // Modo local: usar datos de los posts
+        totalLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0)
+        totalComments = posts.reduce((sum, p) => sum + (p.commentsCount || 0), 0)
+      }
 
       // Posts recientes (últimos 5)
       const recent = [...posts]

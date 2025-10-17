@@ -17,7 +17,9 @@ export default function BlogCard({
     showViews = true,
     onLike,
     isLiked = false,
-    currentUser
+    currentUser,
+    likesCount,
+    commentsCount
 }: BlogCardProps) {
 
     const formatDate = (dateString: string) => {
@@ -203,7 +205,7 @@ export default function BlogCard({
                                     {showLikes && (
                                         <div className="flex items-center gap-1">
                                             <Heart className={`h-3 w-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                                            <span>{formatNumber(post.likes)}</span>
+                                            <span>{formatNumber(likesCount !== undefined ? likesCount : post.likes)}</span>
                                         </div>
                                     )}
 
@@ -218,7 +220,7 @@ export default function BlogCard({
                                     {/* Comentarios */}
                                     <div className="flex items-center gap-1 text-muted-foreground">
                                         <MessageCircle className="h-3 w-3" />
-                                        <span>{post.commentsCount}</span>
+                                        <span>{commentsCount !== undefined ? commentsCount : post.commentsCount}</span>
                                     </div>
                                 </div>
                             </div>

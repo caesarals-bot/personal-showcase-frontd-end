@@ -2,29 +2,63 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import type { BlogPost } from '@/types/blog.types'
 import { useAuth } from '@/hooks/useAuth'
 import { likePost, unlikePost, getPostLikesCount } from '@/services/likeService'
+import { getPostCommentsCount } from '@/services/commentService'
+import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '@/firebase/config'
 
 export function useBlogInteractions() {
     const { user: currentUser } = useAuth()
     const [userLikes, setUserLikes] = useState<string[]>([])
     const [isLiking, setIsLiking] = useState<Record<string, boolean>>({})
     const [likesCount, setLikesCount] = useState<Record<string, number>>({})
+    const [commentsCount, setCommentsCount] = useState<Record<string, number>>({})
     // Cargar estado de likes del usuario
     useEffect(() => {
         const loadUserLikes = async () => {
-            if (!currentUser) return
+            if (!currentUser) {
+                setUserLikes([])
+                return
+            }
             
-            // Cargar likes del usuario desde localStorage
-            const stored = localStorage.getItem('blog_likes')
-            if (stored) {
-                const likes = JSON.parse(stored)
-                const userLikeIds = likes
-                    .filter((like: any) => like.userId === currentUser.id)
-                    .map((like: any) => like.postId)
-                setUserLikes(userLikeIds)
+            const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true'
+            
+            if (USE_FIREBASE) {
+                try {
+                    // Cargar likes del usuario desde Firestore
+                    const likesQuery = query(
+                        collection(db, 'interactions'),
+                        where('type', '==', 'like'),
+                        where('userId', '==', currentUser.id)
+                    )
+                    const snapshot = await getDocs(likesQuery)
+                    const userLikeIds = snapshot.docs.map(doc => doc.data().postId)
+                    setUserLikes(userLikeIds)
+                } catch (error) {
+                    console.error('Error al cargar likes del usuario:', error)
+                    // Fallback a localStorage
+                    const stored = localStorage.getItem('blog_likes')
+                    if (stored) {
+                        const likes = JSON.parse(stored)
+                        const userLikeIds = likes
+                            .filter((like: any) => like.userId === currentUser.id)
+                            .map((like: any) => like.postId)
+                        setUserLikes(userLikeIds)
+                    }
+                }
+            } else {
+                // Modo local: cargar desde localStorage
+                const stored = localStorage.getItem('blog_likes')
+                if (stored) {
+                    const likes = JSON.parse(stored)
+                    const userLikeIds = likes
+                        .filter((like: any) => like.userId === currentUser.id)
+                        .map((like: any) => like.postId)
+                    setUserLikes(userLikeIds)
+                }
             }
         }
         loadUserLikes()
-    }, [currentUser])
+    }, [currentUser?.id]) // Usar currentUser?.id para detectar cambios
 
     // Función para dar/quitar like
     const toggleLike = useCallback(async (postId: string) => {
@@ -82,13 +116,45 @@ export function useBlogInteractions() {
 
     // Función para obtener el contador actualizado de likes
     const getLikesCount = useCallback((post: BlogPost) => {
-        // Si tenemos un contador actualizado, usarlo
+        // Si tenemos un contador actualizado en caché, usarlo
         if (likesCount[post.id] !== undefined) {
             return likesCount[post.id]
         }
-        // Sino, usar el contador original del post
+        
+        // Si no está en caché, cargar el contador real desde Firestore
+        // (esto se ejecuta de forma asíncrona en background)
+        getPostLikesCount(post.id).then(realCount => {
+            if (realCount !== post.likes) {
+                setLikesCount(prev => ({ ...prev, [post.id]: realCount }))
+            }
+        }).catch(err => {
+            console.error('Error al cargar contador de likes:', err)
+        })
+        
+        // Mientras tanto, devolver el contador del post
         return post.likes
     }, [likesCount])
+
+    // Función para obtener el contador actualizado de comentarios
+    const getCommentsCount = useCallback((post: BlogPost) => {
+        // Si tenemos un contador actualizado en caché, usarlo
+        if (commentsCount[post.id] !== undefined) {
+            return commentsCount[post.id]
+        }
+        
+        // Si no está en caché, cargar el contador real desde Firestore
+        // (esto se ejecuta de forma asíncrona en background)
+        getPostCommentsCount(post.id).then(realCount => {
+            if (realCount !== post.commentsCount) {
+                setCommentsCount(prev => ({ ...prev, [post.id]: realCount }))
+            }
+        }).catch(err => {
+            console.error('Error al cargar contador de comentarios:', err)
+        })
+        
+        // Mientras tanto, devolver el contador del post
+        return post.commentsCount
+    }, [commentsCount])
 
     // Función para manejar comentarios (placeholder)
     const addComment = useCallback(async (postId: string, content: string) => {
@@ -157,6 +223,7 @@ export function useBlogInteractions() {
 
         // Funciones de comentarios
         addComment,
+        getCommentsCount,
 
         // Funciones adicionales
         sharePost

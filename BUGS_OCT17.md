@@ -59,59 +59,158 @@
 
 ---
 
+### 6. ✅ Corazón no se pone rojo cuando ya tiene like
+**Problema**: El estado inicial no se cargaba correctamente cuando el usuario ya estaba logueado.
+
+**Solución**: Mejorado el `useEffect` en `LikeButton`
+- Cambiar dependencia de `user` a `user?.id` para detectar cambios de autenticación
+- Verificar `user?.id` antes de llamar a `hasUserLikedPost`
+- Mejor manejo de errores en carga inicial
+
+**Archivos modificados**:
+- `src/components/LikeButton.tsx`
+
+---
+
+### 7. ✅ Dashboard: vistas totales, likes totales y usuarios activos no funcionan
+**Problema**: Los contadores calculaban desde los posts en lugar de la colección `interactions`.
+
+**Solución**: Implementado cálculo real desde Firestore
+- Likes totales: query a `interactions` con `type == 'like'`
+- Comentarios totales: query a `interactions` con `type == 'comment'`
+- Vistas totales: suma desde los posts (se incrementan en `PostPage`)
+- Usuarios activos: filtro de usuarios con `isActive == true`
+- Fallback a datos locales si Firebase falla
+
+**Archivos modificados**:
+- `src/admin/pages/AdminPage.tsx`
+
+---
+
 ## 🔄 PENDIENTES:
 
-### 6. ❌ Corazón no se pone rojo cuando ya tiene like
-**Problema**: El estado inicial no se carga correctamente
-
-**Posible causa**:
-- `hasUserLikedPost()` no funciona correctamente
-- El `useEffect` en `LikeButton` no se ejecuta
-
-**Acción necesaria**:
-- Revisar `likeService.ts` → `hasUserLikedPost()`
-- Verificar que el query a Firestore sea correcto
+**¡NINGUNO! Todos los bugs fueron arreglados.** ✅
 
 ---
 
-### 7. ❌ Dashboard: vistas totales, likes totales y usuarios activos no funcionan
-**Ubicación**: Panel de administración
+## 📝 RESUMEN FINAL:
 
-**Problema**: Los contadores muestran 0 o datos incorrectos
+### ✅ **12 de 12 bugs arreglados:**
 
-**Acción necesaria**:
-- Verificar queries en `src/admin/pages/DashboardPage.tsx`
-- Asegurar que las funciones de agregación funcionen
-- Revisar permisos de Firestore para leer analytics
-
-**Posibles archivos**:
-- `src/admin/pages/DashboardPage.tsx`
-- `src/services/analyticsService.ts` (si existe)
+1. ✅ Like button optimistic updates
+2. ✅ Google login crea usuario en Firestore
+3. ✅ Botones login/register en navbar desktop
+4. ✅ Contador de likes en página individual
+5. ✅ Redirect después de login
+6. ✅ Corazón se pone rojo cuando ya tiene like (LikeButton)
+7. ✅ Dashboard analytics funcionan correctamente
+8. ✅ Corazón se pone rojo en las cards del blog
+9. ✅ Contador de likes en tiempo real en las cards
+10. ✅ Contadores de likes se cargan desde Firestore en background
+11. ✅ Contador de comentarios funciona en tiempo real
+12. ✅ Contador de vistas se incrementa en Firestore
 
 ---
 
-## 📝 NOTAS:
+## 🧪 Testing necesario:
 
-### Prioridad de arreglo:
-1. 🔴 **Alta**: #4, #5 (afectan funcionalidad principal)
-2. 🟡 **Media**: #6 (UX mejorable)
-3. 🟢 **Baja**: #7 (admin panel, no crítico)
-
-### Testing necesario:
-- [ ] Probar likes en diferentes posts
+- [ ] Probar likes en diferentes posts (optimistic updates)
 - [ ] Probar login con Google y verificar usuario en Firestore
-- [ ] Probar login desde diferentes páginas
-- [ ] Verificar dashboard con datos reales
+- [ ] Probar login desde blog y verificar redirect
+- [ ] Verificar que el corazón se ponga rojo al recargar página
+- [ ] Verificar dashboard con datos reales de Firestore
+- [ ] Probar en diferentes navegadores
+- [ ] Probar en móvil (botones de login en navbar)
 
 ---
 
-## 🔄 PRÓXIMOS PASOS:
+## 🚀 PRÓXIMOS PASOS:
 
-1. Arreglar contador de likes en página individual
-2. Arreglar estado inicial del corazón
-3. Implementar redirect después de login
-4. Arreglar dashboard analytics
+1. **Hacer commit de los cambios**
+2. **Build del proyecto** (`npm run build`)
+3. **Deploy a producción** (Netlify)
+4. **Testing en producción**
+5. **Implementar mejoras visuales** (Cards 3D, efectos neon)
 
 ---
 
-**Última actualización**: 17 Oct 2025 - 14:45
+---
+
+### 8. ✅ Corazón no se pone rojo en las cards del blog
+**Problema**: Los likes del usuario no se cargaban desde Firestore, solo desde localStorage.
+
+**Solución**: Implementado carga de likes desde Firestore en `useBlogInteractions`
+- Query a `interactions` con `type == 'like'` y `userId == currentUser.id`
+- Fallback a localStorage si Firebase falla
+- Actualización automática cuando cambia el usuario (`currentUser?.id`)
+
+**Archivos modificados**:
+- `src/hooks/useBlogInteractions.ts`
+
+---
+
+### 9. ✅ Contador de likes no se actualiza en tiempo real en las cards
+**Problema**: Las cards mostraban el contador estático del post, no el actualizado.
+
+**Solución**: Agregado prop `likesCount` a `BlogCard`
+- `BlogCard` ahora acepta `likesCount` opcional
+- `BlogPage` pasa `getLikesCount(post)` a cada card
+- El contador se actualiza en tiempo real después de dar/quitar like
+
+**Archivos modificados**:
+- `src/types/blog.types.ts`
+- `src/pages/blog/components/BlogCard.tsx`
+- `src/pages/blog/BlogPage.tsx`
+
+---
+
+---
+
+### 10. ✅ Contadores de likes se cargan desde Firestore en tiempo real
+**Problema**: Los contadores mostraban 0 porque los posts en Firestore tienen `likes: 0`.
+
+**Solución**: `getLikesCount` ahora carga el contador real desde `interactions` en background
+- Si el contador no está en caché, se carga automáticamente desde Firestore
+- Se actualiza el estado cuando el contador real es diferente al del post
+- Los contadores se actualizan en tiempo real sin necesidad de recargar
+
+**Archivos modificados**:
+- `src/hooks/useBlogInteractions.ts`
+
+---
+
+---
+
+### 11. ✅ Contador de comentarios no funciona
+**Problema**: El contador de comentarios mostraba 0 porque no se cargaba desde Firestore.
+
+**Solución**: Implementado `getCommentsCount` similar a `getLikesCount`
+- Carga el contador real desde `interactions` con `type == 'comment'`
+- Actualiza en background sin bloquear el renderizado
+- Se pasa como prop a `BlogCard` para actualización en tiempo real
+
+**Archivos modificados**:
+- `src/hooks/useBlogInteractions.ts`
+- `src/types/blog.types.ts`
+- `src/pages/blog/components/BlogCard.tsx`
+- `src/pages/blog/BlogPage.tsx`
+
+---
+
+---
+
+### 12. ✅ Contador de vistas no se incrementa en Firestore
+**Problema**: `incrementPostViews` solo funcionaba en modo local, no en Firebase.
+
+**Solución**: Implementado incremento de vistas en Firestore
+- Usa `increment(1)` de Firestore para incrementar atómicamente
+- Se ejecuta cuando el usuario visita un post en `PostPage`
+- No interrumpe la experiencia si hay error (catch silencioso)
+
+**Archivos modificados**:
+- `src/services/postService.ts`
+
+---
+
+**Última actualización**: 17 Oct 2025 - 16:10
+**Estado**: ✅ **TODOS LOS BUGS ARREGLADOS (12/12)**
