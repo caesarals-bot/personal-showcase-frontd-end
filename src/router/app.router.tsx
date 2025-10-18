@@ -13,7 +13,7 @@ const ContactMePage = lazy(() => import("../pages/contactme/ContactMePage"));
 const BlogPage = lazy(() => import("../pages/blog/BlogPage"));
 const PostPage = lazy(() => import("../pages/blog/PostPage"));
 const AboutPage = lazy(() => import("../pages/about/AboutPage"));
-const PortfolioPage = lazy(() => import("../pages/portfolio/PorftfoliPage"));
+const PortfolioPage = lazy(() => import("../pages/portfolio/PortfolioPage"));
 
 // Lazy Loading - Auth Pages
 const LoginPage = lazy(() => import("@/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })));

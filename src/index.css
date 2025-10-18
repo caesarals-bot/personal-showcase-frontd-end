@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* ===== Utilidades de animación y tipografías (global) ===== */
 
 /* Google Fonts utilidades: Oswald (ya cargada en index.html) */
@@ -44,6 +46,96 @@
 .flip-in-up { animation: flip-in-up 500ms cubic-bezier(.2,.8,.2,1) forwards; backface-visibility: hidden; }
 .flip-out-up { animation: flip-out-up 400ms cubic-bezier(.2,.8,.2,1) forwards; backface-visibility: hidden; }
 
+/* ===== Animaciones para Portfolio Cards 3D ===== */
+
+/* Gradiente rotativo para efecto neon */
+@keyframes gradient-rotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-rotate {
+  background-size: 200% 200%;
+  animation: gradient-rotate 3s ease infinite;
+}
+
+/* Línea de escaneo */
+@keyframes scan-line {
+  0% { 
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% { 
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.scan-line {
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(244, 63, 94, 0.2),
+    transparent
+  );
+  width: 100%;
+  height: 100%;
+  animation: scan-line 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.animate-scan-line {
+  animation: scan-line 2s ease-in-out infinite;
+}
+
+/* Efecto LED pulsante */
+@keyframes led-pulse {
+  0% { opacity: 0.4; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.4; transform: scale(0.95); }
+}
+
+.led-pulse {
+  animation: led-pulse 2s ease-in-out infinite;
+}
+
+/* Delays para LEDs */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Efecto Shine para botones */
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
+
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 45%,
+    rgba(244, 63, 94, 0.3) 50%,
+    transparent 55%
+  );
+  animation: shine 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
 /* ===== Modo monocromático oscuro (activar con <body class="mono-dark">) ===== */
 .mono-dark {
   background-color: #0b0b0b;
@@ -65,3 +157,19 @@
 /* Ajuste de fondo translúcido por si hay headers con blur */
 .mono-dark .bg-background\/30 { background-color: rgba(0,0,0,0.3) !important; }
 .mono-dark .bg-background\/60 { background-color: rgba(0,0,0,0.6) !important; }
+
+/* Utilidades para Portfolio Cards */
+.portfolio-card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.portfolio-card-content {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.portfolio-image-container {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
