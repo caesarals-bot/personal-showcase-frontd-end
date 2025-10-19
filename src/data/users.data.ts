@@ -2,8 +2,8 @@ import type { User, Author } from '@/types/blog.types';
 
 export const mockAdminUser: User = {
     id: 'admin-mock-01',
-    email: 'admin@mock.com',
-    displayName: 'Admin User',
+    email: 'caesarals@gmail.com',
+    displayName: 'César Alvarado',
     role: 'admin',
     isVerified: true,
     createdAt: new Date().toISOString(),

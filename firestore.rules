@@ -16,14 +16,16 @@ service cloud.firestore {
     
     // Regla para la colección de usuarios
     match /users/{userId} {
-      // Cualquier usuario autenticado puede leer su propio documento
-      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Los usuarios pueden leer su propio documento, los admins pueden leer todos
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
       
       // Permitir crear documento solo si el UID coincide con el usuario autenticado
       allow create: if isAuthenticated() && request.auth.uid == userId;
       
-      // Permitir actualizar solo su propio documento
-      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // Los usuarios pueden actualizar su propio documento, los admins pueden actualizar cualquiera
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == userId || isAdmin());
       
       // Solo admins pueden eliminar usuarios
       allow delete: if isAdmin();
