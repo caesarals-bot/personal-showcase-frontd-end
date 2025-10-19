@@ -127,12 +127,12 @@ export default function CategoriesPage() {
 
     const handleCreate = async () => {
         try {
-            await createCategory(
-                formData.name,
-                formData.color,
-                formData.description,
-                formData.icon
-            )
+            await createCategory({
+                name: formData.name,
+                description: formData.description,
+                color: formData.color,
+                icon: formData.icon
+            })
             setIsCreateDialogOpen(false)
             resetForm()
             loadData()

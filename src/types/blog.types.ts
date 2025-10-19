@@ -44,6 +44,8 @@ export interface Category {
     description?: string
     color: string // Para el badge de categoría
     icon?: string // Icono de la categoría
+    createdAt: string
+    updatedAt: string
 }
 
 export interface Tag {
@@ -51,6 +53,8 @@ export interface Tag {
     name: string
     slug: string
     color?: string
+    createdAt: string
+    updatedAt: string
 }
 
 // Sistema de likes y interacción

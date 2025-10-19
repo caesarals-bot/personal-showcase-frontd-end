@@ -10,7 +10,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'react',
     color: '#61DAFB',
     description: 'Todo sobre React y su ecosistema',
-    icon: 'atom'
+    icon: 'atom',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-2',
@@ -18,7 +20,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'typescript',
     color: '#3178C6',
     description: 'Desarrollo con TypeScript',
-    icon: 'code'
+    icon: 'code',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-3',
@@ -26,7 +30,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'nodejs',
     color: '#339933',
     description: 'Backend con Node.js',
-    icon: 'server'
+    icon: 'server',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-4',
@@ -34,7 +40,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'devops',
     color: '#FFA500',
     description: 'Despliegue y operaciones',
-    icon: 'cloud'
+    icon: 'cloud',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-5',
@@ -42,7 +50,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'ui-ux',
     color: '#FF6B6B',
     description: 'Diseño de interfaces',
-    icon: 'palette'
+    icon: 'palette',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-6',
@@ -50,7 +60,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'tutoriales',
     color: '#9C27B0',
     description: 'Guías paso a paso',
-    icon: 'book-open'
+    icon: 'book-open',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-7',
@@ -58,7 +70,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'inteligencia-artificial',
     color: '#FF0080',
     description: 'Machine Learning, Deep Learning, IA',
-    icon: 'brain'
+    icon: 'brain',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-8',
@@ -66,7 +80,9 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'iot',
     color: '#00BCD4',
     description: 'IoT, dispositivos conectados, sensores',
-    icon: 'wifi'
+    icon: 'wifi',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   },
   {
     id: 'cat-9',
@@ -74,6 +90,8 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: 'analisis-de-datos',
     color: '#4CAF50',
     description: 'Data Science, Analytics, Big Data',
-    icon: 'bar-chart'
+    icon: 'bar-chart',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z'
   }
 ];
