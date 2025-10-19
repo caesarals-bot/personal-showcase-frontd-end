@@ -712,7 +712,6 @@ export async function incrementPostViews(id: string): Promise<void> {
       await updateDoc(postRef, {
         views: increment(1)
       });
-      console.log(`✅ Vista incrementada para post: ${id}`);
     } catch (error) {
       console.error('Error al incrementar vistas:', error);
       // No lanzar error para no interrumpir la experiencia del usuario

@@ -49,7 +49,7 @@ function PostRow({ post }: { post: BlogPost }) {
                     )}
                 </div>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>{new Date(post.publishedAt).toLocaleDateString('es-ES')}</span>
+                    <span>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString('es-ES') : 'Sin fecha'}</span>
                     <span className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
                         {post.views}

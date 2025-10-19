@@ -166,7 +166,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
                     {project.images.map((_, index) => (
                       <button
-                        key={index}
+                        key={`${project.id}-img-btn-${index}`}
                         onClick={() => setCurrentImageIndex(index)}
                         className={cn(
                           "h-1.5 rounded-full transition-all duration-300",
@@ -224,7 +224,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                   <div className="flex flex-wrap gap-2">
                     {project.technologies.map((tech, index) => (
                       <Badge
-                        key={index}
+                        key={`${project.id}-tech-${index}-${tech}`}
                         variant="secondary"
                         className="text-xs font-medium transition-all duration-300 hover:scale-110 hover:shadow-lg"
                         style={{

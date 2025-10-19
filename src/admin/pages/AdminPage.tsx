@@ -13,11 +13,13 @@ import DashboardStats from '../components/DashboardStats'
 import RecentPosts from '../components/RecentPosts'
 import CategoriesOverview from '../components/CategoriesOverview'
 import PendingApproval from '../components/PendingApproval'
-import type { DashboardStats as DashboardStatsType } from '@/types/admin.types'
+import ProjectsOverview from '../components/ProjectsOverview'
+import type { DashboardStats as DashboardStatsType, Project } from '@/types/admin.types'
 import type { BlogPost } from '@/types/blog.types'
 import { getPosts } from '@/services/postService'
 import { getCategories } from '@/services/categoryService'
 import { getUsers } from '@/services/userService'
+import { getProjects } from '@/services/projectService'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '@/firebase/config'
 
@@ -34,12 +36,22 @@ const initialStats: DashboardStatsType = {
   recentPosts: [],
   topPosts: [],
   categoriesStats: [],
-  tagsStats: []
+  tagsStats: [],
+  // Métricas de proyectos
+  totalProjects: 0,
+  featuredProjects: 0,
+  completedProjects: 0,
+  inProgressProjects: 0,
+  plannedProjects: 0,
+  totalTechnologies: 0,
+  recentProjects: [],
+  technologiesStats: []
 }
 
 const AdminPage = () => {
   const [stats, setStats] = useState<DashboardStatsType>(initialStats)
   const [recentPosts, setRecentPosts] = useState<BlogPost[]>([])
+  const [recentProjects, setRecentProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -50,10 +62,11 @@ const AdminPage = () => {
     setIsLoading(true)
     try {
       // Cargar datos en paralelo
-      const [posts, categories, users] = await Promise.all([
+      const [posts, categories, users, projects] = await Promise.all([
         getPosts(),
         getCategories(),
-        getUsers()
+        getUsers(),
+        getProjects()
       ])
 
       // Calcular estadísticas básicas
@@ -112,6 +125,40 @@ const AdminPage = () => {
         color: cat.color
       })).filter(stat => stat.postsCount > 0)
 
+      // Calcular métricas de proyectos
+      const completedProjects = projects.filter(p => p.status === 'completed')
+      const inProgressProjects = projects.filter(p => p.status === 'in-progress')
+      const plannedProjects = projects.filter(p => p.status === 'planned')
+      const featuredProjects = projects.filter(p => p.featured)
+
+      // Proyectos recientes (últimos 5)
+      const recentProjectsList = [...projects]
+        .sort((a, b) => {
+          const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0
+          const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0
+          return dateB - dateA
+        })
+        .slice(0, 5)
+        .map(p => ({
+          id: p.id,
+          title: p.title,
+          status: p.status,
+          technologies: p.technologies || [],
+          featured: p.featured,
+          updatedAt: p.updatedAt || new Date().toISOString()
+        }))
+
+      // Estadísticas de tecnologías
+      const allTechnologies = projects.flatMap(p => p.technologies || [])
+      const technologiesCount = new Map<string, number>()
+      allTechnologies.forEach(tech => {
+        technologiesCount.set(tech, (technologiesCount.get(tech) || 0) + 1)
+      })
+      
+      const technologiesStats = Array.from(technologiesCount.entries())
+        .map(([name, projectsCount]) => ({ name, projectsCount }))
+        .sort((a, b) => b.projectsCount - a.projectsCount)
+
       setStats({
         totalPosts: posts.length,
         publishedPosts: publishedPosts.length,
@@ -124,10 +171,20 @@ const AdminPage = () => {
         recentPosts: recent,
         topPosts: [],
         categoriesStats,
-        tagsStats: []
+        tagsStats: [],
+        // Métricas de proyectos
+        totalProjects: projects.length,
+        featuredProjects: featuredProjects.length,
+        completedProjects: completedProjects.length,
+        inProgressProjects: inProgressProjects.length,
+        plannedProjects: plannedProjects.length,
+        totalTechnologies: technologiesCount.size,
+        recentProjects: recentProjectsList,
+        technologiesStats
       })
 
       setRecentPosts(recent)
+      setRecentProjects(projects.slice(0, 5))
     } catch (error) {
       console.error('Error al cargar datos del dashboard:', error)
     } finally {
@@ -152,9 +209,12 @@ const AdminPage = () => {
       <PendingApproval />
 
       {/* Grid de contenido */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Posts recientes */}
         <RecentPosts posts={recentPosts} isLoading={isLoading} />
+
+        {/* Proyectos recientes */}
+        <ProjectsOverview projects={recentProjects} isLoading={isLoading} />
 
         {/* Categorías */}
         <CategoriesOverview stats={stats.categoriesStats} isLoading={isLoading} />

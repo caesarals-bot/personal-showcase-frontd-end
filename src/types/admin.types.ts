@@ -156,6 +156,26 @@ export interface DashboardStats {
     name: string
     postsCount: number
   }>
+  // Métricas de proyectos
+  totalProjects: number
+  featuredProjects: number
+  completedProjects: number
+  inProgressProjects: number
+  plannedProjects: number
+  totalTechnologies: number
+  recentProjects: Array<{
+    id: string
+    title: string
+    status: 'completed' | 'in-progress' | 'planned'
+    technologies: string[]
+    featured: boolean
+    updatedAt: string
+  }>
+  technologiesStats: Array<{
+    name: string
+    projectsCount: number
+    category?: string
+  }>
 }
 
 /**
@@ -312,9 +332,7 @@ export interface CreateProjectData {
 /**
  * Datos para actualizar un proyecto
  */
-export interface UpdateProjectData extends Partial<CreateProjectData> {
-  id: string
-}
+export interface UpdateProjectData extends Partial<CreateProjectData> {}
 
 // ============================================================================
 // TIPOS PARA NAVEGACIÓN DEL ADMIN

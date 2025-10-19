@@ -33,7 +33,6 @@ export async function sendContactEmail(data: ContactFormData): Promise<ContactFo
   // Si EmailJS no está configurado, simular envío
   if (!isEmailJSConfigured) {
     console.warn('⚠️ EmailJS no está configurado. Usando modo simulación.');
-    console.log('📧 Datos del formulario:', data);
     
     return simulateEmailSend(data);
   }
@@ -50,14 +49,12 @@ export async function sendContactEmail(data: ContactFormData): Promise<ContactFo
     };
 
     // Enviar email usando EmailJS
-    const response = await emailjs.send(
+    await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams,
       EMAILJS_PUBLIC_KEY
     );
-
-    console.log('✅ Email enviado exitosamente:', response);
 
     return {
       success: true,

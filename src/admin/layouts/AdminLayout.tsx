@@ -28,7 +28,9 @@ import {
   LogOut,
   Shield,
   Database,
-  Download
+  Download,
+  Upload,
+  Briefcase
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
@@ -80,6 +82,12 @@ const navItems: AdminNavItem[] = [
     path: '/admin/timeline'
   },
   {
+    id: 'projects',
+    label: 'Proyectos',
+    icon: 'Briefcase',
+    path: '/admin/projects'
+  },
+  {
     id: 'firestore',
     label: 'Firestore Setup',
     icon: 'Database',
@@ -90,6 +98,12 @@ const navItems: AdminNavItem[] = [
     label: 'Migrar Datos',
     icon: 'Download',
     path: '/admin/data-migration'
+  },
+  {
+    id: 'projects-migration',
+    label: 'Migrar Proyectos',
+    icon: 'Upload',
+    path: '/admin/projects-migration'
   },
   {
     id: 'settings',
@@ -112,7 +126,9 @@ const iconMap: Record<string, any> = {
   Clock,
   Database,
   Download,
-  Settings
+  Upload,
+  Settings,
+  Briefcase
 }
 
 export default function AdminLayout() {

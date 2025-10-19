@@ -229,7 +229,7 @@ export default function PostDetailPage() {
           >
             <CommentsSection
               postId={post.id}
-              onCommentCountChange={(count) => console.log('Comentarios:', count)}
+              onCommentCountChange={() => {}}
             />
           </motion.div>
 

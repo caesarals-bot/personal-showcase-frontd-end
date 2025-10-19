@@ -157,7 +157,7 @@ export function useBlogInteractions() {
     }, [commentsCount])
 
     // Función para manejar comentarios (placeholder)
-    const addComment = useCallback(async (postId: string, content: string) => {
+    const addComment = useCallback(async (_postId: string, _content: string) => {
         if (!currentUser) {
             alert('Debes iniciar sesión para comentar')
             return
@@ -167,7 +167,6 @@ export function useBlogInteractions() {
             // Simular llamada a API
             await new Promise(resolve => setTimeout(resolve, 1000))
 
-            console.log('Comentario agregado:', { postId, content, author: currentUser.displayName })
         } catch (error) {
             console.error('Error al agregar comentario:', error)
             alert('Error al agregar comentario. Intenta nuevamente.')

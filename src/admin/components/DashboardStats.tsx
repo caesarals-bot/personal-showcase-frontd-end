@@ -9,7 +9,7 @@
  */
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Eye, Heart, Users, TrendingUp, TrendingDown } from 'lucide-react'
+import { FileText, Eye, Heart, Users, TrendingUp, TrendingDown, Briefcase, Star, CheckCircle, Code } from 'lucide-react'
 import type { DashboardStats as DashboardStatsType } from '@/types/admin.types'
 
 interface DashboardStatsProps {
@@ -61,8 +61,8 @@ function StatCard({ title, value, icon, trend, description }: StatCardProps) {
 export default function DashboardStats({ stats, isLoading }: DashboardStatsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <Card key={i}>
             <CardHeader className="space-y-0 pb-2">
               <div className="h-4 w-24 bg-muted animate-pulse rounded" />
@@ -77,29 +77,65 @@ export default function DashboardStats({ stats, isLoading }: DashboardStatsProps
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <StatCard
-        title="Total Posts"
-        value={stats.totalPosts}
-        icon={<FileText className="h-4 w-4" />}
-        description={`${stats.publishedPosts} publicados, ${stats.draftPosts} borradores`}
-      />
-      <StatCard
-        title="Vistas Totales"
-        value={stats.totalViews}
-        icon={<Eye className="h-4 w-4" />}
-      />
-      <StatCard
-        title="Likes Totales"
-        value={stats.totalLikes}
-        icon={<Heart className="h-4 w-4" />}
-      />
-      <StatCard
-        title="Usuarios Activos"
-        value={stats.activeUsers}
-        icon={<Users className="h-4 w-4" />}
-        description={`${stats.totalUsers} usuarios totales`}
-      />
+    <div className="space-y-6">
+      {/* Métricas de Blog */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-muted-foreground">📝 Blog</h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Posts"
+            value={stats.totalPosts}
+            icon={<FileText className="h-4 w-4" />}
+            description={`${stats.publishedPosts} publicados, ${stats.draftPosts} borradores`}
+          />
+          <StatCard
+            title="Vistas Totales"
+            value={stats.totalViews}
+            icon={<Eye className="h-4 w-4" />}
+          />
+          <StatCard
+            title="Likes Totales"
+            value={stats.totalLikes}
+            icon={<Heart className="h-4 w-4" />}
+          />
+          <StatCard
+            title="Usuarios Activos"
+            value={stats.activeUsers}
+            icon={<Users className="h-4 w-4" />}
+            description={`${stats.totalUsers} usuarios totales`}
+          />
+        </div>
+      </div>
+
+      {/* Métricas de Proyectos */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-muted-foreground">💼 Proyectos</h3>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Proyectos"
+            value={stats.totalProjects || 0}
+            icon={<Briefcase className="h-4 w-4" />}
+            description={`${stats.completedProjects || 0} completados, ${stats.inProgressProjects || 0} en progreso`}
+          />
+          <StatCard
+            title="Proyectos Destacados"
+            value={stats.featuredProjects || 0}
+            icon={<Star className="h-4 w-4" />}
+            description={`${stats.plannedProjects || 0} planeados`}
+          />
+          <StatCard
+            title="Completados"
+            value={stats.completedProjects || 0}
+            icon={<CheckCircle className="h-4 w-4" />}
+          />
+          <StatCard
+            title="Tecnologías"
+            value={stats.totalTechnologies || 0}
+            icon={<Code className="h-4 w-4" />}
+            description="Tecnologías diferentes"
+          />
+        </div>
+      </div>
     </div>
   )
 }

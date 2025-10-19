@@ -34,11 +34,8 @@ async function isCollectionEmpty(collectionName: string): Promise<boolean> {
  * Inicializar colección de categorías
  */
 export async function initCategories(): Promise<void> {
-    console.log('📁 Inicializando categorías...')
-
     const isEmpty = await isCollectionEmpty('categories')
     if (!isEmpty) {
-        console.log('⏭️ Las categorías ya existen, saltando...')
         return
     }
 
@@ -58,18 +55,14 @@ export async function initCategories(): Promise<void> {
     })
 
     await batch.commit()
-    console.log(`✅ ${MOCK_CATEGORIES.length} categorías creadas`)
 }
 
 /**
  * Inicializar colección de tags
  */
 export async function initTags(): Promise<void> {
-    console.log('🏷️ Inicializando tags...')
-
     const isEmpty = await isCollectionEmpty('tags')
     if (!isEmpty) {
-        console.log('⏭️ Los tags ya existen, saltando...')
         return
     }
 
@@ -87,18 +80,14 @@ export async function initTags(): Promise<void> {
     })
 
     await batch.commit()
-    console.log(`✅ ${MOCK_TAGS.length} tags creados`)
 }
 
 /**
  * Inicializar colección de posts
  */
 export async function initPosts(): Promise<void> {
-    console.log('📝 Inicializando posts...')
-
     const isEmpty = await isCollectionEmpty('posts')
     if (!isEmpty) {
-        console.log('⏭️ Los posts ya existen, saltando...')
         return
     }
 
@@ -136,23 +125,20 @@ export async function initPosts(): Promise<void> {
     })
 
     await batch.commit()
-    console.log(`✅ ${MOCK_POSTS.length} posts creados`)
 }
 
 /**
  * Inicializar colección de usuarios (estructura base)
  */
 export async function initUsersCollection(): Promise<void> {
-    console.log('👥 Verificando colección de usuarios...')
-
     // Solo verificamos que exista, los usuarios se crean con Auth
     const isEmpty = await isCollectionEmpty('users')
 
     if (isEmpty) {
-        console.log('ℹ️ La colección de usuarios está vacía (se poblará con el registro)')
+        // La colección de usuarios está vacía (se poblará con el registro)
     } else {
-        const snapshot = await getDocs(collection(db, 'users'))
-        console.log(`✅ ${snapshot.size} usuarios encontrados`)
+        await getDocs(collection(db, 'users'))
+        // usuarios encontrados
     }
 }
 
@@ -160,8 +146,6 @@ export async function initUsersCollection(): Promise<void> {
  * Inicializar colección de configuración del sitio
  */
 export async function initSiteSettings(): Promise<void> {
-    console.log('⚙️ Inicializando configuración del sitio...')
-
     const settingsRef = doc(db, 'settings', 'site')
 
     await setDoc(settingsRef, {
@@ -185,16 +169,12 @@ export async function initSiteSettings(): Promise<void> {
         },
         updatedAt: serverTimestamp(),
     }, { merge: true })
-
-    console.log('✅ Configuración del sitio creada')
 }
 
 /**
  * Función principal para inicializar Firestore
  */
 export async function initializeFirestore(): Promise<void> {
-    console.log('🚀 Iniciando configuración de Firestore...\n')
-
     try {
         // Inicializar en orden (respetando dependencias)
         await initCategories()
@@ -202,13 +182,6 @@ export async function initializeFirestore(): Promise<void> {
         await initPosts()
         await initUsersCollection()
         await initSiteSettings()
-
-        console.log('\n✅ Firestore inicializado correctamente!')
-        console.log('📊 Resumen:')
-        console.log(`   - ${MOCK_CATEGORIES.length} categorías`)
-        console.log(`   - ${MOCK_TAGS.length} tags`)
-        console.log(`   - ${MOCK_POSTS.length} posts`)
-        console.log('   - Configuración del sitio')
 
     } catch (error) {
         console.error('❌ Error al inicializar Firestore:', error)
@@ -225,8 +198,6 @@ export async function checkFirestoreStatus(): Promise<{
     posts: number
     users: number
 }> {
-    console.log('🔍 Verificando estado de Firestore...\n')
-
     const categoriesSnapshot = await getDocs(collection(db, 'categories'))
     const tagsSnapshot = await getDocs(collection(db, 'tags'))
     const postsSnapshot = await getDocs(collection(db, 'posts'))
@@ -238,12 +209,6 @@ export async function checkFirestoreStatus(): Promise<{
         posts: postsSnapshot.size,
         users: usersSnapshot.size,
     }
-
-    console.log('📊 Estado actual:')
-    console.log(`   - Categorías: ${status.categories}`)
-    console.log(`   - Tags: ${status.tags}`)
-    console.log(`   - Posts: ${status.posts}`)
-    console.log(`   - Usuarios: ${status.users}`)
 
     return status
 }

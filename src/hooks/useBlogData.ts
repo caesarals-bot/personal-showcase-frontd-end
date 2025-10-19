@@ -48,8 +48,7 @@ export function useBlogData() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                console.time('🔄 Carga total del blog')
-                console.log('🔄 Cargando datos del blog...')
+
                 
                 // Cargar posts (que internamente ya carga categorías y tags)
                 const postsData = await getPosts({ published: true })
@@ -71,12 +70,7 @@ export function useBlogData() {
                 setCategories(Array.from(uniqueCategories.values()))
                 setTags(Array.from(uniqueTags.values()))
                 
-                console.timeEnd('🔄 Carga total del blog')
-                console.log('✅ Datos cargados:', {
-                    posts: postsData.length,
-                    categories: uniqueCategories.size,
-                    tags: uniqueTags.size
-                })
+
                 
                 setLoading('success')
             } catch (err) {
@@ -90,7 +84,6 @@ export function useBlogData() {
         
         // Escuchar evento personalizado para recargar
         const handleReload = () => {
-            console.log('🔄 Recargando posts...')
             fetchData()
         }
         

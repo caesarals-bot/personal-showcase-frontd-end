@@ -222,7 +222,6 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
                       className="text-primary underline hover:no-underline"
                       onClick={() => {
                         // Aquí podrías abrir un modal o navegar a una página de términos
-                        console.log('Abrir términos y condiciones')
                       }}
                     >
                       términos y condiciones
@@ -233,7 +232,6 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
                       className="text-primary underline hover:no-underline"
                       onClick={() => {
                         // Aquí podrías abrir un modal o navegar a una página de privacidad
-                        console.log('Abrir política de privacidad')
                       }}
                     >
                       política de privacidad
