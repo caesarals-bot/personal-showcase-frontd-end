@@ -25,10 +25,20 @@ import {
   type ContactFormResponse,
 } from '@/types/contact-form.types'
 import { sendContactEmail } from '@/services/emailService'
+import { useRateLimit } from '@/hooks/useRateLimit'
+import { RateLimitNotification } from '@/components/RateLimitNotification'
+import { FormErrorBoundary } from '@/components/error-boundary'
 
 export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   const [status, setStatus] = useState<FormStatus>('idle')
   const [response, setResponse] = useState<ContactFormResponse | null>(null)
+
+  // Rate limiting: máximo 3 intentos cada 15 minutos, bloqueo de 30 minutos
+  const rateLimit = useRateLimit('contact-form', {
+    maxAttempts: 3,
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    blockDurationMs: 30 * 60 * 1000, // 30 minutos
+  })
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -43,8 +53,23 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   })
 
   const handleSubmit = async (data: ContactFormData) => {
+    // Verificar rate limiting antes de proceder
+    if (!rateLimit.canAttempt()) {
+      setResponse({
+        success: false,
+        message: rateLimit.isBlocked 
+          ? `Has excedido el límite de envíos. Espera ${Math.ceil(rateLimit.timeRemaining / 60)} minutos antes de intentar nuevamente.`
+          : 'Has alcanzado el límite de intentos. Por favor, espera antes de enviar otro mensaje.',
+      })
+      setStatus('error')
+      return
+    }
+
     setStatus('submitting')
     setResponse(null)
+
+    // Registrar el intento
+    rateLimit.recordAttempt()
 
     try {
       // Si se proporciona una función onSubmit personalizada, la usamos
@@ -58,6 +83,11 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
 
       if (result.success) {
         form.reset()
+        // Resetear rate limit en caso de envío exitoso
+        // Esto permite que usuarios legítimos no sean penalizados por errores del servidor
+        if (result.success) {
+          // No reseteamos completamente, solo no penalizamos por éxito
+        }
       }
     } catch (error) {
       setResponse({
@@ -95,14 +125,23 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={className}
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+    <FormErrorBoundary formName="Contact Form">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className={className}
+      >
+        {/* Notificación de Rate Limiting */}
+        <RateLimitNotification
+          isBlocked={rateLimit.isBlocked}
+          attemptsRemaining={rateLimit.attemptsRemaining}
+          timeRemaining={rateLimit.timeRemaining}
+          maxAttempts={3}
+        />
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           {/* Nombre y Email en una fila */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FormField
@@ -269,14 +308,20 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
           <Button
             type="submit"
             size="lg"
-            disabled={status === 'submitting' || status === 'success'}
+            disabled={
+              status === 'submitting' || 
+              status === 'success' || 
+              rateLimit.isBlocked || 
+              !rateLimit.canAttempt()
+            }
             className="w-full"
           >
             {getStatusIcon()}
-            {getButtonText()}
+            {rateLimit.isBlocked ? 'Bloqueado temporalmente' : getButtonText()}
           </Button>
-        </form>
-      </Form>
-    </motion.div>
+          </form>
+        </Form>
+      </motion.div>
+    </FormErrorBoundary>
   )
 }

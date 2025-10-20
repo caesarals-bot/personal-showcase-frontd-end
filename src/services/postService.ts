@@ -129,6 +129,7 @@ async function getPostsFromFirestore(options?: {
     const snapshot = await getDocs(postsRef);
     
     // Pre-cargar TODAS las categorías y tags en paralelo (UNA SOLA VEZ)
+    console.time('⚡ Pre-carga categorías y tags');
     const [allCategories, allTags] = await Promise.all([
       getCategories(),
       getTags()
@@ -172,6 +173,8 @@ async function getPostsFromFirestore(options?: {
         category,
         tags,
         featuredImage: data.featuredImage,
+        gallery: data.gallery || [],
+        sources: data.sources || [],
         status: data.status || 'draft',
         isPublished: data.isPublished,
         isFeatured: data.isFeatured,
@@ -194,6 +197,8 @@ async function getPostsFromFirestore(options?: {
       data: posts,
       timestamp: Date.now()
     };
+    
+    console.timeEnd('⚡ Carga de posts');
     
     // Filtrar según opciones
     let filtered = posts;
@@ -358,6 +363,8 @@ export async function createPost(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  gallery?: string[];
+  sources?: string[];
   status: PostStatus;
   isPublished: boolean;
   isFeatured: boolean;
@@ -382,11 +389,14 @@ async function createPostInFirestore(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  gallery?: string[];
+  sources?: string[];
   status: PostStatus;
   isPublished: boolean;
   isFeatured: boolean;
 }): Promise<BlogPost> {
   try {
+    
     // Validar que el slug no exista
     const existingPosts = await getPosts();
     const exists = existingPosts.some(post => post.slug === data.slug);
@@ -425,6 +435,8 @@ async function createPostInFirestore(data: {
       publishedAt: serverTimestamp(),
       readingTime: calculateReadingTime(data.content),
       featuredImage: data.featuredImage || '',
+      gallery: data.gallery || [],
+      sources: data.sources || [],
       status: data.status,
       isPublished: data.isPublished,
       isFeatured: data.isFeatured,
@@ -432,6 +444,8 @@ async function createPostInFirestore(data: {
       views: 0,
       commentsCount: 0,
     };
+    
+
     
     const docRef = await addDoc(collection(db, 'posts'), postData);
     
@@ -451,6 +465,8 @@ async function createPostInFirestore(data: {
       category,
       tags,
       featuredImage: data.featuredImage,
+      gallery: data.gallery || [],
+      sources: data.sources || [],
       status: data.status,
       isPublished: data.isPublished,
       isFeatured: data.isFeatured,
@@ -479,6 +495,8 @@ async function createPostLocal(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  gallery?: string[];
+  sources?: string[];
   status: PostStatus;
   isPublished: boolean;
   isFeatured: boolean;
@@ -518,6 +536,8 @@ async function createPostLocal(data: {
     category,
     tags,
     featuredImage: data.featuredImage,
+    gallery: data.gallery || [],
+    sources: data.sources || [],
     status: data.status,
     isPublished: data.isPublished,
     isFeatured: data.isFeatured,
@@ -544,6 +564,8 @@ export async function updatePost(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    gallery: string[];
+    sources: string[];
     status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;
@@ -568,6 +590,8 @@ async function updatePostInFirestore(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    gallery: string[];
+    sources: string[];
     status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;
@@ -589,6 +613,8 @@ async function updatePostInFirestore(
     if (updates.categoryId !== undefined) updateData.categoryId = updates.categoryId;
     if (updates.tagIds !== undefined) updateData.tagIds = updates.tagIds;
     if (updates.featuredImage !== undefined) updateData.featuredImage = updates.featuredImage;
+    if (updates.gallery !== undefined) updateData.gallery = updates.gallery;
+    if (updates.sources !== undefined) updateData.sources = updates.sources;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.isPublished !== undefined) updateData.isPublished = updates.isPublished;
     if (updates.isFeatured !== undefined) updateData.isFeatured = updates.isFeatured;
@@ -625,6 +651,8 @@ async function updatePostLocal(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    gallery: string[];
+    sources: string[];
     status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;

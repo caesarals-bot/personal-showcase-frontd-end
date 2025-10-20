@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LikeButton } from '@/components/LikeButton';
 import { CommentsSection } from '@/components/CommentsSection';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { getPosts, incrementPostViews } from '@/services/postService';
 import type { BlogPost } from '@/types/blog.types';
+import { PostDetailSkeleton } from '@/components/skeletons';
 
 export default function PostPage() {
     const { slug } = useParams<{ slug: string }>();
@@ -56,14 +58,7 @@ export default function PostPage() {
     }, [slug, navigate]);
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-muted-foreground">Cargando post...</p>
-                </div>
-            </div>
-        );
+        return <PostDetailSkeleton />;
     }
 
     if (!post) {
@@ -169,12 +164,12 @@ export default function PostPage() {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="mb-8 rounded-xl overflow-hidden"
+                            className="mb-8 rounded-xl overflow-hidden mx-auto max-w-2xl"
                         >
                             <img
                                 src={post.featuredImage}
                                 alt={post.title}
-                                className="w-full h-auto"
+                                className="w-full h-auto max-h-96 object-cover"
                             />
                         </motion.div>
                     )}
@@ -213,65 +208,10 @@ export default function PostPage() {
                             lineHeight: '1.8',
                         }}
                     >
-                        <div 
-                            className="whitespace-pre-wrap leading-relaxed"
-                            style={{
-                                fontSize: '1.125rem',
-                                color: 'var(--foreground)',
-                            }}
-                        >
-                            {post.content.split('\n').map((line, index) => {
-                                // Títulos H2
-                                if (line.startsWith('## ')) {
-                                    return (
-                                        <h2 key={index} className="text-2xl font-bold mt-8 mb-4">
-                                            {line.replace('## ', '')}
-                                        </h2>
-                                    );
-                                }
-                                // Títulos H3
-                                if (line.startsWith('### ')) {
-                                    return (
-                                        <h3 key={index} className="text-xl font-semibold mt-6 mb-3">
-                                            {line.replace('### ', '')}
-                                        </h3>
-                                    );
-                                }
-                                // Listas numeradas
-                                if (/^\d+\./.test(line)) {
-                                    return (
-                                        <li key={index} className="ml-6 mb-2">
-                                            {line.replace(/^\d+\.\s*/, '')}
-                                        </li>
-                                    );
-                                }
-                                // Listas con viñetas
-                                if (line.startsWith('- ')) {
-                                    return (
-                                        <li key={index} className="ml-6 mb-2">
-                                            {line.replace('- ', '')}
-                                        </li>
-                                    );
-                                }
-                                // Bloques de código
-                                if (line.startsWith('```')) {
-                                    return null; // Manejado por el siguiente bloque
-                                }
-                                // Líneas vacías
-                                if (line.trim() === '') {
-                                    return <br key={index} />;
-                                }
-                                // Texto normal con formato bold
-                                const formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                                return (
-                                    <p 
-                                        key={index} 
-                                        className="mb-4"
-                                        dangerouslySetInnerHTML={{ __html: formattedLine }}
-                                    />
-                                );
-                            })}
-                        </div>
+                        <MarkdownRenderer 
+                            content={post.content}
+                            className="text-lg leading-relaxed"
+                        />
                     </motion.article>
 
                     {/* Botón de Like */}

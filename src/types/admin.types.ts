@@ -281,6 +281,23 @@ export interface UpdateProfileData extends Partial<Omit<Profile, 'id' | 'updated
 // ============================================================================
 
 /**
+ * Colaborador del proyecto
+ */
+export interface ProjectCollaborator {
+  id: string
+  name: string
+  role: string
+  avatar?: string
+  bio?: string
+  specialties?: string[]
+  socialLinks?: {
+    platform: string
+    url: string
+  }[]
+  contribution?: string
+}
+
+/**
  * Proyecto del portfolio
  */
 export interface Project {
@@ -289,7 +306,7 @@ export interface Project {
   slug: string
   description: string
   fullDescription: string
-  coverImage: string
+  coverImage?: string
   images: string[]
   technologies: string[]
   category: string
@@ -300,6 +317,7 @@ export interface Project {
     github?: string
     demo?: string
   }
+  collaborators?: ProjectCollaborator[]
   startDate: string
   endDate?: string
   createdAt: string
@@ -314,7 +332,7 @@ export interface CreateProjectData {
   slug: string
   description: string
   fullDescription: string
-  coverImage: string
+  coverImage?: string
   images?: string[]
   technologies: string[]
   category: string
@@ -325,6 +343,7 @@ export interface CreateProjectData {
     github?: string
     demo?: string
   }
+  collaborators?: ProjectCollaborator[]
   startDate: string
   endDate?: string
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Edit, Trash2, ExternalLink, Github, Eye, Calendar } from 'lucide-react';
+import { OptimizedImage } from '../../components/ui/OptimizedImage';
 import type { Project } from '../../types/admin.types';
 
 interface ProjectsTableProps {
@@ -72,10 +73,14 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({ projects, onEdit, onDelet
                   <div className="flex items-center">
                     {project.images && project.images.length > 0 && (
                       <div className="flex-shrink-0 h-10 w-10">
-                        <img
+                        <OptimizedImage
                           className="h-10 w-10 rounded-lg object-cover"
                           src={project.images[0]}
                           alt={project.title}
+                          preset="thumbnail"
+                          width={40}
+                          height={40}
+                          lazy={false}
                         />
                       </div>
                     )}

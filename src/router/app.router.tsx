@@ -8,12 +8,25 @@ import PagesLayout from "@/pages/layouts/PagesLayout";
 // HomePage - Carga inmediata (primera impresión)
 import HomePage from "../pages/home/HomePage";
 
+// Skeletons específicos
+import {
+  BlogPageSkeleton,
+  PortfolioPageSkeleton,
+  AboutPageSkeleton,
+  ContactPageSkeleton,
+  AuthPageSkeleton,
+  AdminPageSkeleton,
+  PostDetailSkeleton,
+  ProjectDetailSkeleton
+} from "@/components/skeletons";
+
 // Lazy Loading - Páginas secundarias
 const ContactMePage = lazy(() => import("../pages/contactme/ContactMePage"));
 const BlogPage = lazy(() => import("../pages/blog/BlogPage"));
 const PostPage = lazy(() => import("../pages/blog/PostPage"));
 const AboutPage = lazy(() => import("../pages/about/AboutPage"));
 const PortfolioPage = lazy(() => import("../pages/portfolio/PortfolioPage"));
+const ProjectDetailPage = lazy(() => import("../pages/ProjectDetailPage"));
 
 // Lazy Loading - Auth Pages
 const LoginPage = lazy(() => import("@/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })));
@@ -32,19 +45,12 @@ const FirestoreSetupPage = lazy(() => import("@/admin/pages/FirestoreSetupPage")
 const DataMigrationPage = lazy(() => import("@/admin/pages/DataMigrationPage"));
 const MigrationPage = lazy(() => import("@/pages/admin/MigrationPage"));
 
-// Loading fallback component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="text-center space-y-4">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-foreground/20 border-t-foreground mx-auto" />
-      <p className="text-muted-foreground">Cargando...</p>
-    </div>
-  </div>
-);
-
-// Wrapper para Suspense
-const withSuspense = (Component: React.LazyExoticComponent<any>) => (
-  <Suspense fallback={<PageLoader />}>
+// Wrappers para Suspense con skeletons específicos
+const withSuspense = (
+  Component: React.LazyExoticComponent<any>, 
+  SkeletonComponent: React.ComponentType
+) => (
+  <Suspense fallback={<SkeletonComponent />}>
     <Component />
   </Suspense>
 );
@@ -60,26 +66,35 @@ export const appRouter = createBrowserRouter([
             },
             {
                 path: 'contactame',
-                element: withSuspense(ContactMePage),
+                element: withSuspense(ContactMePage, ContactPageSkeleton),
             },      
             {
                 path: 'about',
-                element: withSuspense(AboutPage),
+                element: withSuspense(AboutPage, AboutPageSkeleton),
             },
             {
                 path: 'portfolio',
-                element: withSuspense(PortfolioPage),
+                children: [
+                    {
+                        index: true,
+                        element: withSuspense(PortfolioPage, PortfolioPageSkeleton),
+                    },
+                    {
+                        path: ':slug',
+                        element: withSuspense(ProjectDetailPage, ProjectDetailSkeleton),
+                    }
+                ]
             },
             {
                 path: 'blog',
                 children: [
                     {
                         index: true,
-                        element: withSuspense(BlogPage),
+                        element: withSuspense(BlogPage, BlogPageSkeleton),
                     },
                     {
                         path: ':slug',
-                        element: withSuspense(PostPage),
+                        element: withSuspense(PostPage, PostDetailSkeleton),
                     }
                 ]
             },
@@ -91,11 +106,11 @@ export const appRouter = createBrowserRouter([
         children: [
             {
                 path: 'login',
-                element: withSuspense(LoginPage),
+                element: withSuspense(LoginPage, AuthPageSkeleton),
             },
             {
                 path: 'register',
-                element: withSuspense(RegisterPage),
+                element: withSuspense(RegisterPage, AuthPageSkeleton),
             },
         ]
     },
@@ -106,48 +121,49 @@ export const appRouter = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: withSuspense(AdminPage),
+                element: withSuspense(AdminPage, AdminPageSkeleton),
             },
             {
                 path: 'posts',
-                element: withSuspense(PostsPage),
+                element: withSuspense(PostsPage, AdminPageSkeleton),
             },
             {
                 path: 'categories',
-                element: withSuspense(CategoriesPage),
+                element: withSuspense(CategoriesPage, AdminPageSkeleton),
             },
             {
                 path: 'tags',
-                element: withSuspense(TagsPage),
+                element: withSuspense(TagsPage, AdminPageSkeleton),
             },
             {
                 path: 'users',
-                element: withSuspense(UsersPage),
+                element: withSuspense(UsersPage, AdminPageSkeleton),
             },
             {
                 path: 'profile',
-                element: withSuspense(ProfilePage),
+                element: withSuspense(ProfilePage, AdminPageSkeleton),
             },
             {
                 path: 'timeline',
-                element: withSuspense(TimelinePage),
+                element: withSuspense(TimelinePage, AdminPageSkeleton),
             },
             {
                 path: 'projects',
-                element: withSuspense(ProjectsManagementPage),
+                element: withSuspense(ProjectsManagementPage, AdminPageSkeleton),
             },
             {
                 path: 'firestore',
-                element: withSuspense(FirestoreSetupPage),
+                element: withSuspense(FirestoreSetupPage, AdminPageSkeleton),
             },
             {
                 path: 'data-migration',
-                element: withSuspense(DataMigrationPage),
+                element: withSuspense(DataMigrationPage, AdminPageSkeleton),
             },
             {
                 path: 'projects-migration',
-                element: withSuspense(MigrationPage),
+                element: withSuspense(MigrationPage, AdminPageSkeleton),
             },
+
         ]
     },
     {

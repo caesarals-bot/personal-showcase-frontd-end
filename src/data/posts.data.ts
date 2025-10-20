@@ -150,4 +150,77 @@ Dominar TypeScript avanzado te permite construir aplicaciones más seguras y esc
     views: 0,
     commentsCount: 0,
   },
+  {
+    id: 'post-test-images',
+    title: 'Test Post: Imágenes y Código en Markdown',
+    slug: 'test-post-imagenes-codigo',
+    excerpt: 'Post de prueba para verificar que las imágenes y el código se renderizan correctamente.',
+    content: `Este es un post de prueba para verificar que las imágenes y el código se muestran correctamente.
+
+## Imagen de prueba
+
+Aquí hay una imagen de ejemplo:
+
+![Imagen de prueba](https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=300&fit=crop)
+
+## Código de ejemplo
+
+Aquí hay un bloque de código JavaScript:
+
+\`\`\`javascript
+function saludar(nombre) {
+  console.log(\`Hola, \${nombre}!\`);
+  return \`¡Bienvenido, \${nombre}!\`;
+}
+
+const usuario = "Desarrollador";
+saludar(usuario);
+\`\`\`
+
+## Más imágenes
+
+Otra imagen para probar:
+
+![Segunda imagen](https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=300&fit=crop)
+
+## Código TypeScript
+
+\`\`\`typescript
+interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+}
+
+const crearUsuario = (datos: Partial<Usuario>): Usuario => {
+  return {
+    id: Math.random(),
+    nombre: datos.nombre || "Sin nombre",
+    email: datos.email || "sin-email@ejemplo.com"
+  };
+};
+\`\`\`
+
+## Conclusión
+
+Si puedes ver las imágenes y el código con sintaxis resaltada, ¡el renderizado funciona correctamente!`,
+    author: mockAuthor,
+    publishedAt: new Date().toISOString(),
+    readingTime: 3,
+    category: MOCK_CATEGORIES[0], // React
+    tags: getTagsByIds(['tag-1', 'tag-12']), // JavaScript, Tutorial
+    featuredImage: 'https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=800&h=400&fit=crop',
+    gallery: [
+      'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1517180102446-f3ece451e9d8?w=600&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=300&fit=crop'
+    ],
+    status: 'published',
+    isPublished: true,
+    isFeatured: false,
+    likes: 0,
+    views: 0,
+    commentsCount: 0,
+  },
 ];

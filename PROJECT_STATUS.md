@@ -376,11 +376,13 @@
 - Reglas de seguridad de Firestore aplicadas
 
 ### 📚 **Documentación Disponible**
-- `BUGS_OCT17.md` - Bugs arreglados y soluciones
 - `FIREBASE_SCHEMA.md` - Esquema de base de datos
 - `PORTFOLIO_3D_CARDS.md` - Diseño de cards 3D
 - `EMAILJS_SETUP.md` - Configuración de EmailJS
 - `RATE_LIMITING_GUIDE.md` - Guía de rate limiting
+- `ESTADO_ACTUAL_PROYECTO.md` - Estado actual del proyecto
+- `CONFIGURACION_ENV.md` - Configuración de variables de entorno
+- `TAREAS_PENDIENTES.md` - Tareas planificadas
 - `agent.md` - Instrucciones para el agente
 - `PROJECT_STATUS.md` - Este documento
 

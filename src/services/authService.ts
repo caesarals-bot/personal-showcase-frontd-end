@@ -227,7 +227,7 @@ export const loginWithGoogle = async (): Promise<User> => {
         initialRole
       );
     } catch (firestoreError) {
-      console.warn('⚠️ No se pudo crear/actualizar documento en Firestore. El usuario se autenticó correctamente.', firestoreError);
+      // No se pudo crear/actualizar documento en Firestore. El usuario se autenticó correctamente.
     }
 
     // Retornar usuario sin llamar a getUserRole (evita CORS)

@@ -265,7 +265,7 @@ export const createProject = async (data: CreateProjectData, excludeId?: string)
       newProject.id = docRef.id
       return newProject
     } catch (error) {
-      console.error('Error al crear proyecto en Firestore:', error)
+      // Error al crear proyecto en Firestore
       throw error
     }
   }
@@ -542,7 +542,6 @@ export const migrateProjectsToFirebase = async (): Promise<{ success: number; er
           slug: project.slug,
           description: project.description,
           fullDescription: project.fullDescription,
-          coverImage: project.coverImage,
           images: project.images,
           technologies: project.technologies,
           category: project.category,
@@ -568,7 +567,6 @@ export const migrateProjectsToFirebase = async (): Promise<{ success: number; er
     
   } catch (error) {
     const errorMsg = `Error general en migración: ${error instanceof Error ? error.message : 'Error desconocido'}`
-    console.error(`❌ ${errorMsg}`)
     results.errors.push(errorMsg)
     return results
   }
@@ -699,7 +697,6 @@ export const cleanDuplicateProjects = async (): Promise<{ removed: number; kept:
             results.removed++
           } catch (error) {
             const errorMsg = `Error eliminando proyecto ${duplicate.id}: ${error instanceof Error ? error.message : 'Error desconocido'}`
-            console.error(`❌ ${errorMsg}`)
             results.errors.push(errorMsg)
           }
         }

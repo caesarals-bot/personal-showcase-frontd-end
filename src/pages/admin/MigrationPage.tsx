@@ -47,7 +47,7 @@ const MigrationPage: React.FC = () => {
       const cleanupResult = await cleanDuplicateProjects()
       setCleanupResults(cleanupResult)
     } catch (error) {
-      console.error('Error durante la limpieza:', error)
+      // Error durante la limpieza
       setCleanupResults({
         removed: 0,
         kept: 0,

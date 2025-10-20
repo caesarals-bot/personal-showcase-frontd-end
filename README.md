@@ -444,7 +444,9 @@ Ver `LIKES_COMMENTS_TROUBLESHOOTING.md` para más soluciones.
 - **`LIKES_COMMENTS_TROUBLESHOOTING.md`** - Solución de problemas
 - **`RATE_LIMITING_GUIDE.md`** - Guía de rate limiting
 - **`FAVICON_INSTRUCTIONS.md`** - Cómo cambiar el favicon
-- **`PROGRESO_OCT16_NOCHE.md`** - Estado actual del proyecto
+- **`ESTADO_ACTUAL_PROYECTO.md`** - Estado actual del proyecto
+- **`CONFIGURACION_ENV.md`** - Configuración de variables de entorno
+- **`TAREAS_PENDIENTES.md`** - Tareas planificadas para mañana
 
 ## 🎯 Roadmap
 

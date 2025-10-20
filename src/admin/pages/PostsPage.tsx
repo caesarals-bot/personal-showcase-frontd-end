@@ -46,6 +46,8 @@ import {
     Eye,
     Heart,
     MessageSquare,
+    Link,
+    X,
 } from 'lucide-react';
 import type { BlogPost, Category, Tag, PostStatus } from '@/types/blog.types';
 import {
@@ -60,6 +62,7 @@ import { getTags } from '@/services/tagService';
 import { PostStatusSelector } from '@/components/PostStatusSelector';
 import { getStatusLabel, getStatusColor, getStatusIcon } from '@/utils/postStatus';
 import { useAuth } from '@/hooks/useAuth';
+import ImageSelector from '@/components/ui/ImageSelector';
 
 interface PostFormData {
     title: string;
@@ -69,6 +72,8 @@ interface PostFormData {
     categoryId: string;
     tagIds: string[];
     featuredImage?: string;
+    gallery?: string[];
+    sources?: string[];
     status: PostStatus;
     isPublished: boolean;
     isFeatured: boolean;
@@ -92,6 +97,8 @@ export default function PostsPage() {
         categoryId: '',
         tagIds: [],
         featuredImage: '',
+        gallery: [],
+        sources: [],
         status: 'draft',
         isPublished: false,
         isFeatured: false,
@@ -110,7 +117,8 @@ export default function PostsPage() {
             setPosts(allPosts);
             setCategories(allCategories);
             setTags(allTags);
-        } catch (error) {
+        } catch (error: any) {
+            // Error al cargar datos
             console.error('Error al cargar datos:', error);
         } finally {
             setLoading(false);
@@ -151,6 +159,8 @@ export default function PostsPage() {
             categoryId: '',
             tagIds: [],
             featuredImage: '',
+            gallery: [],
+            sources: [],
             status: 'draft',
             isPublished: false,
             isFeatured: false,
@@ -169,6 +179,8 @@ export default function PostsPage() {
             const fullName = user.displayName || user.email?.split('@')[0] || 'Usuario';
             const firstName = fullName.split(' ')[0]; // Toma solo la primera palabra
 
+
+
             await createPost({
                 ...formData,
                 authorId: user.id,
@@ -179,7 +191,7 @@ export default function PostsPage() {
             resetForm();
             loadData();
         } catch (error: any) {
-            console.error('Error al crear post:', error);
+            // Error al crear post
             alert(`❌ ${error.message || 'Error al crear el post'}`);
         }
     };
@@ -188,6 +200,8 @@ export default function PostsPage() {
         if (!editingPost) return;
 
         try {
+
+
             await updatePost(editingPost.id, formData);
             setEditingPost(null);
             resetForm();
@@ -222,6 +236,8 @@ export default function PostsPage() {
             categoryId: post.category.id,
             tagIds: post.tags.map(t => t.id),
             featuredImage: post.featuredImage,
+            gallery: post.gallery || [],
+            sources: post.sources || [],
             status: post.status,
             isPublished: post.isPublished,
             isFeatured: post.isFeatured,
@@ -428,8 +444,8 @@ export default function PostsPage() {
                         </DialogDescription>
                     </DialogHeader>
                     
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
+                    <div className="space-y-3 py-3 flex flex-col items-center justify-center w-full">
+                        <div className="space-y-1 w-full max-w-md">
                             <Label htmlFor="title">Título *</Label>
                             <Input
                                 id="title"
@@ -439,7 +455,7 @@ export default function PostsPage() {
                             />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 w-full max-w-md">
                             <Label htmlFor="slug">Slug (URL)</Label>
                             <Input
                                 id="slug"
@@ -450,7 +466,7 @@ export default function PostsPage() {
                             />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 w-full max-w-md">
                             <Label htmlFor="excerpt">Extracto *</Label>
                             <Textarea
                                 id="excerpt"
@@ -461,18 +477,18 @@ export default function PostsPage() {
                             />
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 w-full max-w-md">
                             <Label htmlFor="content">Contenido *</Label>
                             <Textarea
                                 id="content"
                                 placeholder="Contenido completo del post..."
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                rows={8}
+                                rows={5}
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-md">
                             <div className="space-y-2">
                                 <Label htmlFor="category">Categoría *</Label>
                                 <Select 
@@ -493,19 +509,22 @@ export default function PostsPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="featuredImage">Imagen destacada (URL)</Label>
-                                <Input
-                                    id="featuredImage"
-                                    placeholder="https://..."
+                                <Label>Imagen destacada</Label>
+                                <ImageSelector
+                                    preset="featured"
+                                    multiple={false}
                                     value={formData.featuredImage}
-                                    onChange={(e) => setFormData({ ...formData, featuredImage: e.target.value })}
+                                    postId={editingPost?.id}
+                                    onChange={(url) => {
+                                        setFormData({ ...formData, featuredImage: url });
+                                    }}
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-1 w-full max-w-md">
                             <Label>Tags (Selección múltiple)</Label>
-                            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md">
+                            <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto p-2 border rounded-md">
                                 {tags.map((tag) => (
                                     <Badge 
                                         key={tag.id}
@@ -533,8 +552,74 @@ export default function PostsPage() {
                             </p>
                         </div>
 
+                        <div className="space-y-1 w-full max-w-md">
+                            <Label>Galería de imágenes (opcional)</Label>
+                            <ImageSelector
+                                preset="gallery"
+                                multiple={true}
+                                maxFiles={4}
+                                value={formData.gallery}
+                                postId={editingPost?.id}
+                                onImagesChange={(images) => {
+                                    setFormData({ ...formData, gallery: images });
+                                }}
+                            />
+                        </div>
+
+                        {/* Fuentes y Referencias */}
+                        <div className="space-y-1 w-full max-w-md">
+                            <Label className="flex items-center gap-2">
+                                <Link className="h-4 w-4" />
+                                Fuentes y Referencias (opcional)
+                            </Label>
+                            <div className="space-y-2">
+                                {formData.sources?.map((source, index) => (
+                                    <div key={index} className="flex gap-2">
+                                        <Input
+                                            value={source}
+                                            onChange={(e) => {
+                                                const newSources = [...(formData.sources || [])];
+                                                newSources[index] = e.target.value;
+                                                setFormData({ ...formData, sources: newSources });
+                                            }}
+                                            placeholder="https://ejemplo.com/fuente o descripción de la referencia"
+                                            className="flex-1"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                const newSources = formData.sources?.filter((_, i) => i !== index) || [];
+                                                setFormData({ ...formData, sources: newSources });
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        const newSources = [...(formData.sources || []), ''];
+                                        setFormData({ ...formData, sources: newSources });
+                                    }}
+                                    className="w-full"
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Agregar fuente
+                                </Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Agrega URLs de fuentes, referencias bibliográficas o cualquier material de apoyo utilizado en el post.
+                            </p>
+                        </div>
+
                         {/* Selector de Estado */}
-                        <PostStatusSelector
+                        <div className="w-full max-w-md">
+                            <PostStatusSelector
                             currentStatus={formData.status}
                             userRole={user?.role || 'guest'}
                             isAuthor={true}
@@ -546,9 +631,10 @@ export default function PostsPage() {
                                 });
                             }}
                         />
+                        </div>
 
                         {/* Destacado */}
-                        <div className="space-y-2">
+                        <div className="space-y-1 w-full max-w-md">
                             <label className="flex items-center gap-2">
                                 <input
                                     type="checkbox"

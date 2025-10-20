@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Upload, X } from 'lucide-react';
-import type { Project, CreateProjectData, UpdateProjectData } from '../../types/admin.types';
+import { X } from 'lucide-react';
+import type { Project, CreateProjectData, UpdateProjectData, ProjectCollaborator } from '../../types/admin.types';
 import { createProject, updateProject, generateProjectSlug } from '../../services/projectService';
 import { getCategories } from '../../services/categoryService';
 import { getTags } from '../../services/tagService';
 import type { Category } from '../../types/blog.types';
 import type { Tag } from '../../types/blog.types';
+import CollaboratorManager from './CollaboratorManager';
+import ImageOptimizer from '../../components/ui/ImageOptimizer';
+import { imageOptimizer } from '../../services/imageOptimizer';
+import type { BatchOptimizeAndUploadResult, OptimizeAndUploadResult } from '../../services/imageOptimizer';
+import type { UploadProgress } from '../../services/imageUploadService';
+import { useAuthContext } from '../../contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -33,12 +39,12 @@ interface ProjectFormProps {
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, onSave }) => {
+  const { user } = useAuthContext();
   const [formData, setFormData] = useState<CreateProjectData>({
     title: '',
     slug: '',
     description: '',
     fullDescription: '',
-    coverImage: '',
     technologies: [],
     images: [],
     links: {
@@ -46,6 +52,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       github: '',
       demo: ''
     },
+    collaborators: [],
     status: 'planned',
     featured: false,
     category: '',
@@ -54,11 +61,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
   });
 
   const [loading, setLoading] = useState(false);
-  const [newImage, setNewImage] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -67,10 +74,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
         slug: project.slug,
         description: project.description,
         fullDescription: project.fullDescription || '',
-        coverImage: project.coverImage || '',
         technologies: project.technologies,
         images: project.images,
         links: project.links,
+        collaborators: project.collaborators || [],
         status: project.status,
         featured: project.featured,
         category: project.category || '',
@@ -83,7 +90,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
         slug: '',
         description: '',
         fullDescription: '',
-        coverImage: '',
         technologies: [],
         images: [],
         links: {
@@ -91,6 +97,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
           github: '',
           demo: ''
         },
+        collaborators: [],
         status: 'planned',
         featured: false,
         category: '',
@@ -163,8 +170,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       errors.push('La fecha de inicio es requerida');
     }
     
-    if (!formData.coverImage.trim()) {
-      errors.push('La imagen de portada es requerida');
+    if (!formData.images || formData.images.length === 0) {
+      errors.push('Al menos una imagen es requerida');
     }
     
     return errors;
@@ -237,20 +244,69 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
     }));
   };
 
-  const addImage = () => {
-    if (newImage.trim() && !formData.images?.includes(newImage.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...(prev.images || []), newImage.trim()]
-      }));
-      setNewImage('');
-    }
-  };
+
 
   const removeImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images?.filter((_, i) => i !== index) || []
+    }));
+  };
+
+  const handleOptimizedImages = async (optimizedFiles: File[]) => {
+    if (!user?.id) {
+      console.error('Usuario no autenticado');
+      return;
+    }
+
+    setUploadingImages(true);
+    try {
+      // Iniciando subida de imágenes optimizadas a Firebase Storage
+      
+      // Usar el servicio de imageOptimizer para optimizar y subir
+      const result: BatchOptimizeAndUploadResult = await imageOptimizer.optimizeAndUploadBatch(
+        optimizedFiles,
+        `projects/${user.id}`, // folder con userId
+        undefined, // options (usa defaults)
+        (_progress: UploadProgress[]) => {
+          // const completed = progress.filter(p => p.status === 'completed').length;
+          // const total = progress.length;
+          // Calculamos el porcentaje pero no lo usamos por ahora
+          // const percentage = total > 0 ? (completed / total) * 100 : 0;
+          // Progreso de subida actualizado
+        }
+      );
+
+      if (result.successCount > 0) {
+        // Agregar las URLs de las imágenes subidas exitosamente
+        const uploadedUrls = result.results
+          .filter((r: OptimizeAndUploadResult) => r.upload && !r.error)
+          .map((r: OptimizeAndUploadResult) => r.upload!.url);
+
+        setFormData(prev => ({
+          ...prev,
+          images: [...(prev.images || []), ...uploadedUrls]
+        }));
+
+        console.log('✅ Imágenes subidas exitosamente:', uploadedUrls);
+      }
+      
+      // Mostrar errores si los hay
+      if (result.errorCount > 0) {
+        const errors = result.results.filter((r: OptimizeAndUploadResult) => r.error);
+        console.warn('⚠️ Algunas imágenes no se pudieron subir:', errors);
+      }
+    } catch (error) {
+      console.error('❌ Error al procesar imágenes optimizadas:', error);
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleCollaboratorsChange = (collaborators: ProjectCollaborator[]) => {
+    setFormData(prev => ({
+      ...prev,
+      collaborators
     }));
   };
 
@@ -323,18 +379,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="coverImage">Imagen de Portada *</Label>
-              <Input
-                type="url"
-                id="coverImage"
-                name="coverImage"
-                required
-                value={formData.coverImage}
-                onChange={handleInputChange}
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
-            </div>
+
           </div>
 
           {/* Description */}
@@ -476,44 +521,60 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
           </div>
 
           {/* Images */}
-          <div className="space-y-2">
-            <Label>Imágenes (URLs)</Label>
-            <div className="flex gap-2">
-              <Input
-                type="url"
-                value={newImage}
-                onChange={(e) => setNewImage(e.target.value)}
-                placeholder="https://ejemplo.com/imagen.jpg"
-                className="flex-1"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addImage())}
-              />
-              <Button
-                type="button"
-                onClick={addImage}
-                size="icon"
-                variant="outline"
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {formData.images?.map((image, index) => (
-                <div key={`image-${index}-${image.substring(0, 20)}`} className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                  <img src={image} alt={`Preview ${index + 1}`} className="w-12 h-12 object-cover rounded" />
-                  <span className="flex-1 text-sm text-muted-foreground truncate">{image}</span>
-                  <Button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    size="icon"
-                    variant="ghost"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div className="space-y-4">
+            <Label>Imágenes del Proyecto</Label>
+            <ImageOptimizer
+              preset="project"
+              maxFiles={6}
+              multiple={true}
+              onImagesOptimized={handleOptimizedImages}
+              onValidationError={(errors) => {
+                console.error('Errores de validación de imágenes:', errors);
+                // Aquí podrías mostrar un toast o notificación
+              }}
+              disabled={uploadingImages}
+            />
+            
+            {uploadingImages && (
+              <div className="flex items-center space-x-2 text-sm text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>Subiendo imágenes a Firebase Storage...</span>
+              </div>
+            )}
+            
+            {/* Mostrar imágenes actuales */}
+            {formData.images && formData.images.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Imágenes actuales:</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={`current-image-${index}`} className="relative group">
+                      <img 
+                        src={image} 
+                        alt={`Imagen ${index + 1}`} 
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
+
+          {/* Collaborators */}
+          <CollaboratorManager
+            collaborators={formData.collaborators || []}
+            onChange={handleCollaboratorsChange}
+          />
 
           {/* Links */}
           <div className="space-y-4">

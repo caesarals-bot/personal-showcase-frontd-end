@@ -149,7 +149,7 @@ export async function getUserById(id: string): Promise<User | null> {
       socialLinks: userData.socialLinks
     };
   } catch (error) {
-    console.error('Error getting user by ID:', error);
+    // Error getting user by ID - returning null
     return null;
   }
 }
@@ -191,7 +191,7 @@ export async function getUserByEmail(email: string): Promise<User | null> {
       socialLinks: userData.socialLinks
     };
   } catch (error) {
-    console.error('Error getting user by email:', error);
+    // Error getting user by email - returning null
     return null;
   }
 }
@@ -233,7 +233,7 @@ export async function getUserByUsername(username: string): Promise<User | null> 
       socialLinks: userData.socialLinks
     };
   } catch (error) {
-    console.error('Error getting user by username:', error);
+    // Error getting user by username - returning null
     return null;
   }
 }
@@ -304,7 +304,7 @@ export async function createUser(data: Omit<User, 'id' | 'createdAt'>): Promise<
 
     return newUser;
   } catch (error) {
-    console.error('Error creating user:', error);
+    // Error creating user - rethrowing
     throw error;
   }
 }
@@ -488,7 +488,7 @@ export async function getUsersStats(): Promise<{
       active: allUsers.filter(u => u.isActive).length,
     };
   } catch (error) {
-    console.error('Error getting users stats:', error);
+    // Error getting users stats - returning default values
     return {
       total: 0,
       admins: 0,

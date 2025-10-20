@@ -9,12 +9,16 @@ import { useEffect, useMemo, useState } from 'react'
 import Logo from '@/shared/components/Logo'
 import { useTheme } from '@/components/theme-provider'
 import SEO from '@/components/SEO'
+import { usePreloadRoutes } from '@/hooks/usePreloadRoutes'
 
 const HomePage = () => {
     // Fases del texto: 0 = Desarrollador web, 1 = Ingeniero informático
     const [phase, setPhase] = useState<0 | 1>(0)
     const [anim, setAnim] = useState<'in' | 'out'>('in')
     const { theme } = useTheme()
+
+    // Precargar rutas importantes para mejorar la experiencia del usuario
+    usePreloadRoutes()
 
     // Determinar color del logo según el tema
     const getLogoColor = () => {
@@ -76,7 +80,7 @@ const HomePage = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    src="/mia (1).png"
+                    src="/mia (1).webp"
                     alt="Foto de Cesar Londoño"
                     className="mx-auto h-64 w-64 rounded-3xl border border-border/40 object-cover shadow-lg sm:h-72 sm:w-72"
                 />

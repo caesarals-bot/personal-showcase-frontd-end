@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
+import { RouteErrorBoundary } from '@/components/error-boundary'
 
 /**
  * Items de navegación del panel de admin
@@ -105,6 +106,7 @@ const navItems: AdminNavItem[] = [
     icon: 'Upload',
     path: '/admin/projects-migration'
   },
+
   {
     id: 'settings',
     label: 'Configuración',
@@ -334,7 +336,9 @@ export default function AdminLayout() {
 
         {/* Área de Contenido */}
         <main className="p-6">
-          <Outlet />
+          <RouteErrorBoundary routeName="Admin Panel">
+            <Outlet />
+          </RouteErrorBoundary>
         </main>
       </div>
     </div>

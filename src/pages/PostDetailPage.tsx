@@ -11,8 +11,10 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LikeButton } from '@/components/LikeButton';
 import { CommentsSection } from '@/components/CommentsSection';
+import { MarkdownRendererOptimized as MarkdownRenderer } from '@/components/MarkdownRenderer.optimized';
 import { getPosts } from '@/services/postService';
 import type { BlogPost } from '@/types/blog.types';
+import { PostDetailSkeleton } from '@/components/skeletons';
 
 export default function PostDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -51,14 +53,7 @@ export default function PostDetailPage() {
   }, [slug, navigate]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando post...</p>
-        </div>
-      </div>
-    );
+    return <PostDetailSkeleton />;
   }
 
   if (!post) {
@@ -160,15 +155,17 @@ export default function PostDetailPage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="mb-8 rounded-xl overflow-hidden"
+              className="mb-8 rounded-xl overflow-hidden mx-auto max-w-2xl"
             >
               <img
                 src={post.featuredImage}
                 alt={post.title}
-                className="w-full h-auto"
+                className="w-full h-auto max-h-96 object-cover"
               />
             </motion.div>
           )}
+
+
 
           {/* Tags */}
           {post.tags.length > 0 && (
@@ -201,7 +198,7 @@ export default function PostDetailPage() {
             transition={{ delay: 0.5 }}
             className="prose prose-lg dark:prose-invert max-w-none mb-12"
           >
-            <div className="whitespace-pre-wrap">{post.content}</div>
+            <MarkdownRenderer content={post.content} />
           </motion.article>
 
           {/* Botón de Like */}

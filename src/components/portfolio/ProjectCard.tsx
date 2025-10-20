@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react"
+import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, ExternalLink, Github } from "lucide-react"
+import { ChevronLeft, ChevronRight, ExternalLink, Github, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { OptimizedImage } from "@/components/ui/OptimizedImage"
 import type { ProjectCardProps } from "@/types/portfolio"
 
 export function ProjectCard({ project, className }: ProjectCardProps) {
@@ -12,6 +14,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
   const [spotlight, setSpotlight] = useState({ x: 50, y: 50 })
   const [isHovered, setIsHovered] = useState(false)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+
   const cardRef = useRef<HTMLDivElement>(null)
 
   // Auto-play del carrusel
@@ -113,10 +116,13 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                   transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                <img
+                <OptimizedImage
                   src={project.images[currentImageIndex]?.url || "/placeholder.svg"}
                   alt={project.images[currentImageIndex]?.alt || project.title}
+                  preset="project"
                   className="w-full h-full object-cover transition-all duration-700 group-hover:brightness-110"
+                  lazy={false}
+                  showSkeleton={true}
                   style={{
                     transform: isHovered
                       ? `scale(1.1) translate(${mousePosition.x * 1.5}px, ${mousePosition.y * 1.5}px)`
@@ -239,35 +245,54 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                 )}
               </div>
 
-              <div className="flex gap-3 mt-6 relative z-10">
-                {project.demoUrl && (
-                  <Button
-                    asChild
-                    className="flex-1 relative overflow-hidden group/btn transition-all duration-300 hover:shadow-lg hover:shadow-primary/50 shine"
-                  >
-                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
-                      <ExternalLink className="h-4 w-4 transition-transform group-hover/btn:scale-110" />
-                      Ver Proyecto
-                    </a>
-                  </Button>
-                )}
-                {project.githubUrl && (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="flex-1 bg-transparent relative overflow-hidden group/btn transition-all duration-300 hover:shadow-lg"
-                  >
-                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
-                      <Github className="h-4 w-4 transition-transform group-hover/btn:rotate-12" />
-                      Código
-                    </a>
-                  </Button>
-                )}
+              <div className="flex flex-col gap-3 mt-6 relative z-10">
+                {/* Botón Leer más */}
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full group/read-more bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/20 hover:to-primary/10 border border-primary/20 hover:border-primary/40 transition-all duration-300"
+                >
+                  <Link to={`/portfolio/${project.slug}`}>
+                    <span className="flex items-center gap-2 text-primary">
+                      Leer más
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover/read-more:translate-x-1" />
+                    </span>
+                  </Link>
+                </Button>
+
+                {/* Botones de enlaces */}
+                <div className="flex gap-3">
+                  {project.demoUrl && (
+                    <Button
+                      asChild
+                      className="flex-1 relative overflow-hidden group/btn transition-all duration-300 hover:shadow-lg hover:shadow-primary/50 shine"
+                    >
+                      <a href={project.demoUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+                        <ExternalLink className="h-4 w-4 transition-transform group-hover/btn:scale-110" />
+                        Ver Proyecto
+                      </a>
+                    </Button>
+                  )}
+                  {project.githubUrl && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="flex-1 bg-transparent relative overflow-hidden group/btn transition-all duration-300 hover:shadow-lg"
+                    >
+                      <a href={project.githubUrl} target="_blank" rel="noopener noreferrer" className="gap-2">
+                        <Github className="h-4 w-4 transition-transform group-hover/btn:rotate-12" />
+                        Código
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
           </div>
         </Card>
+
+
     </div>
   )
 }

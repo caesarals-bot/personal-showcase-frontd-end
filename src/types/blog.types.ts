@@ -16,6 +16,7 @@ export interface BlogPost {
     tags: Tag[]
     featuredImage?: string
     gallery?: string[] // Galería de imágenes adicionales
+    sources?: string[] // Fuentes y referencias del post
     status: PostStatus // Estado del post: draft, review, published, archived
     isPublished: boolean // DEPRECATED: Usar 'status' en su lugar
     isFeatured: boolean

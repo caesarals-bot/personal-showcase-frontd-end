@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom"
 import NavbarShadcn from "./NavbarShadcn"
 import ContactInfo from "@/shared/components/ContactInfo"
 import BackgroundPaths from "@/shared/components/BackgroundPaths"
+import { RouteErrorBoundary } from "@/components/error-boundary"
 
 
 const PagesLayout = () => {
@@ -25,7 +26,9 @@ const PagesLayout = () => {
 
             {/* Contenido principal debajo del header fijo */}
             <main className="relative z-10 pt-16">
-                <Outlet />
+                <RouteErrorBoundary routeName="Public Pages">
+                    <Outlet />
+                </RouteErrorBoundary>
             </main>
         </div>
     )

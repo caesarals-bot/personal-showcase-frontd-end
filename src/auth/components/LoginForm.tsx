@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FormErrorBoundary } from '@/components/error-boundary';
 
 // Esquema de validación
 const loginSchema = z.object({
@@ -92,13 +93,14 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 py-12 px-4 sm:px-6 lg:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
+    <FormErrorBoundary formName="Login Form">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 py-12 px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md"
+        >
         {/* Botón volver al blog */}
         <Button
           variant="ghost"
@@ -252,8 +254,9 @@ export function LoginForm() {
               </p>
             </div>
           </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+          </Card>
+        </motion.div>
+      </div>
+    </FormErrorBoundary>
   );
 }

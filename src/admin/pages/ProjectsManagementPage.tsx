@@ -24,7 +24,7 @@ const ProjectsManagementPage: React.FC = () => {
       const projectsData = await getProjects();
       setProjects(projectsData);
     } catch (error) {
-      console.error('Error loading projects:', error);
+      // Error loading projects
     } finally {
       setLoading(false);
     }
@@ -36,7 +36,7 @@ const ProjectsManagementPage: React.FC = () => {
         await deleteProject(projectId);
         await loadProjects();
       } catch (error) {
-        console.error('Error deleting project:', error);
+        // Error deleting project
       }
     }
   };
@@ -58,7 +58,7 @@ const ProjectsManagementPage: React.FC = () => {
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
+      project.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || project.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
@@ -135,21 +135,19 @@ const ProjectsManagementPage: React.FC = () => {
           <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('table')}
-              className={`p-2 rounded-md ${
-                viewMode === 'table'
+              className={`p-2 rounded-md ${viewMode === 'table'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-900'
-              }`}
+                }`}
             >
               <List className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${
-                viewMode === 'grid'
+              className={`p-2 rounded-md ${viewMode === 'grid'
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-900'
-              }`}
+                }`}
             >
               <Grid className="h-4 w-4" />
             </button>
@@ -223,7 +221,7 @@ const ProjectsManagementPage: React.FC = () => {
       {filteredProjects.length === 0 && (
         <div className="text-center py-12">
           <div className="text-gray-500">
-            {searchTerm || selectedStatus !== 'all' 
+            {searchTerm || selectedStatus !== 'all'
               ? 'No se encontraron proyectos con los filtros aplicados.'
               : 'No hay proyectos creados aún.'
             }

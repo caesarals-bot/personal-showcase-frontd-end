@@ -4,6 +4,7 @@ import { Calendar, Clock, Heart, Eye, MessageCircle, ArrowRight } from 'lucide-r
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { OptimizedImage } from '@/components/ui/OptimizedImage'
 import type { BlogCardProps } from '@/types/blog.types'
 
 export default function BlogCard({
@@ -61,6 +62,27 @@ export default function BlogCard({
         compact: "h-24"
     }
 
+    // Función para obtener la imagen principal del post
+    const getPostImage = () => {
+        // Prioridad: featuredImage > primera imagen de galería > imagen por defecto
+        const imageUrl = post.featuredImage 
+            ? post.featuredImage 
+            : (post.gallery && post.gallery.length > 0) 
+                ? post.gallery[0] 
+                : `https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop`;
+        
+        // Debug: Log para verificar qué imagen se está usando
+        console.log('🖼️ BlogCard Image:', {
+            postId: post.id,
+            title: post.title,
+            featuredImage: post.featuredImage || 'NO TIENE',
+            gallery: post.gallery?.length || 0,
+            computedImage: imageUrl
+        });
+        
+        return imageUrl;
+    };
+
     return (
         <motion.div
             initial={false}
@@ -70,13 +92,19 @@ export default function BlogCard({
             <Card className="h-full overflow-hidden border-border dark:border-border bg-card dark:bg-card backdrop-blur-sm transition-all duration-300 hover:border-primary/30 dark:hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 group">
                 {/* Imagen destacada - Siempre mostrar imagen (con fallback si no hay) */}
                 <div className={`relative overflow-hidden ${imageVariants[variant]}`}>
-                    <img
-                        src={post.featuredImage || `https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop`}
+                    <OptimizedImage
+                        src={getPostImage()}
                         alt={post.title}
+                        preset="blog"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                            // Fallback si la imagen no carga
-                            e.currentTarget.src = `https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop`
+                        lazy={false} // FIX: Deshabilitar lazy loading temporalmente para debug
+                        showSkeleton={true}
+                        quality={0.8} // Optimizar calidad para mejor rendimiento
+                        onError={() => {
+                            console.error('❌ Error cargando imagen:', post.title);
+                        }}
+                        onLoad={() => {
+                            console.log('✅ Imagen cargada:', post.title);
                         }}
                     />
                     {/* Botón de like flotante */}

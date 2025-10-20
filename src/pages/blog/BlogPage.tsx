@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import BlogCard from './components/BlogCard'
 import { useBlogData } from '@/hooks/useBlogData'
 import CollaborationSection from './components/CollaborationSection'
+import { BlogCardSkeleton } from '@/components/skeletons'
 
 const BlogPage = () => {
     const {
@@ -40,7 +41,7 @@ const BlogPage = () => {
     }
 
 
-    if (loading === 'loading') {
+    if (loading === 'loading' || loading === 'idle') {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center space-y-4">
@@ -71,44 +72,45 @@ const BlogPage = () => {
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
                     className="mb-12 text-center"
                 >
                     <div className="mb-4 flex justify-center">
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="rounded-full bg-primary/10 p-4"
-                        >
+                        <div className="rounded-full bg-primary/10 p-4">
                             <BookOpen className="h-8 w-8 text-primary" />
-                        </motion.div>
+                        </div>
                     </div>
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl"
-                    >
+                    <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
                         <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                             Blog
                         </span>
-                    </motion.h1>
+                    </h1>
 
-                    <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl"
-                    >
+                    <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
                         Artículos sobre desarrollo web, tecnología y mejores prácticas.
                         Comparto conocimientos y experiencias del mundo del desarrollo.
-                    </motion.p>
+                    </p>
                 </motion.div>
 
                 {/* Sección de artículos destacados */}
-                {featuredPosts.length > 0 && (
+                {loading !== 'success' ? (
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                        className="mb-12"
+                    >
+                        <div className="mb-6 flex items-center gap-3">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                            <h2 className="text-2xl font-bold tracking-tight">Artículos Destacados</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <BlogCardSkeleton count={3} />
+                        </div>
+                    </motion.section>
+                ) : featuredPosts.length > 0 && (
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -259,7 +261,11 @@ const BlogPage = () => {
                     </div>
 
                     {/* Grid de artículos */}
-                    {posts.length > 0 ? (
+                    {loading !== 'success' ? (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            <BlogCardSkeleton count={6} />
+                        </div>
+                    ) : posts.length > 0 ? (
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                             {posts.map((post, index) => (
                                 <motion.div

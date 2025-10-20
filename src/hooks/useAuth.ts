@@ -55,7 +55,7 @@ export function useAuth(): AuthState & {
                 };
                 localStorage.setItem('mockUser', JSON.stringify(adminUser));
                 setUser(adminUser);
-                console.log('🔧 Usuario administrador configurado automáticamente en modo desarrollo');
+                // Usuario administrador configurado automáticamente en modo desarrollo
             }
             setIsLoading(false);
             return () => {}; // No hay nada que limpiar en modo desarrollo

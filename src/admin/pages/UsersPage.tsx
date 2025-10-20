@@ -105,7 +105,7 @@ export default function UsersPage() {
             setUsers(allUsers);
             setStats(userStats);
         } catch (error) {
-            console.error('Error al cargar usuarios:', error);
+            // Error al cargar usuarios
         } finally {
             setLoading(false);
         }
@@ -150,8 +150,8 @@ export default function UsersPage() {
             resetForm();
             loadData();
         } catch (error: any) {
-            console.error('Error al crear usuario:', error);
-            alert(`❌ ${error.message || 'Error al crear el usuario'}`);
+            // Error al crear usuario
+            alert(`❌ ${error.message || 'Error al crear usuario'}`);
         }
     };
 
@@ -164,7 +164,7 @@ export default function UsersPage() {
             resetForm();
             loadData();
         } catch (error: any) {
-            console.error('Error al actualizar usuario:', error);
+            // Error al actualizar usuario
             alert(`❌ ${error.message || 'Error al actualizar el usuario'}`);
         }
     };
@@ -183,7 +183,7 @@ export default function UsersPage() {
             await deleteUser(user.id);
             loadData();
         } catch (error: any) {
-            console.error('Error al eliminar usuario:', error);
+            // Error al eliminar usuario
             alert(`❌ ${error.message || 'Error al eliminar el usuario'}`);
         }
     };
@@ -193,7 +193,7 @@ export default function UsersPage() {
             await toggleUserActive(user.id);
             loadData();
         } catch (error: any) {
-            console.error('Error al cambiar estado:', error);
+            // Error al cambiar estado
             alert(`❌ ${error.message || 'Error al cambiar el estado'}`);
         }
     };

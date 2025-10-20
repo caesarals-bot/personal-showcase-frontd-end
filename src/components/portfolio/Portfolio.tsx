@@ -3,13 +3,16 @@ import { ProjectCard } from './ProjectCard'
 import type { Project } from '@/types/portfolio'
 import type { Project as AdminProject } from '@/types/admin.types'
 import { getProjects } from '@/services/projectService'
+import { ProjectCardSkeleton } from '@/components/skeletons'
 
 // Función para convertir proyecto de admin a formato portfolio
 const convertAdminProjectToPortfolio = (adminProject: AdminProject): Project => {
   const converted = {
     id: adminProject.id,
+    slug: adminProject.slug,
     title: adminProject.title,
     description: adminProject.description,
+    longDescription: adminProject.fullDescription,
     images: adminProject.images.map((url, index) => ({
       url,
       alt: `${adminProject.title} - Imagen ${index + 1}`,
@@ -19,7 +22,11 @@ const convertAdminProjectToPortfolio = (adminProject: AdminProject): Project => 
     demoUrl: adminProject.links.demo || adminProject.links.live,
     githubUrl: adminProject.links.github,
     featured: adminProject.featured,
-    category: adminProject.category.toLowerCase() as 'web' | 'mobile' | 'desktop' | 'other'
+    category: adminProject.category.toLowerCase() as 'web' | 'mobile' | 'desktop' | 'other',
+    status: adminProject.status,
+    startDate: adminProject.startDate,
+    endDate: adminProject.endDate,
+    collaborators: adminProject.collaborators
   }
   
   return converted
@@ -65,8 +72,13 @@ export function Portfolio() {
         <h2 className="oswald mb-8 text-center text-4xl font-bold tracking-tight">
           Mis Proyectos
         </h2>
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        {/* En desktop: un proyecto por pantalla */}
+        <div className="hidden md:flex flex-col gap-8">
+          <ProjectCardSkeleton count={3} variant="list" />
+        </div>
+        {/* En móvil: cards verticales */}
+        <div className="md:hidden flex flex-col gap-6 px-4">
+          <ProjectCardSkeleton count={3} variant="grid" />
         </div>
       </section>
     )

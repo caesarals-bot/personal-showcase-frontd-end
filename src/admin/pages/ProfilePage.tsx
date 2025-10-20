@@ -133,7 +133,7 @@ export default function ProfilePage() {
             await AboutService.updateAboutData({ sections: updatedSections });
             loadData();
         } catch (error: any) {
-            console.error('Error al eliminar sección:', error);
+            // Error al eliminar sección
             alert(`❌ ${error.message || 'Error al eliminar la sección'}`);
         }
     };
