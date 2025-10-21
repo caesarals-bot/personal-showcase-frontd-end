@@ -163,16 +163,7 @@ export function OptimizedImage({
   const [currentSrc, setCurrentSrc] = useState<string>(lazy ? '' : optimizedSrc)
 
   useEffect(() => {
-    console.log('🔍 OptimizedImage State:', {
-      isInView,
-      currentSrc: currentSrc || 'EMPTY',
-      optimizedSrc: optimizedSrc?.substring(0, 50) + '...',
-      lazy,
-      alt
-    });
-    
     if (isInView && !currentSrc) {
-      console.log('✅ Setting currentSrc:', optimizedSrc);
       setCurrentSrc(optimizedSrc)
     }
   }, [isInView, optimizedSrc, currentSrc, lazy, alt])

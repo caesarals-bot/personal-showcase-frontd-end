@@ -123,25 +123,21 @@ async function getPostsFromFirestore(options?: {
       return filtered;
     }
     
-    console.time('⚡ Carga de posts');
-    
+    // Cargar posts desde Firestore
     const postsRef = collection(db, 'posts');
     const snapshot = await getDocs(postsRef);
     
     // Pre-cargar TODAS las categorías y tags en paralelo (UNA SOLA VEZ)
-    console.time('⚡ Pre-carga categorías y tags');
     const [allCategories, allTags] = await Promise.all([
       getCategories(),
       getTags()
     ]);
-    console.timeEnd('⚡ Pre-carga categorías y tags');
     
     // Crear mapas para lookup rápido O(1)
     const categoryMap = new Map<string, Category>(allCategories.map(cat => [cat.id, cat]));
     const tagMap = new Map<string, Tag>(allTags.map(tag => [tag.id, tag]));
     
     // Procesar todos los posts en paralelo
-    console.time('⚡ Procesamiento de posts');
     const postsPromises = snapshot.docs.map(async (docSnap) => {
       const data = docSnap.data();
       
@@ -185,7 +181,6 @@ async function getPostsFromFirestore(options?: {
     });
     
     const posts = await Promise.all(postsPromises);
-    console.timeEnd('⚡ Procesamiento de posts');
     
     // Ordenar todos los posts antes de guardar en caché
     posts.sort((a, b) => 
@@ -197,8 +192,6 @@ async function getPostsFromFirestore(options?: {
       data: posts,
       timestamp: Date.now()
     };
-    
-    console.timeEnd('⚡ Carga de posts');
     
     // Filtrar según opciones
     let filtered = posts;

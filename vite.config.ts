@@ -6,6 +6,9 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  esbuild: {
+    drop: ['console', 'debugger'], // Eliminar console.log y debugger en producción
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -50,6 +53,8 @@ export default defineConfig({
     // Optimizaciones adicionales
     chunkSizeWarningLimit: 1000,
     sourcemap: false, // Desactivar sourcemaps en producción para reducir tamaño
+    minify: 'esbuild', // Usar esbuild para mejor rendimiento
+    target: 'es2020',
   },
   // Optimizaciones para desarrollo
   optimizeDeps: {

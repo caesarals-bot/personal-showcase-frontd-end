@@ -22,7 +22,6 @@ export const useServiceWorker = () => {
   useEffect(() => {
     // Verificar soporte para Service Workers
     if (!('serviceWorker' in navigator)) {
-      console.log('Service Workers no soportados en este navegador');
       return;
     }
 
@@ -34,8 +33,6 @@ export const useServiceWorker = () => {
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
         });
-
-        console.log('Service Worker registrado exitosamente:', registration);
 
         setState(prev => ({
           ...prev,
@@ -52,7 +49,6 @@ export const useServiceWorker = () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // Nueva versión disponible
                 setState(prev => ({ ...prev, isUpdateAvailable: true }));
-                console.log('Nueva versión de la aplicación disponible');
               }
             });
           }
@@ -60,12 +56,11 @@ export const useServiceWorker = () => {
 
         // Escuchar cambios en el controlador
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-          console.log('Service Worker actualizado, recargando página...');
           window.location.reload();
         });
 
       } catch (error) {
-        console.error('Error registrando Service Worker:', error);
+        // Error silencioso en producción
       }
     };
 

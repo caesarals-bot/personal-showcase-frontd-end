@@ -71,14 +71,7 @@ export default function BlogCard({
                 ? post.gallery[0] 
                 : `https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=400&fit=crop`;
         
-        // Debug: Log para verificar qué imagen se está usando
-        console.log('🖼️ BlogCard Image:', {
-            postId: post.id,
-            title: post.title,
-            featuredImage: post.featuredImage || 'NO TIENE',
-            gallery: post.gallery?.length || 0,
-            computedImage: imageUrl
-        });
+        // Image selection logic completed
         
         return imageUrl;
     };
@@ -101,10 +94,10 @@ export default function BlogCard({
                         showSkeleton={true}
                         quality={0.8} // Optimizar calidad para mejor rendimiento
                         onError={() => {
-                            console.error('❌ Error cargando imagen:', post.title);
+                            // Error handling for image loading
                         }}
                         onLoad={() => {
-                            console.log('✅ Imagen cargada:', post.title);
+                            // Image loaded successfully
                         }}
                     />
                     {/* Botón de like flotante */}
