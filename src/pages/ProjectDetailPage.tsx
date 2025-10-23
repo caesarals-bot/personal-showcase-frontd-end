@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProjectCarousel from '@/components/portfolio/ProjectCarousel'
 import CollaboratorCard from '@/components/portfolio/CollaboratorCard';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { SocialShareButtons } from '@/components/SocialShareButtons';
 import { getProjectBySlug } from '@/services/projectService';
 import type { Project } from '@/types/portfolio';
 import type { Project as AdminProject } from '@/types/admin.types';
@@ -233,6 +234,20 @@ export default function ProjectDetailPage() {
               </Button>
             )}
           </motion.div>
+
+          {/* Botones de Compartir */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-6"
+          >
+            <SocialShareButtons
+              url={window.location.href}
+              title={project.title}
+              description={project.description}
+            />
+          </motion.div>
         </div>
       </div>
 
@@ -247,10 +262,13 @@ export default function ProjectDetailPage() {
               transition={{ delay: 0.4 }}
               className="mb-12"
             >
-              <ProjectCarousel 
-                images={project.images}
-                autoPlay={true}
-              />
+              <div className="flex justify-center">
+                <ProjectCarousel 
+                  images={project.images}
+                  autoPlay={true}
+                  className="h-[300px] md:h-[400px] lg:h-[450px] max-w-2xl w-full"
+                />
+              </div>
             </motion.div>
           )}
 

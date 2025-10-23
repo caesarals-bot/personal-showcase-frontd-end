@@ -3,24 +3,33 @@ import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Github, ArrowRight } from "lucide-react"
+import { ExternalLink, Github, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import ProjectCarousel from "@/components/portfolio/ProjectCarousel"
 import type { ProjectCardProps } from "@/types/portfolio"
 
 export function ProjectCard({ project, className }: ProjectCardProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [spotlight, setSpotlight] = useState({ x: 50, y: 50 })
+  const [spotlight, setSpotlight] = useState({ x: 50, y: 50, intensity: 0 })
   const [isHovered, setIsHovered] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  
+  // Validar que el índice actual sea válido
+  const validImageIndex = Math.min(currentImageIndex, Math.max(0, project.images.length - 1))
+  const currentImage = project.images[validImageIndex]
 
   const cardRef = useRef<HTMLDivElement>(null)
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (!cardRef.current || !isHovered) return;
     
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    
+    // Throttle mouse position updates para reducir re-renderizado
+    const now = Date.now();
+    if (now - ((handleMouseMove as any).lastUpdate || 0) < 16) return; // ~60fps
+    (handleMouseMove as any).lastUpdate = now;
     
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -32,8 +41,16 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
     // Actualizar posición del mouse para efectos internos
     setMousePosition({ x: rotateY, y: rotateX });
     
-    // Spotlight effect más suave
-    setSpotlight({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+    // Spotlight effect más suave con menor intensidad
+    const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    const intensity = Math.max(0, 1 - distance / maxDistance);
+    
+    setSpotlight({ 
+      x: (x / rect.width) * 100, 
+      y: (y / rect.height) * 100,
+      intensity: intensity * 0.15 // Reducida intensidad
+    });
   };
 
   const handleMouseEnter = () => {
@@ -43,7 +60,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
   const handleMouseLeave = () => {
     setIsHovered(false);
     setMousePosition({ x: 0, y: 0 });
-    setSpotlight({ x: 50, y: 50 });
+    setSpotlight({ x: 50, y: 50, intensity: 0 });
   };
 
   return (
@@ -77,51 +94,117 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
           <div className="grid md:grid-cols-2 gap-0">
             {/* Sección de Imágenes - Izquierda */}
             <div className="relative aspect-video md:aspect-square overflow-hidden bg-muted">
-              <div
-                className="relative w-full h-full"
-                style={{
-                  clipPath: isHovered
-                    ? "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
-                    : "polygon(5% 5%, 95% 0%, 100% 100%, 0% 95%)",
-                  transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-                }}
-              >
-                <ProjectCarousel 
-                  images={project.images}
-                  autoPlay={!isHovered}
-                  className="w-full h-full"
-                />
-
-                {/* Scan line effect */}
+              {/* Image Container - Simple structure */}
+              <div className="relative w-full h-full">
                 <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent opacity-0 transition-all duration-1000 pointer-events-none",
-                    isHovered && "opacity-100 animate-scan-line",
+                  className="relative w-full h-full"
+                  style={{
+                    clipPath: isHovered
+                      ? "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
+                      : "polygon(5% 5%, 95% 0%, 100% 100%, 0% 95%)",
+                    transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
+                >
+                  {currentImage && (
+                    <img
+                      src={currentImage.url}
+                      alt={currentImage.alt || `${project.title} - Image ${validImageIndex + 1}`}
+                      className="w-full h-full object-cover transition-all duration-700 ease-out"
+                      style={{
+                        transform: isHovered
+                          ? `scale(1.1) translate(${(mousePosition.x - 0.5) * 20}px, ${(mousePosition.y - 0.5) * 20}px)`
+                          : "scale(1)",
+                      }}
+                    />
                   )}
+                  
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+                </div>
+                
+                {/* Scan Line Effect */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: isHovered
+                      ? "linear-gradient(90deg, transparent 0%, rgba(0, 255, 255, 0.3) 50%, transparent 100%)"
+                      : "transparent",
+                    animation: isHovered ? "scan-line 2s ease-in-out infinite" : "none",
+                    zIndex: 5,
+                  }}
                 />
+                
+                {/* LEDs pulsantes en las esquinas */}
+                {isHovered && (
+                  <div className="absolute inset-0 pointer-events-none z-10">
+                    <div className="absolute top-4 left-4 w-1.5 h-1.5 bg-cyan-400/80 rounded-full animate-pulse" />
+                    <div className="absolute top-4 right-4 w-1.5 h-1.5 bg-pink-400/80 rounded-full animate-pulse" style={{ animationDelay: "0.5s" }} />
+                    <div className="absolute bottom-4 left-4 w-1.5 h-1.5 bg-purple-400/80 rounded-full animate-pulse" style={{ animationDelay: "1s" }} />
+                    <div className="absolute bottom-4 right-4 w-1.5 h-1.5 bg-cyan-400/80 rounded-full animate-pulse" style={{ animationDelay: "1.5s" }} />
+                  </div>
+                )}
+                
+                {/* Navigation Arrows */}
+                {project.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setCurrentImageIndex((prev) => (prev === 0 ? project.images.length - 1 : prev - 1))
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-20"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setCurrentImageIndex((prev) => (prev === project.images.length - 1 ? 0 : prev + 1))
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200 opacity-0 group-hover:opacity-100 z-20"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Image Counter */}
+                {project.images.length > 1 && (
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                    {validImageIndex + 1} / {project.images.length}
+                  </div>
+                )}
+                
+                {/* Dot Indicators */}
+                {project.images.length > 1 && (
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+                    {project.images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setCurrentImageIndex(index)
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          index === validImageIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/75'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-
-              {/* LEDs pulsantes en las esquinas */}
-              {isHovered && (
-                <>
-                  <div className="absolute top-4 left-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse z-30" />
-                  <div className="absolute top-4 right-4 w-2 h-2 bg-pink-400 rounded-full led-pulse delay-100 z-30" />
-                  <div className="absolute bottom-4 left-4 w-2 h-2 bg-purple-400 rounded-full led-pulse delay-200 z-30" />
-                  <div className="absolute bottom-4 right-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse delay-300 z-30" />
-                </>
-              )}
             </div>
 
             {/* Sección de Contenido - Derecha */}
             <div className="flex flex-col justify-between p-6 md:p-8 relative">
-              {/* Spotlight radial que sigue al mouse */}
+              {/* Spotlight radial que sigue al mouse - optimizado */}
               <div
-                className="absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none"
+                className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
                 style={{
-                  background: isHovered
-                    ? `radial-gradient(400px circle at ${spotlight.x}% ${spotlight.y}%, rgba(139, 92, 246, 0.1), transparent 40%)`
+                  background: isHovered && spotlight.intensity > 0
+                    ? `radial-gradient(400px circle at ${spotlight.x}% ${spotlight.y}%, rgba(244, 63, 94, ${spotlight.intensity}), transparent 60%)`
                     : "none",
-                  opacity: isHovered ? 1 : 0,
+                  opacity: isHovered ? spotlight.intensity * 2 : 0,
                 }}
               />
 

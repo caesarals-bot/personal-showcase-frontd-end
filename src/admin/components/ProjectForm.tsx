@@ -603,11 +603,7 @@ const proyecto = 'Mi proyecto';
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {formData.images.map((image, index) => (
                     <div key={`current-image-${index}`} className="relative group">
-                      <img 
-                        src={image} 
-                        alt={`Imagen ${index + 1}`} 
-                        className="w-full h-24 object-cover rounded-lg border"
-                      />
+                      <img src={image} alt={`Imagen ${index + 1}`} className="w-full h-24 object-cover rounded-lg border" />
                       <Button
                         type="button"
                         onClick={() => removeImage(index)}
@@ -620,6 +616,13 @@ const proyecto = 'Mi proyecto';
                     </div>
                   ))}
                 </div>
+                {/* Mostrar URLs para copiar de la galería */}
+                <ImageUrlDisplay
+                  urls={formData.images}
+                  title="URLs de la galería"
+                  description="Copia estas URLs para usarlas en Markdown o como referencias."
+                  className="max-w-md"
+                />
               </div>
             )}
 

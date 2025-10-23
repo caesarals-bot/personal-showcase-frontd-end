@@ -65,6 +65,7 @@ import { PostStatusSelector } from '@/components/PostStatusSelector';
 import { getStatusLabel, getStatusColor, getStatusIcon } from '@/utils/postStatus';
 import { useAuth } from '@/hooks/useAuth';
 import ImageSelector from '@/components/ui/ImageSelector';
+import { MarkdownEditorCompact } from '@/components/ui/MarkdownEditor';
 
 interface PostFormData {
     title: string;
@@ -481,12 +482,10 @@ export default function PostsPage() {
 
                         <div className="space-y-1 w-full max-w-md">
                             <Label htmlFor="content">Contenido *</Label>
-                            <Textarea
-                                id="content"
-                                placeholder="Contenido completo del post..."
+                            <MarkdownEditorCompact
                                 value={formData.content}
-                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                rows={5}
+                                onChange={(content) => setFormData({ ...formData, content })}
+                                placeholder="Escribe el contenido del post en Markdown..."
                             />
                         </div>
 

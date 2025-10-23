@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
-import { Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { Send, CheckCircle, AlertCircle, Loader2, Shield } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +28,8 @@ import { sendContactEmail } from '@/services/emailService'
 import { useRateLimit } from '@/hooks/useRateLimit'
 import { RateLimitNotification } from '@/components/RateLimitNotification'
 import { FormErrorBoundary } from '@/components/error-boundary'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
+import { RecaptchaWrapper } from '@/components/RecaptchaWrapper'
 
 export default function ContactForm({ onSubmit, className }: ContactFormProps) {
   const [status, setStatus] = useState<FormStatus>('idle')
@@ -40,6 +42,14 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
     blockDurationMs: 30 * 60 * 1000, // 30 minutos
   })
 
+  const {
+    recaptchaRef,
+    recaptchaToken,
+    recaptchaError,
+    resetRecaptcha,
+    onRecaptchaChange
+  } = useRecaptcha()
+
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -49,6 +59,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
       message: '',
       company: '',
       acceptTerms: false,
+      recaptcha: '',
     },
   })
 
@@ -60,6 +71,16 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
         message: rateLimit.isBlocked 
           ? `Has excedido el límite de envíos. Espera ${Math.ceil(rateLimit.timeRemaining / 60)} minutos antes de intentar nuevamente.`
           : 'Has alcanzado el límite de intentos. Por favor, espera antes de enviar otro mensaje.',
+      })
+      setStatus('error')
+      return
+    }
+
+    // Validar que reCAPTCHA esté completado
+    if (!recaptchaToken) {
+      setResponse({
+        success: false,
+        message: 'Por favor, completa la verificación reCAPTCHA',
       })
       setStatus('error')
       return
@@ -88,6 +109,8 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
         if (result.success) {
           // No reseteamos completamente, solo no penalizamos por éxito
         }
+      } else {
+        resetRecaptcha() // Resetear reCAPTCHA en caso de error
       }
     } catch (error) {
       setResponse({
@@ -95,6 +118,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
         message: 'Error inesperado. Por favor intenta nuevamente.',
       })
       setStatus('error')
+      resetRecaptcha() // Resetear reCAPTCHA en caso de error
     }
   }
 
@@ -282,6 +306,36 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
             )}
           />
 
+          {/* reCAPTCHA */}
+          <FormField
+            control={form.control}
+            name="recaptcha"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <RecaptchaWrapper
+                    ref={recaptchaRef}
+                    onChange={(token) => {
+                      field.onChange(token)
+                      onRecaptchaChange(token)
+                    }}
+                    onError={() => {
+                      field.onChange('')
+                      onRecaptchaChange('')
+                    }}
+                  />
+                </FormControl>
+                {recaptchaError && (
+                  <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                    <Shield className="h-4 w-4" />
+                    <span>{recaptchaError}</span>
+                  </div>
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Mensaje de respuesta */}
           {response && (
             <motion.div
@@ -312,7 +366,8 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
               status === 'submitting' || 
               status === 'success' || 
               rateLimit.isBlocked || 
-              !rateLimit.canAttempt()
+              !rateLimit.canAttempt() ||
+              !recaptchaToken
             }
             className="w-full"
           >

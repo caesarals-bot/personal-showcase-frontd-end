@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate, useLocation } from 'react-router';
-import { loginUser, loginWithGoogle } from '@/services/authService';
+import { loginUser, loginWithGoogle, isEmailVerified } from '@/services/authService';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Lock, LogIn, Shield } from 'lucide-react';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
@@ -85,6 +85,15 @@ export function LoginForm() {
       }
 
       await loginUser(data.email, data.password);
+      
+      // Verificar si el email está verificado
+      const emailVerified = await isEmailVerified();
+      if (!emailVerified) {
+        setError('Tu email no está verificado. Por favor, revisa tu bandeja de entrada y verifica tu email antes de continuar.');
+        setIsLoading(false);
+        return;
+      }
+      
       setLoginSuccess(true);
       // Redirigir a la página de origen o al home
       navigate(from, { replace: true });
@@ -109,6 +118,15 @@ export function LoginForm() {
       }
 
       await loginWithGoogle();
+      
+      // Verificar si el email está verificado (Google suele verificar automáticamente)
+      const emailVerified = await isEmailVerified();
+      if (!emailVerified) {
+        setError('Tu email no está verificado. Por favor, revisa tu bandeja de entrada y verifica tu email antes de continuar.');
+        setIsLoading(false);
+        return;
+      }
+      
       setLoginSuccess(true);
       // Redirigir a la página de origen o al home
       navigate(from, { replace: true });

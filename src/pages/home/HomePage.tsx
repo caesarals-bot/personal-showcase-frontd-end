@@ -5,34 +5,53 @@
 // - Animación: efecto flip 3D (ver utilidades en src/index.css)
 
 import { motion } from 'framer-motion'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Logo from '@/shared/components/Logo'
 import { useTheme } from '@/components/theme-provider'
 import SEO from '@/components/SEO'
 import { usePreloadRoutes } from '@/hooks/usePreloadRoutes'
+import { getHomeHeroImage, getHomeTextSettings } from '@/services/siteSettingsService'
 
 const HomePage = () => {
-    // Fases del texto: 0 = Desarrollador web, 1 = Ingeniero informático
+    // Control de texto dinámico
     const [phase, setPhase] = useState<0 | 1>(0)
     const [anim, setAnim] = useState<'in' | 'out'>('in')
     const { theme } = useTheme()
+    const [heroImage, setHeroImage] = useState<string>('/mia (1).webp')
+
+    // Textos y lema desde settings
+    const [dynamicEnabled, setDynamicEnabled] = useState<boolean>(true)
+    const [titles, setTitles] = useState<string[]>(['Desarrollador web', 'Ingeniero informático'])
+    const [staticTitle, setStaticTitle] = useState<string>('Ingeniero informático y desarrollador web')
+    const [tagline, setTagline] = useState<string>('Creando experiencias digitales memorables que fusionan diseño y tecnología para resolver problemas complejos.')
 
     // Precargar rutas importantes para mejorar la experiencia del usuario
     usePreloadRoutes()
 
-    // Determinar color del logo según el tema
-    const getLogoColor = () => {
-        if (theme === 'dark') return '#ffffff'
-        if (theme === 'light') return '#000000'
-        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
-        return isDarkMode ? '#ffffff' : '#000000'
-    }
-
-    // Textos a alternar (bucle infinito)
-    const texts = useMemo(() => [
-        'Desarrollador web',
-        'Ingeniero informático',
-    ], [])
+    // Intentar cargar imagen y textos de Home desde settings (Firebase)
+    useEffect(() => {
+        const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true'
+        if (!USE_FIREBASE) return
+        ;(async () => {
+            try {
+                const url = await getHomeHeroImage()
+                if (url) setHeroImage(url)
+            } catch (e) {
+                console.warn('No se pudo cargar imagen de Home desde settings:', e)
+            }
+            try {
+                const textSettings = await getHomeTextSettings()
+                if (textSettings) {
+                    setDynamicEnabled(textSettings.dynamicEnabled)
+                    setTitles(textSettings.titles?.length ? textSettings.titles : ['Desarrollador web', 'Ingeniero informático'])
+                    setStaticTitle(textSettings.staticTitle || 'Ingeniero informático y desarrollador web')
+                    setTagline(textSettings.tagline || 'Creando experiencias digitales memorables que fusionan diseño y tecnología para resolver problemas complejos.')
+                }
+            } catch (e) {
+                console.warn('No se pudieron cargar los textos del Home desde settings:', e)
+            }
+        })()
+    }, [])
 
     // Control de animación: mostrar, salir y alternar
     useEffect(() => {
@@ -51,6 +70,8 @@ const HomePage = () => {
 
         return () => window.clearTimeout(t)
     }, [anim])
+
+    const getLogoColor = () => (theme === 'dark' ? 'light' : 'dark')
 
     return (
         <>
@@ -80,13 +101,13 @@ const HomePage = () => {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.8, delay: 0.4 }}
-                    src="/mia (1).webp"
+                    src={heroImage}
                     alt="Foto de Cesar Londoño"
                     className="mx-auto h-64 w-64 rounded-3xl border border-border/40 object-cover shadow-lg sm:h-72 sm:w-72"
                 />
             </div>
 
-            {/* Texto dinámico con fuente Oswald 500 y efecto flip 3D + corchetes */}
+            {/* Texto dinámico o estático */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -97,14 +118,20 @@ const HomePage = () => {
                     {/* Corchete izquierdo */}
                     <span className="oswald oswald-500 text-2xl text-foreground/70">[</span>
 
-                    {/* Palabra animada */}
-                    <p
-                        className={`oswald oswald-600 text-2xl will-change-transform inline-block ${
-                            anim === 'in' ? 'flip-in-up' : 'flip-out-up'
-                        }`}
-                    >
-                        {texts[phase]}
-                    </p>
+                    {/* Palabra animada o título estático */}
+                    {dynamicEnabled && titles.length > 1 ? (
+                        <p
+                            className={`oswald oswald-600 text-2xl will-change-transform inline-block ${
+                                anim === 'in' ? 'flip-in-up' : 'flip-out-up'
+                            }`}
+                        >
+                            {titles[phase]}
+                        </p>
+                    ) : (
+                        <p className="oswald oswald-600 text-2xl inline-block">
+                            {titles[0] || staticTitle}
+                        </p>
+                    )}
 
                     {/* Corchete derecho */}
                     <span className="oswald oswald-500 text-2xl text-foreground/70">]</span>
@@ -118,7 +145,7 @@ const HomePage = () => {
                 transition={{ duration: 0.6, delay: 1.2 }}
                 className="mt-2 max-w-xl text-sm text-foreground/70"
             >
-                Creando experiencias digitales memorables que fusionan diseño y tecnología para resolver problemas complejos.
+                {tagline}
             </motion.p>
 
             {/* Acento visual opcional bajo el texto */}

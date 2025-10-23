@@ -65,4 +65,5 @@ export interface ProjectCarouselProps {
   className?: string
   showThumbnails?: boolean
   autoPlay?: boolean
+  isPaused?: boolean
 }

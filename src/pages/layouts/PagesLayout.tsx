@@ -5,9 +5,13 @@ import NavbarShadcn from "./NavbarShadcn"
 import ContactInfo from "@/shared/components/ContactInfo"
 import BackgroundPaths from "@/shared/components/BackgroundPaths"
 import { RouteErrorBoundary } from "@/components/error-boundary"
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner"
+import { useEmailVerification } from "@/hooks/useEmailVerification"
 
 
 const PagesLayout = () => {
+    const { showBanner, dismissBanner, userEmail } = useEmailVerification();
+    
     return (
         <div className="min-h-screen relative">
             {/* Fondo animado global */}
@@ -15,6 +19,13 @@ const PagesLayout = () => {
             
             {/* Header fijo construido con shadcn/ui */}
             <NavbarShadcn />
+            
+            {/* Banner de verificación de email */}
+            <EmailVerificationBanner 
+                isVisible={showBanner}
+                onDismiss={dismissBanner}
+                userEmail={userEmail}
+            />
             
             {/* Información de contacto flotante */}
             <ContactInfo 

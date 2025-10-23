@@ -30,7 +30,8 @@ import {
   Database,
   Download,
   Upload,
-  Briefcase
+  Briefcase,
+  Image
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
@@ -72,9 +73,15 @@ const navItems: AdminNavItem[] = [
   },
   {
     id: 'profile',
-    label: 'Perfil (About)',
+    label: 'About',
     icon: 'UserCircle',
     path: '/admin/profile'
+  },
+  {
+    id: 'profile-edit',
+    label: 'Editar Perfil',
+    icon: 'UserCircle',
+    path: '/admin/profile-edit'
   },
   {
     id: 'timeline',
@@ -95,23 +102,10 @@ const navItems: AdminNavItem[] = [
     path: '/admin/firestore'
   },
   {
-    id: 'data-migration',
-    label: 'Migrar Datos',
-    icon: 'Download',
-    path: '/admin/data-migration'
-  },
-  {
-    id: 'projects-migration',
-    label: 'Migrar Proyectos',
-    icon: 'Upload',
-    path: '/admin/projects-migration'
-  },
-
-  {
-    id: 'settings',
-    label: 'Configuración',
-    icon: 'Settings',
-    path: '/admin/settings'
+    id: 'home-settings',
+    label: 'Home',
+    icon: 'Image',
+    path: '/admin/home-settings'
   }
 ]
 
@@ -130,7 +124,8 @@ const iconMap: Record<string, any> = {
   Download,
   Upload,
   Settings,
-  Briefcase
+  Briefcase,
+  Image
 }
 
 export default function AdminLayout() {
@@ -144,7 +139,7 @@ export default function AdminLayout() {
     if (!isLoading) {
       // Si no está autenticado, redirigir al login
       if (!user) {
-        navigate('/login', { replace: true })
+        navigate('/auth/login', { replace: true })
         return
       }
       
@@ -329,6 +324,17 @@ export default function AdminLayout() {
                 <Link to="/">
                   Ver Sitio
                 </Link>
+              </Button>
+              
+              {/* Botón de logout */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleLogout}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Salir
               </Button>
             </div>
           </div>

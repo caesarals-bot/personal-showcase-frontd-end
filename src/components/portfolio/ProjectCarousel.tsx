@@ -8,13 +8,19 @@ import type { ProjectCarouselProps } from '@/types/portfolio'
 
 export default function ProjectCarousel({ 
   images, 
+  className, 
   showThumbnails = false, 
-  autoPlay = false,
-  className 
+  autoPlay = true,
+  isPaused = false
 }: ProjectCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(autoPlay)
+  const [isPlaying, setIsPlaying] = useState(autoPlay && !isPaused)
+
+  // Update isPlaying when isPaused changes
+  useEffect(() => {
+    setIsPlaying(autoPlay && !isPaused)
+  }, [autoPlay, isPaused])
 
   // Auto-play functionality
   useEffect(() => {
@@ -60,10 +66,14 @@ export default function ProjectCarousel({
     )
   }
 
-  const CarouselContent = ({ isFullscreenMode = false }: { isFullscreenMode?: boolean }) => (
+  const CarouselContent = ({ isFullscreenMode = false }: { isFullscreenMode?: boolean }) => {
+    // Check if className contains h-[ to avoid using aspect-video
+    const hasCustomHeight = className?.includes('h-[')
+    
+    return (
     <div className={cn(
       "relative group",
-      isFullscreenMode ? "w-full h-full" : "aspect-video",
+      isFullscreenMode ? "w-full h-full" : hasCustomHeight ? "w-full" : "aspect-video",
       className
     )}>
       {/* Main image */}
@@ -168,7 +178,8 @@ export default function ProjectCarousel({
         </div>
       )}
     </div>
-  )
+    )
+  }
 
   return (
     <>

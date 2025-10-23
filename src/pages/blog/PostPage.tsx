@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LikeButton } from '@/components/LikeButton';
 import { CommentsSection } from '@/components/CommentsSection';
+import { SocialShareButtons } from '@/components/SocialShareButtons';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { getPosts, incrementPostViews } from '@/services/postService';
 import type { BlogPost } from '@/types/blog.types';
@@ -213,6 +214,20 @@ export default function PostPage() {
                             className="text-lg leading-relaxed"
                         />
                     </motion.article>
+
+                    {/* Botones de Compartir */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.55 }}
+                        className="flex justify-center mb-8"
+                    >
+                        <SocialShareButtons
+                            url={window.location.href}
+                            title={post.title}
+                            description={post.excerpt}
+                        />
+                    </motion.div>
 
                     {/* Botón de Like */}
                     <motion.div

@@ -5,6 +5,9 @@ export interface AboutSection {
     image: string
     imageAlt: string
     imagePosition: 'left' | 'right'
+    // Nuevos campos para soporte de múltiples imágenes
+    images?: string[]  // URLs de imágenes adicionales
+    gallery?: string[] // Galería de imágenes (alias para images)
 }
 
 export interface AboutData {
@@ -17,6 +20,9 @@ export interface ContactInfo {
     phone?: string
     whatsapp?: string
     location?: string
+    website?: string
+    // Información de contacto adicional dinámica
+    additional?: Array<{ name: string; url: string; icon?: string }>
 }
 
 // Redes sociales
@@ -26,6 +32,10 @@ export interface SocialLinks {
     twitter?: string
     instagram?: string
     website?: string
+    youtube?: string
+    facebook?: string
+    discord?: string
+    telegram?: string
     // Redes sociales adicionales dinámicas
     additional?: Array<{ name: string; url: string; icon?: string }>
 }

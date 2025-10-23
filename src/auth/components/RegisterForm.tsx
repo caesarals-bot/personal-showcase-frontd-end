@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Link, useNavigate } from 'react-router';
 import { registerUser, loginWithGoogle } from '@/services/authService';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, User, UserPlus, Shield } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, UserPlus, Shield, CheckCircle } from 'lucide-react';
 import { useRecaptcha } from '@/hooks/useRecaptcha';
 import { RecaptchaWrapper } from '@/components/RecaptchaWrapper';
 
@@ -37,6 +37,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
   const navigate = useNavigate();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<RegisterFormValues>({
@@ -91,10 +93,12 @@ export function RegisterForm() {
 
       // Registrar usuario con token de reCAPTCHA
       await registerUser(data.email, data.password, data.name);
-      setRegisterSuccess(true); // Activar prevención de back
-      setTimeout(() => {
-        navigate('/blog', { replace: true });
-      }, 100);
+      
+      // Mostrar mensaje de verificación de email en lugar de redirigir
+      setUserEmail(data.email);
+      setShowVerificationMessage(true);
+      setError(null);
+      
     } catch (err) {
       setError('Error al registrar usuario. Intenta con otro correo electrónico.');
       resetRecaptcha(); // Resetear reCAPTCHA en caso de error
@@ -369,6 +373,52 @@ export function RegisterForm() {
             </div>
           </CardContent>
           </Card>
+
+          {/* Banner flotante de verificación de email */}
+          {showVerificationMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -100 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
+              className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md mx-4"
+            >
+              <Card className="border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800 shadow-2xl">
+                <CardContent className="p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-1">
+                        ¡Registro exitoso, {userEmail?.split('@')[0]}!
+                      </h3>
+                      <p className="text-xs text-green-700 dark:text-green-300 mb-3">
+                        Hemos enviado un email de verificación a <strong>{userEmail}</strong>. 
+                        Revisa tu bandeja de entrada para activar tu cuenta.
+                      </p>
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => navigate('/auth/login')}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1"
+                        >
+                          Ir al Login
+                        </Button>
+                        <Button
+                          onClick={() => setShowVerificationMessage(false)}
+                          variant="outline"
+                          size="sm"
+                          className="text-xs px-3 py-1"
+                        >
+                          Cerrar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </FormErrorBoundary>

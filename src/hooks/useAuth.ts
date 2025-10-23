@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { User, AuthState } from '../types/blog.types'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase/config'
-import { loginUser, logoutUser, registerUser, loginWithGoogle } from '../services/authService'
+import { loginUser, logoutUser, registerUser, loginWithGoogle, resendEmailVerification, isEmailVerified, reloadUserInfo } from '../services/authService'
 // import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS en desarrollo
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
@@ -14,6 +14,9 @@ export function useAuth(): AuthState & {
     loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     register: (userData: { email: string, name: string, password: string }) => Promise<void>
+    resendVerificationEmail: () => Promise<void>
+    checkEmailVerified: () => boolean
+    reloadUser: () => Promise<void>
 } {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -146,6 +149,46 @@ export function useAuth(): AuthState & {
         }
     }
 
+    const resendVerificationEmail = async () => {
+        try {
+            setError(null)
+            await resendEmailVerification()
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al reenviar email de verificación')
+            throw err
+        }
+    }
+
+    const checkEmailVerified = () => {
+        return isEmailVerified()
+    }
+
+    const reloadUser = async () => {
+        try {
+            await reloadUserInfo()
+            // Actualizar el estado del usuario después de recargar
+            if (auth.currentUser) {
+                const { shouldBeAdmin } = await import('../services/roleService');
+                const role = shouldBeAdmin(auth.currentUser.email || '') ? 'admin' : 'user';
+                
+                const userData: User = {
+                    id: auth.currentUser.uid,
+                    displayName: auth.currentUser.displayName || 'Usuario',
+                    email: auth.currentUser.email || '',
+                    avatar: auth.currentUser.photoURL || undefined,
+                    isVerified: auth.currentUser.emailVerified,
+                    isActive: true,
+                    role,
+                    createdAt: auth.currentUser.metadata.creationTime || new Date().toISOString()
+                }
+                setUser(userData)
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al recargar información del usuario')
+            throw err
+        }
+    }
+
     return {
         user,
         isAuthenticated: !!user,
@@ -154,6 +197,9 @@ export function useAuth(): AuthState & {
         login,
         loginWithGoogle: loginGoogle,
         logout,
-        register
+        register,
+        resendVerificationEmail,
+        checkEmailVerified,
+        reloadUser
     }
 }

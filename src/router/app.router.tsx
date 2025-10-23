@@ -7,17 +7,18 @@ import PagesLayout from "@/pages/layouts/PagesLayout";
 
 // HomePage - Carga inmediata (primera impresión)
 import HomePage from "../pages/home/HomePage";
+const HomeSettingsPage = lazy(() => import("@/admin/pages/HomeSettingsPage"));
 
 // Skeletons específicos
 import {
-  BlogPageSkeleton,
-  PortfolioPageSkeleton,
-  AboutPageSkeleton,
-  ContactPageSkeleton,
-  AuthPageSkeleton,
-  AdminPageSkeleton,
-  PostDetailSkeleton,
-  ProjectDetailSkeleton
+    BlogPageSkeleton,
+    PortfolioPageSkeleton,
+    AboutPageSkeleton,
+    ContactPageSkeleton,
+    AuthPageSkeleton,
+    AdminPageSkeleton,
+    PostDetailSkeleton,
+    ProjectDetailSkeleton
 } from "@/components/skeletons";
 
 // Lazy Loading - Páginas secundarias
@@ -39,20 +40,19 @@ const CategoriesPage = lazy(() => import("@/admin/pages/CategoriesPage"));
 const TagsPage = lazy(() => import("@/admin/pages/TagsPage"));
 const UsersPage = lazy(() => import("@/admin/pages/UsersPage"));
 const ProfilePage = lazy(() => import("@/admin/pages/ProfilePage"));
+const ProfileEditPage = lazy(() => import("@/admin/pages/ProfileEditPage"));
 const TimelinePage = lazy(() => import("@/admin/pages/TimelinePage"));
 const ProjectsManagementPage = lazy(() => import("@/admin/pages/ProjectsManagementPage"));
 const FirestoreSetupPage = lazy(() => import("@/admin/pages/FirestoreSetupPage"));
-const DataMigrationPage = lazy(() => import("@/admin/pages/DataMigrationPage"));
-const MigrationPage = lazy(() => import("@/pages/admin/MigrationPage"));
 
 // Wrappers para Suspense con skeletons específicos
 const withSuspense = (
-  Component: React.LazyExoticComponent<any>, 
-  SkeletonComponent: React.ComponentType
+    Component: React.LazyExoticComponent<any>,
+    SkeletonComponent: React.ComponentType
 ) => (
-  <Suspense fallback={<SkeletonComponent />}>
-    <Component />
-  </Suspense>
+    <Suspense fallback={<SkeletonComponent />}>
+        <Component />
+    </Suspense>
 );
 
 export const appRouter = createBrowserRouter([
@@ -67,7 +67,7 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'contactame',
                 element: withSuspense(ContactMePage, ContactPageSkeleton),
-            },      
+            },
             {
                 path: 'about',
                 element: withSuspense(AboutPage, AboutPageSkeleton),
@@ -100,7 +100,7 @@ export const appRouter = createBrowserRouter([
             },
         ]
     },
-    
+
     {
         path: '/auth',
         children: [
@@ -114,7 +114,7 @@ export const appRouter = createBrowserRouter([
             },
         ]
     },
-    
+
     {
         path: '/admin',
         element: <AdminLayout />,
@@ -144,6 +144,10 @@ export const appRouter = createBrowserRouter([
                 element: withSuspense(ProfilePage, AdminPageSkeleton),
             },
             {
+                path: 'profile-edit',
+                element: withSuspense(ProfileEditPage, AdminPageSkeleton),
+            },
+            {
                 path: 'timeline',
                 element: withSuspense(TimelinePage, AdminPageSkeleton),
             },
@@ -156,12 +160,8 @@ export const appRouter = createBrowserRouter([
                 element: withSuspense(FirestoreSetupPage, AdminPageSkeleton),
             },
             {
-                path: 'data-migration',
-                element: withSuspense(DataMigrationPage, AdminPageSkeleton),
-            },
-            {
-                path: 'projects-migration',
-                element: withSuspense(MigrationPage, AdminPageSkeleton),
+                path: 'home-settings',
+                element: withSuspense(HomeSettingsPage, AdminPageSkeleton),
             },
 
         ]

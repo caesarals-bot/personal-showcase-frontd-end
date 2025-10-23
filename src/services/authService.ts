@@ -6,6 +6,7 @@ import {
   signOut,
   updateProfile,
   sendPasswordResetEmail,
+  sendEmailVerification,
   type User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -72,6 +73,18 @@ export const registerUser = async (email: string, password: string, name: string
     await updateProfile(userCredential.user, {
       displayName: name
     });
+
+    // Enviar email de verificación
+    try {
+      await sendEmailVerification(userCredential.user, {
+        url: `${window.location.origin}/auth/login?verified=true`,
+        handleCodeInApp: false
+      });
+      console.log('✅ Email de verificación enviado exitosamente');
+    } catch (verificationError) {
+      console.warn('⚠️ Error al enviar email de verificación:', verificationError);
+      // No lanzar error - el usuario se registró exitosamente
+    }
 
     // Determinar rol inicial
     const initialRole = shouldBeAdmin(email) ? 'admin' : 'user';
@@ -202,6 +215,49 @@ export const resetPassword = async (email: string): Promise<void> => {
 // Obtener usuario actual
 export const getCurrentUser = (): FirebaseUser | null => {
   return auth.currentUser;
+};
+
+// Reenviar email de verificación
+export const resendEmailVerification = async (): Promise<void> => {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      throw new Error('No hay usuario autenticado');
+    }
+
+    if (user.emailVerified) {
+      throw new Error('El email ya está verificado');
+    }
+
+    await sendEmailVerification(user, {
+      url: `${window.location.origin}/auth/login?verified=true`,
+      handleCodeInApp: false
+    });
+
+    console.log('✅ Email de verificación reenviado exitosamente');
+  } catch (error) {
+    console.error('Error al reenviar email de verificación:', error);
+    throw error;
+  }
+};
+
+// Verificar si el email del usuario actual está verificado
+export const isEmailVerified = (): boolean => {
+  const user = getCurrentUser();
+  return user?.emailVerified || false;
+};
+
+// Recargar información del usuario (útil después de verificar email)
+export const reloadUserInfo = async (): Promise<void> => {
+  try {
+    const user = getCurrentUser();
+    if (user) {
+      await user.reload();
+    }
+  } catch (error) {
+    console.error('Error al recargar información del usuario:', error);
+    throw error;
+  }
 };
 
 // Login con Google

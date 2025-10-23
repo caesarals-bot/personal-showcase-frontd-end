@@ -32,6 +32,10 @@ export const contactFormSchema = z.object({
         .refine(val => val === true, {
             message: 'Debes aceptar los términos y condiciones para continuar'
         }),
+
+    recaptcha: z
+        .string()
+        .min(1, 'Por favor, completa la verificación reCAPTCHA'),
 })
 
 // Tipo inferido del schema

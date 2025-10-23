@@ -197,18 +197,77 @@ export async function checkFirestoreStatus(): Promise<{
     tags: number
     posts: number
     users: number
+    portfolio: number
 }> {
-    const categoriesSnapshot = await getDocs(collection(db, 'categories'))
-    const tagsSnapshot = await getDocs(collection(db, 'tags'))
-    const postsSnapshot = await getDocs(collection(db, 'posts'))
-    const usersSnapshot = await getDocs(collection(db, 'users'))
+    try {
+        // Estas colecciones son públicas y no requieren autenticación
+        const categoriesSnapshot = await getDocs(collection(db, 'categories'))
+        const tagsSnapshot = await getDocs(collection(db, 'tags'))
+        const postsSnapshot = await getDocs(collection(db, 'posts'))
+        const portfolioSnapshot = await getDocs(collection(db, 'portfolio'))
+        
+        // Para la colección de usuarios, manejamos el error de permisos
+        let usersCount = 0
+        try {
+            const usersSnapshot = await getDocs(collection(db, 'users'))
+            usersCount = usersSnapshot.size
+        } catch (error) {
+            // Si no tenemos permisos para leer usuarios, devolvemos 0
+            console.warn('No se pueden leer usuarios sin autenticación:', error)
+            usersCount = 0
+        }
 
-    const status = {
-        categories: categoriesSnapshot.size,
-        tags: tagsSnapshot.size,
-        posts: postsSnapshot.size,
-        users: usersSnapshot.size,
+        const status = {
+            categories: categoriesSnapshot.size,
+            tags: tagsSnapshot.size,
+            posts: postsSnapshot.size,
+            users: usersCount,
+            portfolio: portfolioSnapshot.size,
+        }
+
+        return status
+    } catch (error) {
+        console.error('Error al verificar estado de Firestore:', error)
+        throw error
     }
+}
 
-    return status
+/**
+ * Eliminar todos los posts
+ */
+export async function deleteAllPosts(): Promise<void> {
+    try {
+        const postsSnapshot = await getDocs(collection(db, 'posts'))
+        const batch = writeBatch(db)
+
+        postsSnapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref)
+        })
+
+        await batch.commit()
+        console.log('✅ Todos los posts han sido eliminados')
+    } catch (error) {
+        console.error('❌ Error al eliminar posts:', error)
+        throw error
+    }
+}
+
+/**
+ * Eliminar todos los portfolios
+ */
+export async function deleteAllPortfolios(): Promise<void> {
+    try {
+        const portfolioSnapshot = await getDocs(collection(db, 'portfolio'))
+        const batch = writeBatch(db)
+
+        portfolioSnapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref)
+        })
+
+        await batch.commit()
+        console.log('✅ Todos los portfolios han sido eliminados')
+    } catch (error) {
+        console.error('❌ Error al eliminar portfolios:', error)
+        throw error
+    }
 }

@@ -23,10 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Información personal sensible
-src/data/
-!src/data/*.example.ts
-!src/data/index.ts
+# # Información personal sensible
+# src/data/
+# !src/data/*.example.ts
+# !src/data/index.ts
 
 # Configuraciones de Firebase (cuando se implemente)
 .env
