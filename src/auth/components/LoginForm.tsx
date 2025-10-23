@@ -5,7 +5,9 @@ import { z } from 'zod';
 import { Link, useNavigate, useLocation } from 'react-router';
 import { loginUser, loginWithGoogle } from '@/services/authService';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Mail, Lock, LogIn } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, LogIn, Shield } from 'lucide-react';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { RecaptchaWrapper } from '@/components/RecaptchaWrapper';
 
 // Componentes UI
 import { Button } from '@/components/ui/button';
@@ -19,7 +21,8 @@ import { FormErrorBoundary } from '@/components/error-boundary';
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  rememberMe: z.boolean().optional()
+  rememberMe: z.boolean().optional(),
+  recaptcha: z.string().min(1, 'Por favor, completa la verificación reCAPTCHA')
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -33,14 +36,23 @@ export function LoginForm() {
   // Obtener la URL de origen (de donde vino el usuario)
   const from = (location.state as any)?.from?.pathname || '/';
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false
+      rememberMe: false,
+      recaptcha: ''
     }
   });
+
+  const {
+    recaptchaRef,
+    recaptchaToken,
+    recaptchaError,
+    resetRecaptcha,
+    onRecaptchaChange
+  } = useRecaptcha();
 
   const [loginSuccess, setLoginSuccess] = useState(false);
 
@@ -65,12 +77,20 @@ export function LoginForm() {
     setError(null);
 
     try {
+      // Validar que reCAPTCHA esté completado
+      if (!recaptchaToken) {
+        setError('Por favor, completa la verificación reCAPTCHA');
+        setIsLoading(false);
+        return;
+      }
+
       await loginUser(data.email, data.password);
       setLoginSuccess(true);
       // Redirigir a la página de origen o al home
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      resetRecaptcha(); // Resetear reCAPTCHA en caso de error
     } finally {
       setIsLoading(false);
     }
@@ -81,12 +101,20 @@ export function LoginForm() {
     setError(null);
 
     try {
+      // Validar que reCAPTCHA esté completado
+      if (!recaptchaToken) {
+        setError('Por favor, completa la verificación reCAPTCHA antes de continuar');
+        setIsLoading(false);
+        return;
+      }
+
       await loginWithGoogle();
       setLoginSuccess(true);
       // Redirigir a la página de origen o al home
       navigate(from, { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google');
+      resetRecaptcha(); // Resetear reCAPTCHA en caso de error
     } finally {
       setIsLoading(false);
     }
@@ -189,7 +217,37 @@ export function LoginForm() {
                 </Label>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              {/* reCAPTCHA */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <Shield className="h-4 w-4" />
+                  Verificación de seguridad
+                </Label>
+                <RecaptchaWrapper
+                  ref={recaptchaRef}
+                  onChange={(token) => {
+                    onRecaptchaChange(token);
+                    setValue('recaptcha', token || '');
+                  }}
+                  onError={() => {
+                    setError('Error al cargar reCAPTCHA. Recarga la página e inténtalo de nuevo.');
+                  }}
+                  onExpired={() => {
+                    setError('La verificación reCAPTCHA ha expirado. Por favor, complétala de nuevo.');
+                    setValue('recaptcha', '');
+                  }}
+                  theme="light"
+                  size="normal"
+                  className="mt-2"
+                />
+                {(errors.recaptcha || recaptchaError) && (
+                  <p className="text-destructive text-xs mt-1">
+                    {errors.recaptcha?.message || recaptchaError}
+                  </p>
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading || !recaptchaToken}>
                 {isLoading ? (
                   <>
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent mr-2" />
