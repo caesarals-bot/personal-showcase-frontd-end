@@ -21,8 +21,14 @@ import { FormErrorBoundary } from '@/components/error-boundary';
 const registerSchema = z.object({
   name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   email: z.string().email('Correo electrónico inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
+  confirmPassword: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe contener al menos una letra mayúscula')
+    .regex(/[0-9]/, 'La contraseña debe contener al menos un número'),
   terms: z.boolean().refine(val => val === true, {
     message: 'Debes aceptar los términos y condiciones'
   }),

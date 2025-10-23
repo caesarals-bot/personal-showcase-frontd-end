@@ -7,6 +7,9 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   type User as FirebaseUser
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -309,5 +312,58 @@ export const loginWithGoogle = async (): Promise<User> => {
     }
     
     throw new Error('Error al iniciar sesión con Google');
+  }
+};
+
+// Reautenticar usuario con contraseña actual
+export const reauthenticateUser = async (currentPassword: string): Promise<void> => {
+  try {
+    const user = getCurrentUser();
+    if (!user || !user.email) {
+      throw new Error('No hay usuario autenticado');
+    }
+
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+  } catch (error: any) {
+    console.error('Error al reautenticar usuario:', error);
+    
+    if (error.code === 'auth/wrong-password') {
+      throw new Error('La contraseña actual es incorrecta');
+    }
+    if (error.code === 'auth/too-many-requests') {
+      throw new Error('Demasiados intentos fallidos. Intenta más tarde.');
+    }
+    
+    throw new Error('Error al verificar la contraseña actual');
+  }
+};
+
+// Cambiar contraseña del usuario autenticado
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      throw new Error('No hay usuario autenticado');
+    }
+
+    // Primero reautenticar al usuario
+    await reauthenticateUser(currentPassword);
+
+    // Luego cambiar la contraseña
+    await updatePassword(user, newPassword);
+    
+    console.log('✅ Contraseña actualizada exitosamente');
+  } catch (error: any) {
+    console.error('Error al cambiar contraseña:', error);
+    
+    if (error.code === 'auth/weak-password') {
+      throw new Error('La nueva contraseña es muy débil');
+    }
+    if (error.code === 'auth/requires-recent-login') {
+      throw new Error('Por seguridad, necesitas iniciar sesión nuevamente antes de cambiar tu contraseña');
+    }
+    
+    throw error;
   }
 };

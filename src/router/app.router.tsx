@@ -32,6 +32,8 @@ const ProjectDetailPage = lazy(() => import("../pages/ProjectDetailPage"));
 // Lazy Loading - Auth Pages
 const LoginPage = lazy(() => import("@/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import("@/auth/pages/RegisterPage").then(m => ({ default: m.RegisterPage })));
+const ResetPasswordPage = lazy(() => import("@/auth/pages/ResetPasswordPage").then(m => ({ default: m.ResetPasswordPage })));
+const ChangePasswordPage = lazy(() => import("@/auth/pages/ChangePasswordPage").then(m => ({ default: m.ChangePasswordPage })));
 
 // Lazy Loading - Admin Pages (prioridad alta)
 const AdminPage = lazy(() => import("@/admin/pages/AdminPage"));
@@ -112,6 +114,10 @@ export const appRouter = createBrowserRouter([
                 path: 'register',
                 element: withSuspense(RegisterPage, AuthPageSkeleton),
             },
+            {
+                path: 'reset-password',
+                element: withSuspense(ResetPasswordPage, AuthPageSkeleton),
+            },
         ]
     },
 
@@ -162,6 +168,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'home-settings',
                 element: withSuspense(HomeSettingsPage, AdminPageSkeleton),
+            },
+            {
+                path: 'change-password',
+                element: withSuspense(ChangePasswordPage, AuthPageSkeleton),
             },
 
         ]

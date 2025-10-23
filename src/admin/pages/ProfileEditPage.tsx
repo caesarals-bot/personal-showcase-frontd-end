@@ -30,8 +30,11 @@ import {
   X,
   CheckCircle,
   AlertCircle,
-  Camera
+  Camera,
+  Lock,
+  Shield
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { Profile } from '@/types/about.types';
 import { getProfile, updateProfile } from '@/services/aboutService';
 import ImageOptimizer from '@/components/ui/ImageOptimizer';
@@ -72,6 +75,7 @@ interface FormData {
 
 export default function ProfileEditPage() {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -643,6 +647,40 @@ export default function ProfileEditPage() {
               <Plus className="h-4 w-4 mr-2" />
               Agregar Más Información de Contacto
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Seguridad */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Seguridad
+            </CardTitle>
+            <CardDescription>
+              Gestiona la seguridad de tu cuenta
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <h4 className="font-medium">Contraseña</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Actualiza tu contraseña para mayor seguridad
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/admin/change-password')}
+                className="flex items-center gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                Cambiar Contraseña
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
