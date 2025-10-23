@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { MarkdownEditorCompact } from '@/components/ui/MarkdownEditor';
+import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
 import {
   Select,
   SelectContent,
@@ -121,7 +123,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       const categoriesData = await getCategories();
       setCategories(categoriesData);
     } catch (error) {
-      console.error('Error loading categories:', error);
+      // Error loading categories
     } finally {
       setLoadingCategories(false);
     }
@@ -133,7 +135,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       const tagsData = await getTags();
       setTags(tagsData);
     } catch (error) {
-      console.error('Error loading tags:', error);
+      // Error loading tags
     } finally {
       setLoadingTags(false);
     }
@@ -287,8 +289,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
           ...prev,
           images: [...(prev.images || []), ...uploadedUrls]
         }));
-
-        console.log('✅ Imágenes subidas exitosamente:', uploadedUrls);
       }
       
       // Mostrar errores si los hay
@@ -398,14 +398,29 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
 
           {/* Full Description */}
           <div className="space-y-2">
-            <Label htmlFor="fullDescription">Descripción Detallada</Label>
-            <Textarea
-              id="fullDescription"
-              name="fullDescription"
-              rows={5}
+            <Label htmlFor="fullDescription">
+              Descripción Detallada
+              <span className="text-xs text-muted-foreground ml-2">(Soporta Markdown)</span>
+            </Label>
+            <MarkdownEditorCompact
               value={formData.fullDescription}
-              onChange={handleInputChange}
-              placeholder="Descripción completa del proyecto, tecnologías utilizadas, características principales..."
+              onChange={(value) => setFormData(prev => ({ ...prev, fullDescription: value }))}
+              placeholder="Descripción completa del proyecto, tecnologías utilizadas, características principales...
+
+**Ejemplo de formato:**
+## Características principales
+- Característica 1
+- Característica 2
+
+## Tecnologías utilizadas
+- React
+- TypeScript
+- Tailwind CSS
+
+```javascript
+// Ejemplo de código
+const proyecto = 'Mi proyecto';
+```"
             />
           </div>
 
@@ -520,9 +535,48 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
             </div>
           </div>
 
-          {/* Images */}
+          {/* Cover Image */}
           <div className="space-y-4">
-            <Label>Imágenes del Proyecto</Label>
+            <Label>Imagen Principal</Label>
+            <div className="space-y-2">
+              <Input
+                type="url"
+                placeholder="URL de la imagen principal del proyecto"
+                value={formData.coverImage || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, coverImage: e.target.value }))}
+              />
+              {formData.coverImage && (
+                <div className="space-y-2">
+                  <div className="relative group max-w-xs">
+                    <img 
+                      src={formData.coverImage} 
+                      alt="Imagen principal" 
+                      className="w-full h-32 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, coverImage: '' }))}
+                      size="icon"
+                      variant="destructive"
+                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <ImageUrlDisplay
+                    urls={[formData.coverImage]}
+                    title="URL de imagen principal"
+                    description="Copia esta URL para usar como imagen principal del proyecto"
+                    className="max-w-xs"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Images Gallery */}
+          <div className="space-y-4">
+            <Label>Galería de Imágenes</Label>
             <ImageOptimizer
               preset="project"
               maxFiles={6}
@@ -567,6 +621,16 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* URLs de imágenes para copiar */}
+            {formData.images && formData.images.length > 0 && (
+              <ImageUrlDisplay
+                urls={formData.images}
+                title="URLs de imágenes del proyecto"
+                description="Copia estas URLs para usar en la descripción del proyecto o en otros lugares"
+                className="mt-4"
+              />
             )}
           </div>
 

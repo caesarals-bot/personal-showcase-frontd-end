@@ -1,32 +1,19 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef } from "react"
 import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronLeft, ChevronRight, ExternalLink, Github, ArrowRight } from "lucide-react"
+import { ExternalLink, Github, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { OptimizedImage } from "@/components/ui/OptimizedImage"
+import ProjectCarousel from "@/components/portfolio/ProjectCarousel"
 import type { ProjectCardProps } from "@/types/portfolio"
 
 export function ProjectCard({ project, className }: ProjectCardProps) {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [spotlight, setSpotlight] = useState({ x: 50, y: 50 })
   const [isHovered, setIsHovered] = useState(false)
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
 
   const cardRef = useRef<HTMLDivElement>(null)
-
-  // Auto-play del carrusel
-  useEffect(() => {
-    if (!isAutoPlaying || project.images.length <= 1) return
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % project.images.length)
-    }, 3000) // Cambiar imagen cada 3 segundos
-
-    return () => clearInterval(interval)
-  }, [isAutoPlaying, project.images.length])
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return;
@@ -51,30 +38,13 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
 
   const handleMouseEnter = () => {
     setIsHovered(true);
-    setIsAutoPlaying(false); // Pausar auto-play en hover
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
     setMousePosition({ x: 0, y: 0 });
     setSpotlight({ x: 50, y: 50 });
-    // Reanudar auto-play después de salir del hover
-    setTimeout(() => setIsAutoPlaying(true), 1000);
   };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % project.images.length)
-    // Pausar auto-play temporalmente cuando el usuario navega manualmente
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 5000) // Reanudar después de 5 segundos
-  }
-
-  const previousImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + project.images.length) % project.images.length)
-    // Pausar auto-play temporalmente cuando el usuario navega manualmente
-    setIsAutoPlaying(false)
-    setTimeout(() => setIsAutoPlaying(true), 5000) // Reanudar después de 5 segundos
-  }
 
   return (
     <div
@@ -89,7 +59,7 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
           : "perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)",
       }}
     >
-      <Card className={cn("relative overflow-hidden transition-all duration-300 hover:shadow-2xl", className)}>
+      <Card className={cn("group relative overflow-hidden transition-all duration-300 hover:shadow-2xl", className)}>
          {/* Neon border effect - contenido dentro de la tarjeta */}
          {isHovered && (
            <div 
@@ -116,24 +86,16 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                   transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                 }}
               >
-                <OptimizedImage
-                  src={project.images[currentImageIndex]?.url || "/placeholder.svg"}
-                  alt={project.images[currentImageIndex]?.alt || project.title}
-                  preset="project"
-                  className="w-full h-full object-cover transition-all duration-700 group-hover:brightness-110"
-                  lazy={false}
-                  showSkeleton={true}
-                  style={{
-                    transform: isHovered
-                      ? `scale(1.1) translate(${mousePosition.x * 1.5}px, ${mousePosition.y * 1.5}px)`
-                      : "scale(1)",
-                  }}
+                <ProjectCarousel 
+                  images={project.images}
+                  autoPlay={!isHovered}
+                  className="w-full h-full"
                 />
 
                 {/* Scan line effect */}
                 <div
                   className={cn(
-                    "absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent opacity-0 transition-all duration-1000",
+                    "absolute inset-0 bg-gradient-to-b from-transparent via-white/10 to-transparent opacity-0 transition-all duration-1000 pointer-events-none",
                     isHovered && "opacity-100 animate-scan-line",
                   )}
                 />
@@ -142,46 +104,10 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
               {/* LEDs pulsantes en las esquinas */}
               {isHovered && (
                 <>
-                  <div className="absolute top-4 left-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse" />
-                  <div className="absolute top-4 right-4 w-2 h-2 bg-pink-400 rounded-full led-pulse delay-100" />
-                  <div className="absolute bottom-4 left-4 w-2 h-2 bg-purple-400 rounded-full led-pulse delay-200" />
-                  <div className="absolute bottom-4 right-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse delay-300" />
-                </>
-              )}
-
-              {/* Controles del carousel */}
-              {project.images.length > 1 && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={previousImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={nextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {project.images.map((_, index) => (
-                      <button
-                        key={`${project.id}-img-btn-${index}`}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={cn(
-                          "h-1.5 rounded-full transition-all duration-300",
-                          index === currentImageIndex ? "w-8 bg-white" : "w-1.5 bg-white/50 hover:bg-white/75",
-                        )}
-                        aria-label={`Ir a imagen ${index + 1}`}
-                      />
-                    ))}
-                  </div>
+                  <div className="absolute top-4 left-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse z-30" />
+                  <div className="absolute top-4 right-4 w-2 h-2 bg-pink-400 rounded-full led-pulse delay-100 z-30" />
+                  <div className="absolute bottom-4 left-4 w-2 h-2 bg-purple-400 rounded-full led-pulse delay-200 z-30" />
+                  <div className="absolute bottom-4 right-4 w-2 h-2 bg-cyan-400 rounded-full led-pulse delay-300 z-30" />
                 </>
               )}
             </div>

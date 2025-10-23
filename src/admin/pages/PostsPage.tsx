@@ -56,6 +56,8 @@ import {
     updatePost,
     deletePost,
     generatePostSlug,
+    removeFeaturedImage,
+    removeGalleryImage
 } from '@/services/postService';
 import { getCategories } from '@/services/categoryService';
 import { getTags } from '@/services/tagService';
@@ -508,6 +510,7 @@ export default function PostsPage() {
                                 </Select>
                             </div>
 
+                            // Dentro del JSX, en la sección "Imagen destacada"
                             <div className="space-y-2">
                                 <Label>Imagen destacada</Label>
                                 <ImageSelector
@@ -519,6 +522,40 @@ export default function PostsPage() {
                                         setFormData({ ...formData, featuredImage: url });
                                     }}
                                 />
+                                {editingPost?.id && formData.featuredImage && (
+                                    <div className="flex justify-end">
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={async () => {
+                                                const confirmed = confirm('¿Eliminar la imagen destacada también de Firebase Storage?')
+                                                if (!confirmed) return
+                                                try {
+                                                    // removeFeaturedImage ya actualiza Firestore internamente
+                                                    await removeFeaturedImage(editingPost.id);
+                                                    
+                                                    // Actualizar el estado local del formulario
+                                                    setFormData({ ...formData, featuredImage: '' });
+                                                    
+                                                    // Actualizar el post que se está editando
+                                                    if (editingPost) {
+                                                        setEditingPost({ ...editingPost, featuredImage: '' });
+                                                    }
+                                                    
+                                                    // Recargar los datos para asegurar consistencia
+                                                    await loadData();
+                                                    
+                                                    alert('✅ Imagen destacada eliminada correctamente');
+                                                } catch (err) {
+                                                    console.error('❌ Error al eliminar imagen destacada:', err);
+                                                    alert('❌ Error al eliminar la imagen destacada: ' + (err as Error).message);
+                                                }
+                                            }}
+                                        >
+                                            Eliminar imagen destacada
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -560,7 +597,25 @@ export default function PostsPage() {
                                 maxFiles={4}
                                 value={formData.gallery}
                                 postId={editingPost?.id}
-                                onImagesChange={(images) => {
+                                onImagesChange={async (images) => {
+                                    // Detectar imágenes eliminadas por el usuario
+                                    const previous = Array.isArray(formData.gallery) ? formData.gallery : [];
+                                    const removed = previous.filter(url => !images.includes(url));
+                                
+                                    // Confirmar antes de eliminar de Firebase Storage las imágenes removidas
+                                    if (editingPost?.id && removed.length > 0) {
+                                        const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de Firebase Storage?`)
+                                        if (confirmed) {
+                                            try {
+                                                await Promise.all(removed.map(url => removeGalleryImage(editingPost.id!, url)));
+                                            } catch (err) {
+                                                console.error('Error al eliminar imágenes de galería:', err);
+                                                alert('❌ Error al eliminar imágenes de la galería');
+                                            }
+                                        }
+                                    }
+                                
+                                    // Actualizar estado del formulario
                                     setFormData({ ...formData, gallery: images });
                                 }}
                             />

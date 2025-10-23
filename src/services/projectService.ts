@@ -146,7 +146,7 @@ export const getProjects = async (): Promise<Project[]> => {
       
       return projects
     } catch (error) {
-      console.error('❌ Error al obtener proyectos desde Firestore:', error)
+      // Error al obtener proyectos desde Firestore
       // Fallback a localStorage
       return projectsDB
     }
@@ -342,24 +342,7 @@ export const updateProject = async (id: string, updates: UpdateProjectData): Pro
       }
       return updatedProject
     } catch (error) {
-      console.error('❌ Error al actualizar proyecto en Firestore:', error)
-      
-      // Type guard para manejar el error de manera segura
-      if (error instanceof Error) {
-        console.error('❌ Detalles del error:', {
-          message: error.message,
-          name: error.name,
-          stack: error.stack
-        })
-      } else if (typeof error === 'object' && error !== null && 'code' in error) {
-        // Error de Firebase
-        console.error('❌ Error de Firebase:', {
-          code: (error as any).code,
-          message: (error as any).message
-        })
-      } else {
-        console.error('❌ Error desconocido:', error)
-      }
+      // Error al actualizar proyecto en Firestore
       
       throw error
     }

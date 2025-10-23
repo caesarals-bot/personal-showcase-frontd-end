@@ -67,13 +67,13 @@ export default function ProjectCarousel({
       className
     )}>
       {/* Main image */}
-      <div className="relative w-full h-full overflow-hidden rounded-lg bg-muted">
+      <div className="relative w-full h-full overflow-hidden rounded-lg bg-muted flex items-center justify-center">
         <AnimatePresence mode="wait">
           <motion.img
             key={currentIndex}
             src={images[currentIndex].url}
             alt={images[currentIndex].alt}
-            className="w-full h-full object-cover"
+            className="max-w-full max-h-full object-contain"
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -158,7 +158,7 @@ export default function ProjectCarousel({
               <img
                 src={image.url}
                 alt={image.alt}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
               {index === currentIndex && (
                 <div className="absolute inset-0 bg-primary/20" />

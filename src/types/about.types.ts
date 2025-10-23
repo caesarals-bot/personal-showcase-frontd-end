@@ -26,6 +26,8 @@ export interface SocialLinks {
     twitter?: string
     instagram?: string
     website?: string
+    // Redes sociales adicionales dinámicas
+    additional?: Array<{ name: string; url: string; icon?: string }>
 }
 
 // Perfil completo

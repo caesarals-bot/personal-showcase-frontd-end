@@ -367,17 +367,6 @@ export default function ImageSelector({
                   />
                   <div className="flex-1">
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setUrlValue('');
-                      onChange?.('');
-                    }}
-                    disabled={disabled}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>

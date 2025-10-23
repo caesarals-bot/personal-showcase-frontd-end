@@ -12,10 +12,12 @@ import {
   getDocs,
   addDoc,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
   increment
 } from 'firebase/firestore';
+import { ImageUploadService } from './imageUploadService';
 import { db } from '@/firebase/config';
 
 // Flag para usar Firebase o localStorage
@@ -712,13 +714,58 @@ async function updatePostLocal(
  * Eliminar un post
  */
 export async function deletePost(id: string): Promise<void> {
+  if (USE_FIREBASE) {
+    return deletePostFromFirestore(id);
+  }
+  return deletePostLocal(id);
+}
+
+/**
+ * Eliminar post desde Firestore con limpieza de imágenes
+ */
+async function deletePostFromFirestore(id: string): Promise<void> {
+  try {
+    const post = await getPostById(id);
+    if (!post) {
+      throw new Error('Post no encontrado');
+    }
+
+    const imagesToDelete: string[] = [];
+    if (post.featuredImage) imagesToDelete.push(post.featuredImage);
+    if (post.gallery && post.gallery.length) imagesToDelete.push(...post.gallery);
+
+    if (imagesToDelete.length > 0) {
+      try {
+        const imagePaths = imagesToDelete
+          .map(extractStoragePathFromUrl)
+          .filter(Boolean) as string[];
+        if (imagePaths.length > 0) {
+          await ImageUploadService.deleteMultipleImages(imagePaths);
+        }
+      } catch (err) {
+        console.warn('Error eliminando imágenes del Storage:', err);
+      }
+    }
+
+    const postRef = doc(db, 'posts', id);
+    await deleteDoc(postRef);
+
+    clearPostsCache();
+  } catch (error) {
+    console.error('Error al eliminar post desde Firestore:', error);
+    throw error;
+  }
+}
+
+/**
+ * Eliminar post en modo local
+ */
+async function deletePostLocal(id: string): Promise<void> {
   await delay();
-  
   const index = postsDB.findIndex(post => post.id === id);
   if (index === -1) {
     throw new Error('Post no encontrado');
   }
-  
   postsDB.splice(index, 1);
   persistPostsDB();
 }
@@ -802,4 +849,110 @@ export async function updatePostLikesCount(postId: string, count: number): Promi
 export function resetPostsDB(): void {
   postsDB = [...MOCK_POSTS];
   persistPostsDB();
+}
+
+/**
+ * Extrae la ruta de Storage desde una URL pública de Firebase Storage
+ */
+function extractStoragePathFromUrl(url: string): string | null {
+  try {
+    // Patrón para URLs de Firebase Storage
+    // Ejemplo: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile.jpg?alt=media&token=...
+    const match = url.match(/\/o\/(.+?)\?/);
+    
+    if (match && match[1]) {
+      const decodedPath = decodeURIComponent(match[1]);
+      return decodedPath;
+    }
+    
+    // Intentar otro patrón si el primero no funciona
+    const altMatch = url.match(/\/([^\/]+\.(jpg|jpeg|png|gif|webp|svg))(\?|$)/i);
+    if (altMatch && altMatch[1]) {
+      return altMatch[1];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ extractStoragePathFromUrl - Error:', error);
+    return null;
+  }
+}
+
+/**
+ * Eliminar solo la imagen destacada de un post
+ */
+export async function removeFeaturedImage(postId: string): Promise<void> {
+  if (USE_FIREBASE) {
+    try {
+      const post = await getPostById(postId);
+      
+      if (!post || !post.featuredImage) {
+        return;
+      }
+
+      const path = extractStoragePathFromUrl(post.featuredImage);
+      
+      if (path) {
+        try {
+          await ImageUploadService.deleteImage(path);
+        } catch (err) {
+          console.warn('⚠️ No se pudo eliminar la imagen destacada del Storage:', err);
+        }
+      }
+
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, { featuredImage: '' });
+
+      clearPostsCache();
+      return;
+    } catch (error) {
+      console.error('❌ Error al eliminar imagen destacada:', error);
+      throw error;
+    }
+  }
+
+  // Modo local
+  const postIndex = postsDB.findIndex(p => p.id === postId);
+  if (postIndex !== -1) {
+    postsDB[postIndex].featuredImage = '';
+    persistPostsDB();
+  }
+}
+
+/**
+ * Eliminar una imagen de la galería del post
+ */
+export async function removeGalleryImage(postId: string, imageUrl: string): Promise<void> {
+  if (USE_FIREBASE) {
+    try {
+      const post = await getPostById(postId);
+      if (!post || !post.gallery || !post.gallery.length) return;
+
+      const path = extractStoragePathFromUrl(imageUrl);
+      if (path) {
+        try {
+          await ImageUploadService.deleteImage(path);
+        } catch (err) {
+          console.warn('No se pudo eliminar la imagen de galería del Storage:', err);
+        }
+      }
+
+      const newGallery = post.gallery.filter(url => url !== imageUrl);
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, { gallery: newGallery });
+
+      clearPostsCache();
+      return;
+    } catch (error) {
+      console.error('Error al eliminar imagen de galería:', error);
+      throw error;
+    }
+  }
+
+  // Modo local
+  const postIndex = postsDB.findIndex(p => p.id === postId);
+  if (postIndex !== -1) {
+    postsDB[postIndex].gallery = (postsDB[postIndex].gallery || []).filter(url => url !== imageUrl);
+    persistPostsDB();
+  }
 }

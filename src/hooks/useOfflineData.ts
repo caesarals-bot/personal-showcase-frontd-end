@@ -11,6 +11,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { cacheService } from '@/services/cacheService'
 import { connectionService, type ConnectionState } from '@/services/connectionService'
+import { logger } from '@/utils/logger'
 
 type DataSource = 'network' | 'cache' | 'default' | 'none'
 
@@ -154,7 +155,7 @@ export function useOfflineData<T>({
 
             // Si volvemos online y refetchOnReconnect está habilitado, refetch
             if (newState.isOnline && refetchOnReconnect && !loading) {
-                console.info('Conexión restaurada, refetching datos...')
+                logger.info('Conexión restaurada, refetching datos...')
                 loadData()
             }
         })

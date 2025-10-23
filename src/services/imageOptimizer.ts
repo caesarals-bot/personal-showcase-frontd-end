@@ -91,6 +91,14 @@ export const IMAGE_PRESETS = {
     format: 'webp' as const,
     maxSizeKB: 400
   },
+  // Para sección About
+  about: {
+    maxWidth: 800,
+    maxHeight: 600,
+    quality: 0.8,
+    format: 'webp' as const,
+    maxSizeKB: 300
+  },
   // Para thumbnails
   thumbnail: {
     maxWidth: 300,
@@ -136,6 +144,14 @@ export const VALIDATION_RULES = {
     maxHeight: 2000,
     minWidth: 200,
     minHeight: 200
+  },
+  about: {
+    maxSizeKB: 2000, // 2MB
+    allowedFormats: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    maxWidth: 1500,
+    maxHeight: 1500,
+    minWidth: 150,
+    minHeight: 150
   }
 };
 

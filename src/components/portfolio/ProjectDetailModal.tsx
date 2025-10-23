@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ProjectMarkdownRenderer } from '@/components/ProjectMarkdownRenderer'
 
 import type { ProjectDetailModalProps } from '@/types/portfolio'
 import ProjectCarousel from './ProjectCarousel'
@@ -105,9 +106,9 @@ export default function ProjectDetailModal({ project, isOpen, onClose }: Project
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
               {/* Carrusel de imágenes */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-1">
                 <ProjectCarousel 
                   images={project.images} 
                   showThumbnails={true}
@@ -195,9 +196,10 @@ export default function ProjectDetailModal({ project, isOpen, onClose }: Project
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {project.longDescription || project.description}
-                        </p>
+                        <ProjectMarkdownRenderer 
+                          content={project.longDescription || project.description} 
+                          compact={true}
+                        />
                       </CardContent>
                     </Card>
 
