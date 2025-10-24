@@ -104,7 +104,13 @@ export default function ProfilePage() {
         try {
             const newSection: AboutSection = {
                 id: `section-${Date.now()}`,
-                ...formData,
+                title: formData.title,
+                content: formData.content,
+                image: formData.images[0] || formData.image, // Usar la primera imagen del array o la imagen individual
+                imageAlt: formData.imageAlt,
+                imagePosition: formData.imagePosition,
+                images: formData.images, // Mantener el array completo
+                gallery: formData.images, // También asignar a gallery para compatibilidad
             };
             const updatedSections = [...sections, newSection];
             await AboutService.updateAboutData({ sections: updatedSections });
@@ -122,7 +128,16 @@ export default function ProfilePage() {
         
         try {
             const updatedSections = sections.map(s => 
-                s.id === editingSection.id ? { ...s, ...formData } : s
+                s.id === editingSection.id ? {
+                    ...s,
+                    title: formData.title,
+                    content: formData.content,
+                    image: formData.images[0] || formData.image, // Usar la primera imagen del array o la imagen individual
+                    imageAlt: formData.imageAlt,
+                    imagePosition: formData.imagePosition,
+                    images: formData.images, // Mantener el array completo
+                    gallery: formData.images, // También asignar a gallery para compatibilidad
+                } : s
             );
             await AboutService.updateAboutData({ sections: updatedSections });
             setEditingSection(null);
@@ -186,7 +201,8 @@ export default function ProfilePage() {
                 // Reemplazar la imagen actual con la nueva
                 setFormData(prev => ({
                     ...prev,
-                    images: [result.upload!.url] // Solo una imagen
+                    image: result.upload!.url, // Imagen principal
+                    images: [result.upload!.url] // Array con la imagen
                 }));
             } else {
                 console.error('Error al subir la imagen:', result.error);

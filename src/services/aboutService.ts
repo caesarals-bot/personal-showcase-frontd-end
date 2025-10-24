@@ -90,6 +90,9 @@ const delay = () => new Promise(resolve => setTimeout(resolve, 300));
 export class AboutService {
   // Método actual (datos locales)
   static async getAboutData(): Promise<AboutData> {
+    if (USE_FIREBASE) {
+      return await getAboutDataFromFirestore();
+    }
     await delay();
     return { ...aboutDataDB };
   }
@@ -105,6 +108,16 @@ export class AboutService {
 
     // Persistir en localStorage
     persistAboutDB();
+
+    // Persistir en Firestore si está habilitado
+    if (USE_FIREBASE) {
+      try {
+        await updateAboutDataInFirestore(aboutDataDB);
+      } catch (error) {
+        console.error('Error al guardar en Firestore (datos guardados en localStorage):', error);
+        // No lanzar error porque los datos ya están guardados en localStorage
+      }
+    }
 
     return { ...aboutDataDB };
   }
@@ -243,4 +256,60 @@ function getProfileLocal(): Profile | null {
   
   // Si no hay datos guardados, retornar null para que el componente maneje el estado inicial
   return null;
+}
+
+/**
+ * Obtener datos About desde Firestore
+ */
+async function getAboutDataFromFirestore(): Promise<AboutData> {
+  try {
+    const docRef = doc(db, 'about', 'data');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const firestoreData = docSnap.data() as AboutData;
+      
+      // Actualizar caché local
+      aboutDataDB = firestoreData;
+      persistAboutDB();
+      
+      return firestoreData;
+    } else {
+      // Si no existe el documento, crear uno con los datos iniciales
+      await updateAboutDataInFirestore(aboutDataDB);
+      return { ...aboutDataDB };
+    }
+  } catch (error) {
+    console.error('Error al obtener datos About desde Firestore:', error);
+    // Fallback a datos locales
+    return { ...aboutDataDB };
+  }
+}
+
+/**
+ * Actualizar datos About en Firestore
+ */
+async function updateAboutDataInFirestore(data: AboutData): Promise<void> {
+  try {
+    const docRef = doc(db, 'about', 'data');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      // Actualizar documento existente
+      await updateDoc(docRef, {
+        ...data,
+        updatedAt: Timestamp.now()
+      });
+    } else {
+      // Crear documento nuevo
+      await setDoc(docRef, {
+        ...data,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error al actualizar datos About en Firestore:', error);
+    throw error;
+  }
 }
