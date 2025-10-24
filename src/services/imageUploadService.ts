@@ -126,7 +126,13 @@ export class ImageUploadService {
     try {
       const imageRef = ref(storage, imagePath)
       await deleteObject(imageRef)
-    } catch (error) {
+    } catch (error: any) {
+      // Si la imagen no existe (404), no es un error crítico
+      if (error?.code === 'storage/object-not-found') {
+        console.warn(`⚠️ Imagen ya no existe en Storage: ${imagePath}`)
+        return // No lanzar error, continuar normalmente
+      }
+      
       console.error('Error deleting image:', error)
       throw new Error(`Error al eliminar imagen: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
@@ -137,12 +143,29 @@ export class ImageUploadService {
    * @param imagePaths - Array de rutas de imágenes a eliminar
    */
   static async deleteMultipleImages(imagePaths: string[]): Promise<void> {
-    try {
-      const deletePromises = imagePaths.map(path => this.deleteImage(path))
-      await Promise.all(deletePromises)
-    } catch (error) {
-      console.error('Error deleting multiple images:', error)
-      throw new Error(`Error al eliminar imágenes: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    const results = await Promise.allSettled(
+      imagePaths.map(path => this.deleteImage(path))
+    )
+    
+    // Contar errores críticos (no 404s)
+    const criticalErrors = results.filter(result => 
+      result.status === 'rejected' && 
+      !result.reason?.message?.includes('storage/object-not-found')
+    )
+    
+    if (criticalErrors.length > 0) {
+      console.error('Errores críticos al eliminar imágenes:', criticalErrors)
+      throw new Error(`Error al eliminar ${criticalErrors.length} de ${imagePaths.length} imágenes`)
+    }
+    
+    // Log de resumen
+    const notFoundCount = results.filter(result => 
+      result.status === 'rejected' && 
+      result.reason?.message?.includes('storage/object-not-found')
+    ).length
+    
+    if (notFoundCount > 0) {
+      console.warn(`⚠️ ${notFoundCount} de ${imagePaths.length} imágenes ya no existían en Storage`)
     }
   }
 

@@ -743,7 +743,8 @@ async function deletePostFromFirestore(id: string): Promise<void> {
           await ImageUploadService.deleteMultipleImages(imagePaths);
         }
       } catch (err) {
-        console.warn('Error eliminando imágenes del Storage:', err);
+        console.warn('⚠️ Error eliminando imágenes del Storage:', err);
+        // No lanzar error, continuar con la eliminación del post
       }
     }
 
@@ -897,6 +898,7 @@ export async function removeFeaturedImage(postId: string): Promise<void> {
           await ImageUploadService.deleteImage(path);
         } catch (err) {
           console.warn('⚠️ No se pudo eliminar la imagen destacada del Storage:', err);
+          // No lanzar error, continuar con la actualización de Firestore
         }
       }
 
@@ -933,7 +935,8 @@ export async function removeGalleryImage(postId: string, imageUrl: string): Prom
         try {
           await ImageUploadService.deleteImage(path);
         } catch (err) {
-          console.warn('No se pudo eliminar la imagen de galería del Storage:', err);
+          console.warn('⚠️ No se pudo eliminar la imagen de galería del Storage:', err);
+          // No lanzar error, continuar con la actualización de Firestore
         }
       }
 
