@@ -99,6 +99,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Excluir URLs de Google Fonts del manejo de cache
+  if (isGoogleFonts(request.url)) {
+    // Dejar que Google Fonts se maneje directamente sin cache
+    return;
+  }
+
   // Determinar estrategia de cache
   if (isStaticAsset(request.url)) {
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
@@ -227,6 +233,12 @@ function isGoogleRecaptcha(url) {
   return url.includes('google.com/recaptcha') || 
          url.includes('gstatic.com/recaptcha') ||
          url.includes('googleapis.com/recaptcha');
+}
+
+function isGoogleFonts(url) {
+  // Excluir todas las URLs relacionadas con Google Fonts
+  return url.includes('fonts.googleapis.com') || 
+         url.includes('fonts.gstatic.com');
 }
 
 // Limpiar cache periódicamente
