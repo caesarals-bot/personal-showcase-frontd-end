@@ -530,23 +530,52 @@ export default function UsersPage() {
                             </Select>
                         </div>
 
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2">
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
+                                    id="isVerified"
                                     checked={formData.isVerified}
                                     onChange={(e) => setFormData({ ...formData, isVerified: e.target.checked })}
+                                    className="rounded border-gray-300"
                                 />
-                                <span className="text-sm">Verificado</span>
-                            </label>
-                            <label className="flex items-center gap-2">
+                                <Label htmlFor="isVerified" className="text-sm font-medium">
+                                    {formData.isVerified ? (
+                                        <span className="flex items-center gap-1 text-green-600">
+                                            <CheckCircle className="h-4 w-4" />
+                                            Verificado
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-1 text-gray-600">
+                                            <XCircle className="h-4 w-4" />
+                                            No verificado
+                                        </span>
+                                    )}
+                                </Label>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
                                 <input
                                     type="checkbox"
+                                    id="isActive"
                                     checked={formData.isActive}
                                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                    className="rounded border-gray-300"
                                 />
-                                <span className="text-sm">Activo</span>
-                            </label>
+                                <Label htmlFor="isActive" className="text-sm font-medium">
+                                    {formData.isActive ? (
+                                        <span className="flex items-center gap-1 text-blue-600">
+                                            <UserCheck className="h-4 w-4" />
+                                            Activo
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-1 text-red-600">
+                                            <XCircle className="h-4 w-4" />
+                                            Inactivo
+                                        </span>
+                                    )}
+                                </Label>
+                            </div>
                         </div>
                     </div>
 
