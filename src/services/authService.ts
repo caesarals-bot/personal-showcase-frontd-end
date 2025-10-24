@@ -140,6 +140,10 @@ export const loginUser = async (email: string, password: string): Promise<User> 
         const mockUser = JSON.parse(storedUser) as User;
         // Verificar si coincide el email
         if (mockUser.email === email) {
+          // Verificar si el usuario está activo
+          if (!mockUser.isActive) {
+            throw new Error('INACTIVE_USER');
+          }
           return mockUser;
         }
       }
@@ -162,21 +166,38 @@ export const loginUser = async (email: string, password: string): Promise<User> 
     // Código original para Firebase
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
-    // Determinar rol basado en email (Firestore deshabilitado temporalmente)
-    const role = shouldBeAdmin(userCredential.user.email || '') ? 'admin' : 'user';
+    // Obtener datos del usuario desde Firestore para verificar estado isActive
+    const { getUserById } = await import('./userService');
+    const userFromFirestore = await getUserById(userCredential.user.uid);
+    
+    // Si el usuario existe en Firestore, verificar si está activo
+    if (userFromFirestore && !userFromFirestore.isActive) {
+      // Cerrar la sesión inmediatamente
+      await signOut(auth);
+      throw new Error('INACTIVE_USER');
+    }
+    
+    // Determinar rol basado en email o datos de Firestore
+    const role = userFromFirestore?.role || (shouldBeAdmin(userCredential.user.email || '') ? 'admin' : 'user');
     
     return {
       id: userCredential.user.uid,
-      displayName: userCredential.user.displayName || 'Usuario',
+      displayName: userFromFirestore?.displayName || userCredential.user.displayName || 'Usuario',
       email: userCredential.user.email || '',
-      avatar: userCredential.user.photoURL || undefined,
+      avatar: userFromFirestore?.avatar || userCredential.user.photoURL || undefined,
       isVerified: userCredential.user.emailVerified,
-      isActive: true,
+      isActive: userFromFirestore?.isActive !== false, // Default true si no existe en Firestore
       role,
-      createdAt: userCredential.user.metadata.creationTime || new Date().toISOString()
+      createdAt: userFromFirestore?.createdAt || userCredential.user.metadata.creationTime || new Date().toISOString()
     };
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
+    
+    // Manejar usuario inactivo con mensaje específico
+    if (error instanceof Error && error.message === 'INACTIVE_USER') {
+      throw new Error('Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información. Email: admin@tudominio.com');
+    }
+    
     // Si el error es auth/operation-not-allowed, dar un mensaje más claro
     if (error instanceof Error && error.message.includes('auth/operation-not-allowed')) {
       throw new Error('La autenticación por email/password no está habilitada en Firebase. Contacta al administrador o usa el modo de desarrollo.');

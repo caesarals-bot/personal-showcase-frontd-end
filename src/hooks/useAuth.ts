@@ -3,6 +3,7 @@ import type { User, AuthState } from '../types/blog.types'
 import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase/config'
 import { loginUser, logoutUser, registerUser, loginWithGoogle, resendEmailVerification, isEmailVerified, reloadUserInfo } from '../services/authService'
+import { getUserById } from '../services/userService'
 // import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS en desarrollo
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
@@ -17,10 +18,30 @@ export function useAuth(): AuthState & {
     resendVerificationEmail: () => Promise<void>
     checkEmailVerified: () => boolean
     reloadUser: () => Promise<void>
+    clearError: () => void
 } {
     const [user, setUser] = useState<User | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    // Función para verificar si el usuario sigue activo
+    const checkUserActiveStatus = async (currentUser: User) => {
+        if (!currentUser || DEV_MODE) return; // En modo desarrollo no verificar
+
+        try {
+            const userFromFirestore = await getUserById(currentUser.id);
+            
+            // Si el usuario existe en Firestore pero está inactivo
+            if (userFromFirestore && !userFromFirestore.isActive) {
+                // Cerrar sesión automáticamente
+                await logout();
+                setError('Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información. Email: admin@tudominio.com');
+            }
+        } catch (err) {
+            console.warn('Error al verificar estado del usuario:', err);
+            // No hacer nada si hay error - evitar cerrar sesión por problemas de red
+        }
+    }
 
     useEffect(() => {
         // En modo desarrollo, verificar si hay un usuario en localStorage
@@ -93,6 +114,20 @@ export function useAuth(): AuthState & {
         // Limpiar el listener cuando el componente se desmonte
         return () => unsubscribe()
     }, [])
+
+    // Verificar periódicamente si el usuario sigue activo (cada 30 segundos)
+    useEffect(() => {
+        if (!user || DEV_MODE) return;
+
+        const interval = setInterval(() => {
+            checkUserActiveStatus(user);
+        }, 30000); // 30 segundos
+
+        // Verificar inmediatamente al montar
+        checkUserActiveStatus(user);
+
+        return () => clearInterval(interval);
+    }, [user])
 
     const login = async (email: string, password: string) => {
         try {
@@ -189,6 +224,10 @@ export function useAuth(): AuthState & {
         }
     }
 
+    const clearError = () => {
+        setError(null)
+    }
+
     return {
         user,
         isAuthenticated: !!user,
@@ -200,6 +239,7 @@ export function useAuth(): AuthState & {
         register,
         resendVerificationEmail,
         checkEmailVerified,
-        reloadUser
+        reloadUser,
+        clearError
     }
 }
