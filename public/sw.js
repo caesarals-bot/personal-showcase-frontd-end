@@ -105,6 +105,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Excluir URLs de Google User Content del manejo de cache
+  if (isGoogleUserContent(request.url)) {
+    // Dejar que Google User Content se maneje directamente sin cache
+    return;
+  }
+
   // Determinar estrategia de cache
   if (isStaticAsset(request.url)) {
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
@@ -239,6 +245,10 @@ function isGoogleFonts(url) {
   // Excluir todas las URLs relacionadas con Google Fonts
   return url.includes('fonts.googleapis.com') || 
          url.includes('fonts.gstatic.com');
+}
+
+function isGoogleUserContent(url) {
+  return url.includes('googleusercontent.com');
 }
 
 // Limpiar cache periódicamente
