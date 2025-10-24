@@ -38,8 +38,20 @@ const persistProfileDB = () => {
   }
 };
 
-// Función para inicializar la base de datos desde localStorage o datos por defecto
-const initializeAboutDB = () => {
+// Función para inicializar la base de datos desde Firebase o localStorage
+const initializeAboutDB = async () => {
+  if (USE_FIREBASE) {
+    try {
+      // Intentar cargar desde Firebase primero
+      aboutDataDB = await getAboutDataFromFirestore();
+      return;
+    } catch (error) {
+      console.warn('⚠️ Error al cargar desde Firebase, usando localStorage:', error);
+      // Fallback a localStorage si Firebase falla
+    }
+  }
+
+  // Cargar desde localStorage (modo local o fallback)
   try {
     const storedData = localStorage.getItem(ABOUT_STORAGE_KEY);
     if (storedData) {
@@ -81,7 +93,9 @@ const initializeProfileDB = () => {
 };
 
 // Inicializar las bases de datos al cargar el módulo
-initializeAboutDB();
+initializeAboutDB().catch(error => {
+  console.error('Error al inicializar aboutDB:', error);
+});
 initializeProfileDB();
 
 // Simulación de delay de red
@@ -107,17 +121,20 @@ export class AboutService {
       ...data,
     };
 
-    // Persistir en localStorage
-    persistAboutDB();
-
-    // Persistir en Firestore si está habilitado
     if (USE_FIREBASE) {
       try {
+        // Persistir en Firestore primero
         await updateAboutDataInFirestore(aboutDataDB);
+        // Solo guardar en localStorage como cache después de éxito en Firebase
+        persistAboutDB();
       } catch (error) {
-        console.error('Error al guardar en Firestore (datos guardados en localStorage):', error);
-        // No lanzar error porque los datos ya están guardados en localStorage
+        console.error('Error al guardar en Firestore, usando localStorage como fallback:', error);
+        // Fallback: guardar en localStorage si Firebase falla
+        persistAboutDB();
       }
+    } else {
+      // Modo local: solo persistir en localStorage
+      persistAboutDB();
     }
 
     return { ...aboutDataDB };
