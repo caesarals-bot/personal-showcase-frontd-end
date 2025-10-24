@@ -32,15 +32,16 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
     Access-Control-Allow-Credentials = "true"
     
-    # Content Security Policy (ajustar según necesidades)
+    # Content Security Policy (configuración completa para reCAPTCHA, Firebase, EmailJS y YouTube)
     Content-Security-Policy = """
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.googleapis.com;
-      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-      img-src 'self' data: https: blob:;
-      font-src 'self' data: https://fonts.gstatic.com;
-      connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://firestore.googleapis.com wss://firestore.googleapis.com;
-      frame-src 'self' https://*.firebaseapp.com https://www.google.com;
+      connect-src 'self' https://www.google.com https://apis.google.com https://*.firebaseio.com https://*.googleapis.com https://firestore.googleapis.com wss://firestore.googleapis.com https://api.emailjs.com;
+      img-src 'self' data: https: blob: https://www.google.com https://www.gstatic.com https://i.ytimg.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com;
+      font-src 'self' data: https://fonts.gstatic.com https://www.gstatic.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com https://www.gstatic.com https://www.googleapis.com https://apis.google.com https://cdn.jsdelivr.net;
+      script-src-elem 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com https://www.googleapis.com https://apis.google.com https://cdn.jsdelivr.net;
+      frame-src 'self' https://*.firebaseapp.com https://www.google.com https://www.youtube.com https://youtube.com;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
