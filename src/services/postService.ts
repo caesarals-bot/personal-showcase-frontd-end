@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import { ImageUploadService } from './imageUploadService';
 import { db } from '@/firebase/config';
+import { safeJsonParse } from '@/utils/safeJsonParse';
 
 // Flag para usar Firebase o localStorage
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -65,7 +66,14 @@ const initializePostsDB = () => {
   try {
     const storedPosts = localStorage.getItem(POSTS_STORAGE_KEY);
     if (storedPosts) {
-      postsDB = JSON.parse(storedPosts);
+      const posts = safeJsonParse<BlogPost[]>(storedPosts);
+      if (posts) {
+        postsDB = posts;
+      } else {
+        console.warn('⚠️ Datos corruptos en posts_db. Reinicializando...');
+        postsDB = [...MOCK_POSTS];
+        persistPostsDB();
+      }
     } else {
       postsDB = [...MOCK_POSTS];
       persistPostsDB();

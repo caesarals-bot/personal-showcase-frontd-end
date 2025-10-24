@@ -7,6 +7,7 @@ import { collection, doc, getDocs, getDoc, updateDoc, addDoc, deleteDoc, query, 
 import { db } from '@/firebase/config';
 import type { User } from '@/types/blog.types';
 import { MOCK_USERS } from '@/data/users.data';
+import { safeJsonParse } from '@/utils/safeJsonParse';
 
 // Flag para usar Firebase
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -39,8 +40,17 @@ function getUsersFromCache(): User[] | null {
       return null;
     }
     
-    return JSON.parse(cached);
-  } catch {
+    const users = safeJsonParse<User[]>(cached);
+    if (!users) {
+      // Si no se puede parsear, limpiar el caché corrupto
+      clearUsersCache();
+      return null;
+    }
+    
+    return users;
+  } catch (error) {
+    console.error('❌ Error en getUsersFromCache:', error);
+    clearUsersCache();
     return null;
   }
 }

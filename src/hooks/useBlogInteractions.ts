@@ -1,10 +1,11 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
-import type { BlogPost } from '@/types/blog.types'
-import { useAuth } from '@/hooks/useAuth'
-import { likePost, unlikePost, getPostLikesCount } from '@/services/likeService'
-import { getPostCommentsCount } from '@/services/commentService'
-import { collection, getDocs, query, where } from 'firebase/firestore'
-import { db } from '@/firebase/config'
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { likePost, unlikePost, getPostLikesCount } from '@/services/likeService';
+import { getPostCommentsCount } from '@/services/commentService';
+import type { BlogPost } from '@/types/blog.types';
+import { safeJsonParse } from '@/utils/safeJsonParse';
+import { useAuth } from '@/hooks/useAuth';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 
 export function useBlogInteractions() {
     const { user: currentUser } = useAuth()
@@ -38,22 +39,26 @@ export function useBlogInteractions() {
                     // Fallback a localStorage
                     const stored = localStorage.getItem('blog_likes')
                     if (stored) {
-                        const likes = JSON.parse(stored)
-                        const userLikeIds = likes
-                            .filter((like: any) => like.userId === currentUser.id)
-                            .map((like: any) => like.postId)
-                        setUserLikes(userLikeIds)
+                        const likes = safeJsonParse<any[]>(stored);
+                        if (likes) {
+                            const userLikeIds = likes
+                                .filter((like: any) => like.userId === currentUser.id)
+                                .map((like: any) => like.postId)
+                            setUserLikes(userLikeIds)
+                        }
                     }
                 }
             } else {
                 // Modo local: cargar desde localStorage
                 const stored = localStorage.getItem('blog_likes')
                 if (stored) {
-                    const likes = JSON.parse(stored)
-                    const userLikeIds = likes
-                        .filter((like: any) => like.userId === currentUser.id)
-                        .map((like: any) => like.postId)
-                    setUserLikes(userLikeIds)
+                    const likes = safeJsonParse<any[]>(stored);
+                    if (likes) {
+                        const userLikeIds = likes
+                            .filter((like: any) => like.userId === currentUser.id)
+                            .map((like: any) => like.postId)
+                        setUserLikes(userLikeIds)
+                    }
                 }
             }
         }

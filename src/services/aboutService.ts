@@ -2,6 +2,7 @@ import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import type { AboutData, Profile } from '@/types/about.types';
 import { aboutData } from '@/data/about.data';
+import { safeJsonParse } from '@/utils/safeJsonParse';
 
 // Flag para usar Firebase
 const USE_FIREBASE = true;
@@ -41,7 +42,14 @@ const initializeAboutDB = () => {
   try {
     const storedData = localStorage.getItem(ABOUT_STORAGE_KEY);
     if (storedData) {
-      aboutDataDB = JSON.parse(storedData);
+      const data = safeJsonParse<AboutData>(storedData);
+      if (data) {
+        aboutDataDB = data;
+      } else {
+        console.warn('⚠️ Datos corruptos en about_data_db. Reinicializando...');
+        aboutDataDB = { ...aboutData };
+        persistAboutDB();
+      }
     } else {
       aboutDataDB = { ...aboutData };
       persistAboutDB();
@@ -57,7 +65,14 @@ const initializeProfileDB = () => {
   try {
     const storedProfile = localStorage.getItem(PROFILE_STORAGE_KEY);
     if (storedProfile) {
-      profileDB = JSON.parse(storedProfile);
+      const profile = safeJsonParse<Profile>(storedProfile);
+      if (profile) {
+        profileDB = profile;
+      } else {
+        console.warn('⚠️ Datos corruptos en profile_data_db. Limpiando...');
+        localStorage.removeItem(PROFILE_STORAGE_KEY);
+        profileDB = null;
+      }
     }
   } catch (error) {
     console.error('Error al cargar profile desde localStorage:', error);

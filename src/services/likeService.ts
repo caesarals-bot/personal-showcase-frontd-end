@@ -13,6 +13,7 @@ import {
   doc 
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { safeJsonParse } from '@/utils/safeJsonParse';
 
 // Modo de desarrollo
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -24,7 +25,14 @@ let likesDB: BlogLike[] = [];
 function loadLikesDB() {
   const stored = localStorage.getItem('blog_likes');
   if (stored) {
-    likesDB = JSON.parse(stored);
+    const likes = safeJsonParse<BlogLike[]>(stored);
+    if (likes) {
+      likesDB = likes;
+    } else {
+      console.warn('⚠️ Datos corruptos en blog_likes. Limpiando...');
+      localStorage.removeItem('blog_likes');
+      likesDB = [];
+    }
   }
 }
 

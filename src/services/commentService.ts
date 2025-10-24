@@ -14,6 +14,7 @@ import {
   doc
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { safeJsonParse } from '@/utils/safeJsonParse';
 
 // Modo de desarrollo
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -25,7 +26,14 @@ let commentsDB: BlogComment[] = [];
 function loadCommentsDB() {
   const stored = localStorage.getItem('blog_comments');
   if (stored) {
-    commentsDB = JSON.parse(stored);
+    const comments = safeJsonParse<BlogComment[]>(stored);
+    if (comments) {
+      commentsDB = comments;
+    } else {
+      console.warn('⚠️ Datos corruptos en blog_comments. Limpiando...');
+      localStorage.removeItem('blog_comments');
+      commentsDB = [];
+    }
   }
 }
 

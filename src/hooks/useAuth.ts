@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase/config'
 import { loginUser, logoutUser, registerUser, loginWithGoogle, resendEmailVerification, isEmailVerified, reloadUserInfo } from '../services/authService'
 import { getUserById } from '../services/userService'
+import { safeJsonParse } from '../utils/safeJsonParse'
 // import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS en desarrollo
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
@@ -48,17 +49,11 @@ export function useAuth(): AuthState & {
         if (DEV_MODE) {
             const storedUser = localStorage.getItem('mockUser');
             if (storedUser) {
-                try {
-                    // Validar que sea un string JSON válido antes de parsear
-                    if (storedUser.startsWith('{') || storedUser.startsWith('[')) {
-                        const userData = JSON.parse(storedUser) as User;
-                        setUser(userData);
-                    } else {
-                        console.warn('⚠️ localStorage contenía datos inválidos. Limpiando...');
-                        localStorage.removeItem('mockUser');
-                    }
-                } catch (err) {
-                    console.error('Error al parsear usuario almacenado:', err);
+                const userData = safeJsonParse<User>(storedUser);
+                if (userData) {
+                    setUser(userData);
+                } else {
+                    console.warn('⚠️ localStorage contenía datos inválidos. Limpiando...');
                     localStorage.removeItem('mockUser');
                 }
             } else {

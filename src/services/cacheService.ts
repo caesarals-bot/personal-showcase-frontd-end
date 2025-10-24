@@ -3,6 +3,8 @@
  * Servicio para gestionar caché en localStorage con TTL (Time To Live)
  */
 
+import { safeJsonParse } from '@/utils/safeJsonParse';
+
 interface CacheEntry<T> {
     data: T
     timestamp: number
@@ -56,7 +58,13 @@ class CacheService {
                 return null
             }
 
-            const entry: CacheEntry<T> = JSON.parse(cached)
+            const entry = safeJsonParse<CacheEntry<T>>(cached)
+            
+            if (!entry) {
+                // Si no se puede parsear, limpiar la entrada corrupta
+                this.removeCache(key)
+                return null
+            }
 
             // Verificar versión
             const expectedVersion = options.version || this.DEFAULT_VERSION
@@ -73,6 +81,8 @@ class CacheService {
 
             return entry.data
         } catch (error) {
+            console.error('❌ Error en getCache:', error)
+            this.removeCache(key)
             return null
         }
     }
@@ -97,7 +107,12 @@ class CacheService {
                 return null
             }
 
-            const entry: CacheEntry<unknown> = JSON.parse(cached)
+            const entry = safeJsonParse<CacheEntry<unknown>>(cached)
+            
+            if (!entry) {
+                this.removeCache(key)
+                return null
+            }
 
             return {
                 timestamp: entry.timestamp,
