@@ -210,7 +210,7 @@ export default function UsersPage() {
             bio: user.bio || '',
             role: user.role,
             isVerified: user.isVerified,
-            isActive: user.isActive || true,
+            isActive: user.isActive ?? true, // Usar nullish coalescing para solo usar true si isActive es null o undefined
         });
     };
 
