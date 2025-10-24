@@ -111,6 +111,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Excluir URLs de DiceBear API del manejo de cache
+  if (isDiceBearAPI(request.url)) {
+    // Dejar que DiceBear API se maneje directamente sin cache
+    return;
+  }
+
   // Determinar estrategia de cache
   if (isStaticAsset(request.url)) {
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
@@ -249,6 +255,10 @@ function isGoogleFonts(url) {
 
 function isGoogleUserContent(url) {
   return url.includes('googleusercontent.com');
+}
+
+function isDiceBearAPI(url) {
+  return url.includes('api.dicebear.com');
 }
 
 // Limpiar cache periódicamente
