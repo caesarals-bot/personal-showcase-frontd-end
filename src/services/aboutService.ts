@@ -3,6 +3,7 @@ import { db } from '@/firebase/config';
 import type { AboutData, Profile } from '@/types/about.types';
 import { aboutData } from '@/data/about.data';
 import { safeJsonParse } from '@/utils/safeJsonParse';
+import { ImageUploadService } from './imageUploadService';
 
 // Flag para usar Firebase
 const USE_FIREBASE = true;
@@ -311,5 +312,218 @@ async function updateAboutDataInFirestore(data: AboutData): Promise<void> {
   } catch (error) {
     console.error('Error al actualizar datos About en Firestore:', error);
     throw error;
+  }
+}
+
+/**
+ * Extraer la ruta de Storage desde una URL de Firebase
+ */
+function extractStoragePathFromUrl(url: string): string | null {
+  try {
+    // Patrón para URLs de Firebase Storage
+    const match = url.match(/\/o\/(.+?)\?/);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    return null;
+  } catch (error) {
+    console.error('Error al extraer ruta de Storage:', error);
+    return null;
+  }
+}
+
+/**
+ * Eliminar una imagen específica de las secciones About
+ */
+export async function removeAboutImage(imageUrl: string, sectionId?: string): Promise<void> {
+  if (USE_FIREBASE) {
+    try {
+      const currentData = await getAboutDataFromFirestore();
+      
+      if (!currentData || !currentData.sections || !currentData.sections.length) {
+        return;
+      }
+
+      // Eliminar de Firebase Storage
+      const path = extractStoragePathFromUrl(imageUrl);
+      if (path) {
+        try {
+          await ImageUploadService.deleteImage(path);
+        } catch (err) {
+          console.warn('⚠️ No se pudo eliminar la imagen del Storage:', err);
+          // No lanzar error, continuar con la actualización de Firestore
+        }
+      }
+
+      // Actualizar las secciones removiendo la imagen
+      const updatedSections = currentData.sections.map(section => {
+        // Si se especifica un sectionId, solo actualizar esa sección
+        if (sectionId && section.id !== sectionId) {
+          return section;
+        }
+
+        const updatedSection = { ...section };
+        
+        // Remover de la imagen principal si coincide
+        if (updatedSection.image === imageUrl) {
+          updatedSection.image = '';
+        }
+        
+        // Remover de las imágenes adicionales si existe
+        if (updatedSection.images) {
+          updatedSection.images = updatedSection.images.filter((url: string) => url !== imageUrl);
+        }
+        
+        // Remover de la galería si existe
+        if (updatedSection.gallery) {
+          updatedSection.gallery = updatedSection.gallery.filter((url: string) => url !== imageUrl);
+        }
+        
+        return updatedSection;
+      });
+
+      const updatedData = { ...currentData, sections: updatedSections };
+      
+      await updateAboutDataInFirestore(updatedData);
+      
+      // Actualizar cache local
+      aboutDataDB = updatedData;
+      persistAboutDB();
+      
+      return;
+    } catch (error) {
+      console.error('❌ Error al eliminar imagen de About:', error);
+      throw error;
+    }
+  }
+
+  // Modo local
+  if (aboutDataDB.sections) {
+    aboutDataDB.sections = aboutDataDB.sections.map(section => {
+      // Si se especifica un sectionId, solo actualizar esa sección
+      if (sectionId && section.id !== sectionId) {
+        return section;
+      }
+
+      const updatedSection = { ...section };
+      
+      // Remover de la imagen principal si coincide
+      if (updatedSection.image === imageUrl) {
+        updatedSection.image = '';
+      }
+      
+      // Remover de las imágenes adicionales si existe
+      if (updatedSection.images) {
+        updatedSection.images = updatedSection.images.filter((url: string) => url !== imageUrl);
+      }
+      
+      // Remover de la galería si existe
+      if (updatedSection.gallery) {
+        updatedSection.gallery = updatedSection.gallery.filter((url: string) => url !== imageUrl);
+      }
+      
+      return updatedSection;
+    });
+    persistAboutDB();
+  }
+}
+
+/**
+ * Eliminar múltiples imágenes de las secciones About
+ */
+export async function removeAboutImages(imageUrls: string[], sectionId?: string): Promise<void> {
+  if (USE_FIREBASE) {
+    try {
+      const currentData = await getAboutDataFromFirestore();
+      
+      if (!currentData || !currentData.sections || !currentData.sections.length) {
+        return;
+      }
+
+      // Eliminar de Firebase Storage
+      const deletionPromises = imageUrls.map(async (imageUrl) => {
+        const path = extractStoragePathFromUrl(imageUrl);
+        if (path) {
+          try {
+            await ImageUploadService.deleteImage(path);
+          } catch (err) {
+            console.warn('⚠️ No se pudo eliminar la imagen del Storage:', err);
+            // No lanzar error, continuar con las demás eliminaciones
+          }
+        }
+      });
+
+      await Promise.all(deletionPromises);
+
+      // Actualizar las secciones removiendo las imágenes
+      const updatedSections = currentData.sections.map(section => {
+        // Si se especifica un sectionId, solo actualizar esa sección
+        if (sectionId && section.id !== sectionId) {
+          return section;
+        }
+
+        const updatedSection = { ...section };
+        
+        // Remover de la imagen principal si coincide con alguna de las URLs
+        if (imageUrls.includes(updatedSection.image)) {
+          updatedSection.image = '';
+        }
+        
+        // Remover de las imágenes adicionales si existe
+        if (updatedSection.images) {
+          updatedSection.images = updatedSection.images.filter((url: string) => !imageUrls.includes(url));
+        }
+        
+        // Remover de la galería si existe
+        if (updatedSection.gallery) {
+          updatedSection.gallery = updatedSection.gallery.filter((url: string) => !imageUrls.includes(url));
+        }
+        
+        return updatedSection;
+      });
+
+      const updatedData = { ...currentData, sections: updatedSections };
+      
+      await updateAboutDataInFirestore(updatedData);
+      
+      // Actualizar cache local
+      aboutDataDB = updatedData;
+      persistAboutDB();
+      
+      return;
+    } catch (error) {
+      console.error('❌ Error al eliminar imágenes de About:', error);
+      throw error;
+    }
+  }
+
+  // Modo local
+  if (aboutDataDB.sections) {
+    aboutDataDB.sections = aboutDataDB.sections.map(section => {
+      // Si se especifica un sectionId, solo actualizar esa sección
+      if (sectionId && section.id !== sectionId) {
+        return section;
+      }
+
+      const updatedSection = { ...section };
+      
+      // Remover de la imagen principal si coincide con alguna de las URLs
+      if (imageUrls.includes(updatedSection.image)) {
+        updatedSection.image = '';
+      }
+      
+      // Remover de las imágenes adicionales si existe
+      if (updatedSection.images) {
+        updatedSection.images = updatedSection.images.filter((url: string) => !imageUrls.includes(url));
+      }
+      
+      // Remover de la galería si existe
+      if (updatedSection.gallery) {
+        updatedSection.gallery = updatedSection.gallery.filter((url: string) => !imageUrls.includes(url));
+      }
+      
+      return updatedSection;
+    });
+    persistAboutDB();
   }
 }

@@ -38,7 +38,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Edit, Trash2, FileText, Image as ImageIcon, ArrowLeft, ArrowRight, X } from 'lucide-react';
 import type { AboutSection } from '@/types/about.types';
-import { AboutService } from '@/services/aboutService';
+import { AboutService, removeAboutImage } from '@/services/aboutService';
 import ImageOptimizer from '@/components/ui/ImageOptimizer';
 import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
 import { imageOptimizer } from '@/services/imageOptimizer';
@@ -216,11 +216,28 @@ export default function ProfilePage() {
     };
 
     // Función para remover una imagen
-    const removeImage = (index: number) => {
-        setFormData(prev => ({
-            ...prev,
-            images: prev.images?.filter((_, i) => i !== index) || []
-        }));
+    const removeImage = async (index: number) => {
+        if (!formData.images || index < 0 || index >= formData.images.length) {
+            return;
+        }
+
+        const imageUrl = formData.images[index];
+        
+        try {
+            // Eliminar de Firebase Storage y Firestore
+            await removeAboutImage(imageUrl);
+            
+            // Actualizar estado local
+            setFormData(prev => ({
+                ...prev,
+                images: prev.images?.filter((_, i) => i !== index) || []
+            }));
+            
+            console.log('✅ Imagen eliminada exitosamente');
+        } catch (error) {
+            console.error('❌ Error al eliminar imagen:', error);
+            // Mostrar mensaje de error al usuario si es necesario
+        }
     };
 
     if (loading) {
