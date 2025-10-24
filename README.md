@@ -23,6 +23,28 @@
 - 📊 **Collections**: users, posts, categories, tags, interactions, contact, about
 - 🔒 **Security Rules** optimizadas y probadas
 
+### 🔐 Sistema de Gestión de Contraseñas
+
+#### 🔑 Cambio de Contraseña (Usuarios Autenticados)
+- **Ruta**: `/admin/change-password`
+- **Reautenticación**: Requiere contraseña actual para seguridad
+- **Validación**: Políticas de contraseña personalizables
+- **Indicador**: Medidor de fortaleza en tiempo real
+- **Acceso**: Desde perfil de usuario → Sección Seguridad
+
+#### 🛡️ Reset de Contraseña (Usuarios No Autenticados)
+- **Ruta**: `/auth/reset-password`
+- **Protección**: reCAPTCHA integrado contra bots
+- **Email**: Envío automático vía Firebase Auth
+- **Validación**: Verificación de formato de email
+- **UX**: Confirmación visual del envío
+
+#### 📋 Políticas de Contraseña
+- **Longitud mínima**: 8 caracteres
+- **Complejidad**: Mayúsculas, minúsculas, números y símbolos
+- **Validación**: En tiempo real con feedback visual
+- **Personalizable**: Configuración en `utils/passwordPolicy.ts`
+
 ### 📝 Blog System
 - ✍️ **Editor de posts** con markdown support
 - 🏷️ **Sistema de categorías y tags**
@@ -35,6 +57,8 @@
 
 ### 👤 User Features
 - 🔐 **Registro y login** con Firebase Auth
+- 🔑 **Cambio de contraseñas** con validación de políticas
+- 🛡️ **Reset de contraseña** con reCAPTCHA
 - 👤 **Perfiles de usuario** con avatar
 - ❤️ **Dar likes** a posts
 - 💬 **Comentar y responder** comentarios
@@ -44,6 +68,7 @@
 - 📊 **Dashboard** con estadísticas
 - ✍️ **Gestión de posts** (crear, editar, eliminar, publicar)
 - 👥 **Gestión de usuarios** y roles
+- 🔐 **Gestión de seguridad** y cambio de contraseñas
 - 💬 **Moderación de comentarios**
 - 🎯 **Sistema de aprobación** de posts
 - 📈 **Analytics** básicos
@@ -74,6 +99,8 @@
 - **Form Management**: React Hook Form 7.64
 - **Validation**: Zod 4.1.11
 - **Resolvers**: @hookform/resolvers 5.2
+- **Password Policy**: Validación personalizada de contraseñas
+- **reCAPTCHA**: Protección contra bots en reset de contraseña
 
 ### Routing
 - **Router**: React Router 7.9.4
@@ -170,6 +197,15 @@ frontend-showcase/
 │   ├── admin/                    # Panel de administración
 │   │   ├── components/           # Componentes del admin
 │   │   └── pages/                # Páginas del admin
+│   ├── auth/                     # Sistema de autenticación
+│   │   ├── components/           # Componentes de auth
+│   │   │   ├── ChangePasswordForm.tsx
+│   │   │   ├── ResetPasswordForm.tsx
+│   │   │   ├── LoginForm.tsx
+│   │   │   └── RegisterForm.tsx
+│   │   └── pages/                # Páginas de auth
+│   │       ├── ChangePasswordPage.tsx
+│   │       └── ResetPasswordPage.tsx
 │   ├── components/               # Componentes globales
 │   │   ├── ui/                   # shadcn/ui components
 │   │   ├── LikeButton.tsx
@@ -207,6 +243,8 @@ frontend-showcase/
 │   ├── utils/                    # Utilidades
 │   │   ├── permissions.ts
 │   │   ├── postStatus.ts
+│   │   ├── passwordPolicy.ts
+│   │   ├── recaptchaConfig.ts
 │   │   └── logger.ts
 │   ├── App.tsx
 │   ├── main.tsx
@@ -404,6 +442,8 @@ O copia el contenido de `firestore.rules` manualmente en Firebase Console.
 
 - [ ] Blog carga correctamente
 - [ ] Usuarios pueden registrarse
+- [ ] Sistema de cambio de contraseñas funciona
+- [ ] Reset de contraseña con reCAPTCHA funciona
 - [ ] Sistema de likes funciona
 - [ ] Sistema de comentarios funciona
 - [ ] Formulario de contacto envía emails
@@ -453,6 +493,8 @@ Ver `LIKES_COMMENTS_TROUBLESHOOTING.md` para más soluciones.
 ### ✅ Completado (Fase 1-3)
 - [x] Setup inicial del proyecto
 - [x] Sistema de autenticación Firebase
+- [x] Sistema de cambio de contraseñas con validación
+- [x] Reset de contraseña con reCAPTCHA
 - [x] Blog con posts, categorías y tags
 - [x] Sistema de likes
 - [x] Sistema de comentarios con respuestas
