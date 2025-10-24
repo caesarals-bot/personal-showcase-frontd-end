@@ -30,8 +30,20 @@ export const useServiceWorker = () => {
     // Registrar Service Worker
     const registerSW = async () => {
       try {
+        // Esperar a que el documento esté completamente cargado
+        if (document.readyState !== 'complete') {
+          await new Promise(resolve => {
+            const handleLoad = () => {
+              window.removeEventListener('load', handleLoad);
+              resolve(void 0);
+            };
+            window.addEventListener('load', handleLoad);
+          });
+        }
+
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
+          updateViaCache: 'none', // Evitar problemas de cache
         });
 
         setState(prev => ({
@@ -60,15 +72,17 @@ export const useServiceWorker = () => {
         });
 
       } catch (error) {
-        // Error silencioso en producción
+        console.warn('Service Worker registration failed:', error);
+        // Error silencioso en producción pero con log para debugging
       }
     };
 
-    registerSW();
+    // Usar setTimeout para asegurar que el registro ocurra después del render inicial
+    const timeoutId = setTimeout(registerSW, 100);
 
     // Cleanup
     return () => {
-      // No hay cleanup específico necesario
+      clearTimeout(timeoutId);
     };
   }, []);
 

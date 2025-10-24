@@ -1,4 +1,59 @@
 # 📋 Tareas Pendientes para Mañana
+*Fecha: 20 de Enero 2025*
+
+## 🚀 **URGENTE - Deploy y Configuración**
+
+### 1. Configuración Final de Netlify
+- [ ] **Aplicar mejoras pendientes al `vite.config.ts`:**
+  - [ ] Añadir configuración de `preview` con puerto 4173
+  - [ ] Añadir `host: true` al servidor para acceso desde red local
+  - [ ] Añadir configuración `experimental.renderBuiltUrl` para Netlify
+  - [ ] Añadir `legalComments: 'none'` a esbuild para reducir bundle size
+- [ ] Configurar variables de entorno en Netlify Dashboard
+  - [ ] `VITE_FIREBASE_API_KEY`
+  - [ ] `VITE_FIREBASE_AUTH_DOMAIN`
+  - [ ] `VITE_FIREBASE_PROJECT_ID`
+  - [ ] `VITE_FIREBASE_STORAGE_BUCKET`
+  - [ ] `VITE_FIREBASE_MESSAGING_SENDER_ID`
+  - [ ] `VITE_FIREBASE_APP_ID`
+  - [ ] `VITE_USE_FIREBASE=true`
+  - [ ] `VITE_DEV_MODE=false`
+  - [ ] `VITE_EMAILJS_SERVICE_ID`
+  - [ ] `VITE_EMAILJS_TEMPLATE_ID`
+  - [ ] `VITE_EMAILJS_PUBLIC_KEY`
+- [ ] Verificar Build Settings en Netlify:
+  - [ ] Build command: `npm run build`
+  - [ ] Publish directory: `dist`
+  - [ ] Node version: 18+
+- [ ] Hacer deploy de prueba y verificar funcionamiento
+- [ ] Probar todas las funcionalidades en producción
+
+### 2. Limpieza de Archivos MD
+- [ ] **Eliminar archivos MD obsoletos:**
+  - [ ] `ANALISIS_IMAGENES_BLOG.md`
+  - [ ] `CardPortfolioEjemplo.md`
+  - [ ] `DEBUG_PASOS.md`
+  - [ ] `ESTADO_ACTUAL_PROYECTO.md`
+  - [ ] `ESTADO_PROYECTO_OPTIMIZACIONES.md`
+  - [ ] `FAVICON_INSTRUCTIONS.md`
+  - [ ] `LIKES_COMMENTS_TROUBLESHOOTING.md`
+  - [ ] `OPTIMIZACIONES_BUNDLE_COMPLETADAS_2025-01-18.md`
+  - [ ] `OPTIMIZACIONES_MODAL.md`
+  - [ ] `PLAN_OPTIMIZACION_BUNDLE.md`
+  - [ ] `PLAN_ROLLBACK_Y_OPTIMIZACION_ITERATIVA_2025-01-19.md`
+  - [ ] `PORTFOLIO_3D_CARDS.md`
+  - [ ] `PROJECT_STATUS.md`
+  - [ ] `RESOLUCION_ERROR_FORWARDREF_2025-01-18.md`
+  - [ ] `ejemplocard.md`
+- [ ] **Mantener solo archivos esenciales:**
+  - [ ] `README.md` (principal)
+  - [ ] `CONFIGURACION_ENV.md`
+  - [ ] `EMAILJS_SETUP.md`
+  - [ ] `FIREBASE_SCHEMA.md`
+  - [ ] `FRONTEND_DOCUMENTATION.md`
+  - [ ] `RATE_LIMITING_GUIDE.md`
+  - [ ] `TAREAS_MANANA.md` (este archivo)
+  - [ ] `TAREAS_PENDIENTES.md`
 
 ## 🎯 Prioridad Alta
 
