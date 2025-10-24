@@ -93,6 +93,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Excluir URLs de Google reCAPTCHA del manejo de cache
+  if (isGoogleRecaptcha(request.url)) {
+    // Dejar que reCAPTCHA se maneje directamente sin cache
+    return;
+  }
+
   // Determinar estrategia de cache
   if (isStaticAsset(request.url)) {
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
@@ -214,6 +220,13 @@ function isImage(url) {
 
 function isDynamicContent(url) {
   return CACHE_STRATEGIES.DYNAMIC.some(pattern => pattern.test(url));
+}
+
+function isGoogleRecaptcha(url) {
+  // Excluir todas las URLs relacionadas con Google reCAPTCHA
+  return url.includes('google.com/recaptcha') || 
+         url.includes('gstatic.com/recaptcha') ||
+         url.includes('googleapis.com/recaptcha');
 }
 
 // Limpiar cache periódicamente
