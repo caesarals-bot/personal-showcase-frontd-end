@@ -1,16 +1,34 @@
-import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase/config';
 import type { AboutData, Profile } from '@/types/about.types';
 import { aboutData } from '@/data/about.data';
+import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import { safeJsonParse } from '@/utils/safeJsonParse';
 import { ImageUploadService } from './imageUploadService';
 
-// Flag para usar Firebase
-const USE_FIREBASE = true;
+const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
 
 // Claves para localStorage
-const ABOUT_STORAGE_KEY = 'about_data_db';
+const ABOUT_STORAGE_KEY = 'about_db';
 const PROFILE_STORAGE_KEY = 'profile_data_db';
+
+// Cache para About data
+interface CacheEntry {
+  data: AboutData;
+  timestamp: number;
+}
+
+let aboutCache: CacheEntry | null = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+function isCacheValid(): boolean {
+  return aboutCache !== null && (Date.now() - aboutCache.timestamp) < CACHE_DURATION;
+}
+
+function clearAboutCache(): void {
+  aboutCache = null;
+}
+
+export { clearAboutCache };
 
 // Base de datos en memoria para AboutData
 let aboutDataDB: AboutData = { ...aboutData };
@@ -23,7 +41,7 @@ const persistAboutDB = () => {
   try {
     localStorage.setItem(ABOUT_STORAGE_KEY, JSON.stringify(aboutDataDB));
   } catch (error) {
-    console.error('Error al guardar about data en localStorage:', error);
+    console.error('Error al guardar datos de About en localStorage:', error);
   }
 };
 
@@ -38,39 +56,24 @@ const persistProfileDB = () => {
   }
 };
 
-// Función para inicializar la base de datos desde Firebase o localStorage
-const initializeAboutDB = async () => {
-  if (USE_FIREBASE) {
-    try {
-      // Intentar cargar desde Firebase primero
-      aboutDataDB = await getAboutDataFromFirestore();
-      return;
-    } catch (error) {
-      console.warn('⚠️ Error al cargar desde Firebase, usando localStorage:', error);
-      // Fallback a localStorage si Firebase falla
-    }
-  }
-
-  // Cargar desde localStorage (modo local o fallback)
+// Función para inicializar la base de datos local
+const initializeAboutDB = () => {
   try {
-    const storedData = localStorage.getItem(ABOUT_STORAGE_KEY);
-    if (storedData) {
-      const data = safeJsonParse<AboutData>(storedData);
-      if (data) {
-        aboutDataDB = data;
-      } else {
-        console.warn('⚠️ Datos corruptos en about_data_db. Reinicializando...');
-        aboutDataDB = { ...aboutData };
-        persistAboutDB();
+    const stored = localStorage.getItem(ABOUT_STORAGE_KEY);
+    if (stored) {
+      const parsed = safeJsonParse<AboutData>(stored);
+      if (parsed && parsed.sections && Array.isArray(parsed.sections)) {
+        aboutDataDB = parsed;
+        return;
       }
-    } else {
-      aboutDataDB = { ...aboutData };
-      persistAboutDB();
     }
   } catch (error) {
-    console.error('Error al cargar about data desde localStorage:', error);
-    aboutDataDB = { ...aboutData };
+    console.warn('Error al cargar datos de About desde localStorage:', error);
   }
+
+  // Si no hay datos válidos, usar datos por defecto
+  aboutDataDB = { ...aboutData };
+  persistAboutDB();
 };
 
 // Función para inicializar el perfil desde localStorage
@@ -93,57 +96,109 @@ const initializeProfileDB = () => {
 };
 
 // Inicializar las bases de datos al cargar el módulo
-initializeAboutDB().catch(error => {
-  console.error('Error al inicializar aboutDB:', error);
-});
+initializeAboutDB();
 initializeProfileDB();
 
-// Simulación de delay de red
-const delay = () => new Promise(resolve => setTimeout(resolve, 300));
+/**
+ * Obtener datos de About (función principal)
+ */
+export async function getAboutData(): Promise<AboutData> {
+  if (USE_FIREBASE) {
+    return getAboutDataFromFirestore();
+  }
+  return getAboutDataLocal();
+}
+
+/**
+ * Obtener datos de About desde Firestore (con caché)
+ */
+async function getAboutDataFromFirestore(): Promise<AboutData> {
+  try {
+    // Verificar caché primero
+    if (isCacheValid() && aboutCache) {
+      return aboutCache.data;
+    }
+
+    const docRef = doc(db, 'about', 'data');
+    const docSnap = await getDoc(docRef);
+    
+    let data: AboutData;
+    
+    if (docSnap.exists()) {
+      data = docSnap.data() as AboutData;
+      // Actualizar caché local
+      aboutDataDB = data;
+      persistAboutDB();
+    } else {
+      // Si no existe el documento, crearlo con los datos iniciales
+      data = { ...aboutDataDB };
+      await setDoc(docRef, data);
+    }
+
+    // Guardar en caché
+    aboutCache = {
+      data,
+      timestamp: Date.now()
+    };
+
+    return data;
+  } catch (error) {
+    console.error('Error al obtener datos de About desde Firestore:', error);
+    // Recurrir a datos locales como fallback
+    return getAboutDataLocal();
+  }
+}
+
+/**
+ * Obtener datos de About desde localStorage
+ */
+async function getAboutDataLocal(): Promise<AboutData> {
+  return { ...aboutDataDB };
+}
+
+/**
+ * Actualizar datos de About
+ */
+export async function updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
+  // Actualizar datos locales primero
+  aboutDataDB = {
+    ...aboutDataDB,
+    ...data,
+  };
+  persistAboutDB();
+  
+  // Limpiar caché
+  clearAboutCache();
+
+  if (USE_FIREBASE) {
+    try {
+      await updateAboutDataInFirestore(aboutDataDB);
+    } catch (error) {
+      console.error('Error al actualizar datos de About en Firebase (datos guardados localmente):', error);
+      // No lanzar error porque los datos ya están guardados localmente
+    }
+  }
+
+  return { ...aboutDataDB };
+}
 
 // Simulación de API/Firebase
 export class AboutService {
   // Método actual (datos locales)
   static async getAboutData(): Promise<AboutData> {
-    if (USE_FIREBASE) {
-      return await getAboutDataFromFirestore();
-    }
-    await delay();
-    return { ...aboutDataDB };
+    return getAboutData();
   }
 
   // Actualizar datos del About
   static async updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
-    await delay();
-    
-    aboutDataDB = {
-      ...aboutDataDB,
-      ...data,
-    };
-
-    if (USE_FIREBASE) {
-      try {
-        // Persistir en Firestore primero
-        await updateAboutDataInFirestore(aboutDataDB);
-        // Solo guardar en localStorage como cache después de éxito en Firebase
-        persistAboutDB();
-      } catch (error) {
-        console.error('Error al guardar en Firestore, usando localStorage como fallback:', error);
-        // Fallback: guardar en localStorage si Firebase falla
-        persistAboutDB();
-      }
-    } else {
-      // Modo local: solo persistir en localStorage
-      persistAboutDB();
-    }
-
-    return { ...aboutDataDB };
+    return updateAboutData(data);
   }
 
   // Resetear a valores iniciales
   static resetAboutData(): void {
     aboutDataDB = { ...aboutData };
     persistAboutDB();
+    clearAboutCache();
   }
 }
 
@@ -276,33 +331,7 @@ function getProfileLocal(): Profile | null {
   return null;
 }
 
-/**
- * Obtener datos About desde Firestore
- */
-async function getAboutDataFromFirestore(): Promise<AboutData> {
-  try {
-    const docRef = doc(db, 'about', 'data');
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const firestoreData = docSnap.data() as AboutData;
-      
-      // Actualizar caché local
-      aboutDataDB = firestoreData;
-      persistAboutDB();
-      
-      return firestoreData;
-    } else {
-      // Si no existe el documento, crear uno con los datos iniciales
-      await updateAboutDataInFirestore(aboutDataDB);
-      return { ...aboutDataDB };
-    }
-  } catch (error) {
-    console.error('Error al obtener datos About desde Firestore:', error);
-    // Fallback a datos locales
-    return { ...aboutDataDB };
-  }
-}
+
 
 /**
  * Actualizar datos About en Firestore
