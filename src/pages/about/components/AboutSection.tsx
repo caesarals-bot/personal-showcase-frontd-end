@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import type { AboutSection as AboutSectionType } from '@/types/about.types'
+import { isFirebaseStorageUrl } from '@/utils/firebaseImageValidator'
 
 interface AboutSectionProps {
     section: AboutSectionType
@@ -9,23 +10,16 @@ interface AboutSectionProps {
 export default function AboutSection({ section, index }: AboutSectionProps) {
     const isImageLeft = section.imagePosition === 'left'
 
-    // Determinar la URL de la imagen: si es una URL de Firebase, usarla directamente
-    // Si es una ruta relativa, cargarla desde /public
+    // Solo usar URLs de Firebase Storage válidas
     const getImageUrl = (imageUrl: string): string => {
-        if (!imageUrl) return ''
-
-        // Si es una URL completa (Firebase Storage, HTTP, HTTPS), usarla directamente
-        if (imageUrl.startsWith('http://') || 
-            imageUrl.startsWith('https://') || 
-            imageUrl.includes('firebasestorage.googleapis.com')) {
-            return imageUrl
+        if (!imageUrl || !isFirebaseStorageUrl(imageUrl)) {
+            return ''
         }
-
-        // Si es una ruta relativa, asegurarse de que empiece con /
-        return imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`
+        return imageUrl
     }
 
     const imageUrl = getImageUrl(section.image)
+    const hasValidImage = !!imageUrl
 
     return (
         <motion.div
@@ -33,31 +27,33 @@ export default function AboutSection({ section, index }: AboutSectionProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.6, delay: index * 0.2 }}
-            className={`flex flex-col gap-4 rounded-xl border border-border/40 bg-background/50 p-4 backdrop-blur-sm sm:gap-6 sm:rounded-2xl sm:p-6 md:flex-row md:gap-6 ${
-                isImageLeft ? 'md:flex-row' : 'md:flex-row-reverse'
+            className={`flex flex-col gap-4 rounded-xl border border-border/40 bg-background/50 p-4 backdrop-blur-sm sm:gap-6 sm:rounded-2xl sm:p-6 ${
+                hasValidImage ? `md:flex-row md:gap-6 ${isImageLeft ? 'md:flex-row' : 'md:flex-row-reverse'}` : ''
             }`}
         >
-            {/* Imagen más compacta */}
-            <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                whileInView={{ scale: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 + 0.2 }}
-                className="flex-shrink-0"
-            >
-                <div className="relative mx-auto h-32 w-32 sm:h-40 sm:w-40 md:h-36 md:w-36">
-                    <img
-                        src={imageUrl}
-                        alt={section.imageAlt}
-                        className="h-full w-full rounded-lg object-cover shadow-md transition-transform duration-300 hover:scale-105 sm:rounded-xl"
-                    />
-                </div>
-            </motion.div>
+            {/* Imagen solo si es válida */}
+            {hasValidImage && (
+                <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.2 + 0.2 }}
+                    className="flex-shrink-0"
+                >
+                    <div className="relative mx-auto h-32 w-32 sm:h-40 sm:w-40 md:h-36 md:w-36">
+                        <img
+                            src={imageUrl}
+                            alt={section.imageAlt}
+                            className="h-full w-full rounded-lg object-cover shadow-md transition-transform duration-300 hover:scale-105 sm:rounded-xl"
+                        />
+                    </div>
+                </motion.div>
+            )}
 
             {/* Texto optimizado */}
             <div className="flex flex-1 flex-col justify-center space-y-2 sm:space-y-3">
                 <motion.h3
-                    initial={{ opacity: 0, x: isImageLeft ? -20 : 20 }}
+                    initial={{ opacity: 0, x: hasValidImage ? (isImageLeft ? -20 : 20) : 0 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.2 + 0.3 }}
@@ -66,7 +62,7 @@ export default function AboutSection({ section, index }: AboutSectionProps) {
                     {section.title}
                 </motion.h3>
                 <motion.p
-                    initial={{ opacity: 0, x: isImageLeft ? -20 : 20 }}
+                    initial={{ opacity: 0, x: hasValidImage ? (isImageLeft ? -20 : 20) : 0 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.2 + 0.4 }}

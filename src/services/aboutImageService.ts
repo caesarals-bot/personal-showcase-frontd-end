@@ -20,7 +20,7 @@ export interface AboutImageBatchResult {
 }
 
 class AboutImageService {
-  private readonly ABOUT_FOLDER = 'about-images';
+  private readonly ABOUT_FOLDER = 'about';
 
   /**
    * Sube una imagen para la sección About
