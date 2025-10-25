@@ -421,16 +421,6 @@ export async function removeAboutImage(imageUrl: string, sectionId?: string): Pr
           updatedSection.image = '';
         }
         
-        // Remover de las imágenes adicionales si existe
-        if (updatedSection.images) {
-          updatedSection.images = updatedSection.images.filter((url: string) => url !== imageUrl);
-        }
-        
-        // Remover de la galería si existe
-        if (updatedSection.gallery) {
-          updatedSection.gallery = updatedSection.gallery.filter((url: string) => url !== imageUrl);
-        }
-        
         return updatedSection;
       });
 
@@ -462,16 +452,6 @@ export async function removeAboutImage(imageUrl: string, sectionId?: string): Pr
       // Remover de la imagen principal si coincide
       if (updatedSection.image === imageUrl) {
         updatedSection.image = '';
-      }
-      
-      // Remover de las imágenes adicionales si existe
-      if (updatedSection.images) {
-        updatedSection.images = updatedSection.images.filter((url: string) => url !== imageUrl);
-      }
-      
-      // Remover de la galería si existe
-      if (updatedSection.gallery) {
-        updatedSection.gallery = updatedSection.gallery.filter((url: string) => url !== imageUrl);
       }
       
       return updatedSection;
@@ -521,16 +501,6 @@ export async function removeAboutImages(imageUrls: string[], sectionId?: string)
           updatedSection.image = '';
         }
         
-        // Remover de las imágenes adicionales si existe
-        if (updatedSection.images) {
-          updatedSection.images = updatedSection.images.filter((url: string) => !imageUrls.includes(url));
-        }
-        
-        // Remover de la galería si existe
-        if (updatedSection.gallery) {
-          updatedSection.gallery = updatedSection.gallery.filter((url: string) => !imageUrls.includes(url));
-        }
-        
         return updatedSection;
       });
 
@@ -562,16 +532,6 @@ export async function removeAboutImages(imageUrls: string[], sectionId?: string)
       // Remover de la imagen principal si coincide con alguna de las URLs
       if (imageUrls.includes(updatedSection.image)) {
         updatedSection.image = '';
-      }
-      
-      // Remover de las imágenes adicionales si existe
-      if (updatedSection.images) {
-        updatedSection.images = updatedSection.images.filter((url: string) => !imageUrls.includes(url));
-      }
-      
-      // Remover de la galería si existe
-      if (updatedSection.gallery) {
-        updatedSection.gallery = updatedSection.gallery.filter((url: string) => !imageUrls.includes(url));
       }
       
       return updatedSection;

@@ -5,9 +5,6 @@ export interface AboutSection {
     image: string
     imageAlt: string
     imagePosition: 'left' | 'right'
-    // Nuevos campos para soporte de múltiples imágenes
-    images?: string[]  // URLs de imágenes adicionales
-    gallery?: string[] // Galería de imágenes (alias para images)
 }
 
 export interface AboutData {

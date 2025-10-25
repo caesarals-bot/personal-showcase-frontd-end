@@ -41,7 +41,7 @@ import type { AboutSection } from '@/types/about.types';
 import { AboutService } from '@/services/aboutService';
 import ImageSelector from '@/components/ui/ImageSelector';
 import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
-import { cleanLocalUrl, cleanLocalUrls } from '@/utils/firebaseImageValidator';
+import { cleanLocalUrl } from '@/utils/firebaseImageValidator';
 
 interface SectionFormData {
     title: string;
@@ -49,7 +49,6 @@ interface SectionFormData {
     image: string;
     imageAlt: string;
     imagePosition: 'left' | 'right';
-    images: string[];  // Múltiples imágenes
 }
 
 export default function ProfilePage() {
@@ -64,7 +63,6 @@ export default function ProfilePage() {
         image: '',
         imageAlt: '',
         imagePosition: 'right',
-        images: [],
     });
 
     // Cargar datos
@@ -92,7 +90,6 @@ export default function ProfilePage() {
             image: '',
             imageAlt: '',
             imagePosition: 'right',
-            images: [],
         });
         setEditingSection(null);
     };
@@ -100,19 +97,15 @@ export default function ProfilePage() {
     const handleCreate = async () => {
         try {
             // Filtrar rutas locales antes de guardar
-            const cleanImages = cleanLocalUrls(formData.images);
             const cleanImage = cleanLocalUrl(formData.image);
-            const finalImage = cleanImages[0] || cleanImage;
             
             const newSection: AboutSection = {
                 id: `section-${Date.now()}`,
                 title: formData.title,
                 content: formData.content,
-                image: finalImage, // Solo URLs de Firebase Storage
+                image: cleanImage, // Solo URLs de Firebase Storage
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
-                images: cleanImages, // Solo URLs de Firebase Storage
-                gallery: cleanImages, // También asignar a gallery para compatibilidad
             };
             const updatedSections = [...sections, newSection];
             await AboutService.updateAboutData({ sections: updatedSections });
@@ -130,20 +123,16 @@ export default function ProfilePage() {
         
         try {
             // Filtrar rutas locales antes de guardar
-            const cleanImages = cleanLocalUrls(formData.images);
             const cleanImage = cleanLocalUrl(formData.image);
-            const finalImage = cleanImages[0] || cleanImage;
             
             const updatedSections = sections.map(s => 
                 s.id === editingSection.id ? {
                     ...s,
                     title: formData.title,
                     content: formData.content,
-                    image: finalImage, // Solo URLs de Firebase Storage
+                    image: cleanImage, // Solo URLs de Firebase Storage
                     imageAlt: formData.imageAlt,
                     imagePosition: formData.imagePosition,
-                    images: cleanImages, // Solo URLs de Firebase Storage
-                    gallery: cleanImages, // También asignar a gallery para compatibilidad
                 } : s
             );
             await AboutService.updateAboutData({ sections: updatedSections });
@@ -176,15 +165,13 @@ export default function ProfilePage() {
         
         // Filtrar rutas locales y mantener solo URLs de Firebase Storage
         const cleanImage = cleanLocalUrl(section.image || '');
-        const cleanImages = cleanLocalUrls(section.images || []);
         
         setFormData({
             title: section.title,
             content: section.content,
-            image: cleanImage,
+            image: cleanImage,  // ✅ Solo image
             imageAlt: section.imageAlt,
             imagePosition: section.imagePosition,
-            images: cleanImages,
         });
         setIsDialogOpen(true);
     };
@@ -353,15 +340,8 @@ export default function ProfilePage() {
                             <Input
                                 id="image"
                                 placeholder="/comic-team-web.webp o URL de Firebase"
-                                value={formData.images && formData.images.length > 0 ? formData.images[0] : formData.image}
-                                onChange={(e) => {
-                                    const newValue = e.target.value;
-                                    setFormData({ 
-                                        ...formData, 
-                                        image: newValue,
-                                        images: newValue ? [newValue] : []  // ✅ Mantener sincronización
-                                    });
-                                }}
+                                value={formData.image}
+                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground">
                                 Ruta relativa a /public (ej: /comic-team-web.webp) o URL de Firebase Storage
@@ -418,8 +398,7 @@ export default function ProfilePage() {
                                         value={formData.image}
                                         onChange={(url) => setFormData(prev => ({ 
                                             ...prev, 
-                                            image: url,
-                                            images: url ? [url] : []  // ✅ Actualizar también el array
+                                            image: url  // ✅ Solo actualizar image
                                         }))}
                                         label="Imagen de About"
                                         placeholder="URL de la imagen o sube una nueva"
@@ -431,10 +410,10 @@ export default function ProfilePage() {
                             </div>
 
                             {/* Mostrar URL para copiar */}
-                            {formData.images && formData.images.length > 0 && (
+                            {formData.image && (
                                 <div className="space-y-2">
                                     <Label>URL de la Imagen</Label>
-                                    <ImageUrlDisplay urls={[formData.images[0]]} />
+                                    <ImageUrlDisplay urls={[formData.image]} />
                                 </div>
                             )}
                         </div>
@@ -455,7 +434,7 @@ export default function ProfilePage() {
                             disabled={
                                 !formData.title || 
                                 !formData.content || 
-                                (!formData.image && (!formData.images || formData.images.length === 0)) || 
+                                !formData.image || 
                                 !formData.imageAlt
                             }
                         >
