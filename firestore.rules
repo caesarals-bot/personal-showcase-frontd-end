@@ -92,6 +92,12 @@ service cloud.firestore {
       allow write: if isAdmin(); // Solo admin puede modificar
     }
     
+    // ===== Reglas para "about" (sección Acerca de) =====
+    match /about/{documentId} {
+      allow read: if true; // Todos pueden ver el contenido del About
+      allow write: if isAdmin(); // Solo el admin puede editar
+    }
+    
     // Denegar todo lo demás por defecto
     match /{document=**} {
       allow read, write: if false;

@@ -160,11 +160,14 @@ async function getAboutDataLocal(): Promise<AboutData> {
  * Actualizar datos de About
  */
 export async function updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
-  // Actualizar datos locales primero
-  aboutDataDB = {
+  // 🔹 Crear datos merged de forma segura
+  const mergedData = {
     ...aboutDataDB,
     ...data,
   };
+
+  // 🔹 Persistir localmente (opcional)
+  aboutDataDB = mergedData;
   persistAboutDB();
   
   // Limpiar caché
@@ -172,14 +175,14 @@ export async function updateAboutData(data: Partial<AboutData>): Promise<AboutDa
 
   if (USE_FIREBASE) {
     try {
-      await updateAboutDataInFirestore(aboutDataDB);
+      await updateAboutDataInFirestore(mergedData);
     } catch (error) {
       console.error('Error al actualizar datos de About en Firebase (datos guardados localmente):', error);
       // No lanzar error porque los datos ya están guardados localmente
     }
   }
 
-  return { ...aboutDataDB };
+  return { ...mergedData };
 }
 
 // Simulación de API/Firebase
