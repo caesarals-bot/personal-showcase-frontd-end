@@ -15,6 +15,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { safeJsonParseWithDefault } from '@/utils/safeJsonParse';
 
 // Flag para usar Firebase o localStorage
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -59,7 +60,8 @@ const initializeCategoriesDB = () => {
   try {
     const storedCategories = localStorage.getItem(CATEGORIES_STORAGE_KEY);
     if (storedCategories) {
-      categoriesDB = JSON.parse(storedCategories);
+      const parsedCategories = safeJsonParseWithDefault(storedCategories, []);
+      categoriesDB = Array.isArray(parsedCategories) ? parsedCategories : [...MOCK_CATEGORIES];
     } else {
       categoriesDB = [...MOCK_CATEGORIES];
       persistCategoriesDB();

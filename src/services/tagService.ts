@@ -15,6 +15,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { safeJsonParseWithDefault } from '@/utils/safeJsonParse';
 
 // Configuración
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -105,7 +106,8 @@ const initializeTagsDB = () => {
   try {
     const storedTags = localStorage.getItem(TAGS_STORAGE_KEY);
     if (storedTags) {
-      tagsDB = JSON.parse(storedTags);
+      const parsedTags = safeJsonParseWithDefault(storedTags, []);
+      tagsDB = Array.isArray(parsedTags) ? parsedTags : [...MOCK_TAGS];
     } else {
       tagsDB = [...MOCK_TAGS];
       persistTagsDB();

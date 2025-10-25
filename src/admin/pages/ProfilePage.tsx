@@ -36,15 +36,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Plus, Edit, Trash2, FileText, Image as ImageIcon, ArrowLeft, ArrowRight, X } from 'lucide-react';
+import { Plus, Edit, Trash2, FileText, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { AboutSection } from '@/types/about.types';
-import { AboutService, removeAboutImage } from '@/services/aboutService';
-import ImageOptimizer from '@/components/ui/ImageOptimizer';
+import { AboutService } from '@/services/aboutService';
+import ImageSelector from '@/components/ui/ImageSelector';
 import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
-import { imageOptimizer } from '@/services/imageOptimizer';
-import type { OptimizeAndUploadResult } from '@/services/imageOptimizer';
-
-import { useAuthContext } from '@/contexts/AuthContext';
 
 interface SectionFormData {
     title: string;
@@ -56,12 +52,11 @@ interface SectionFormData {
 }
 
 export default function ProfilePage() {
-    const { user } = useAuthContext();
     const [loading, setLoading] = useState(true);
     const [sections, setSections] = useState<AboutSection[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingSection, setEditingSection] = useState<AboutSection | null>(null);
-    const [uploadingImages, setUploadingImages] = useState(false);
+
     const [formData, setFormData] = useState<SectionFormData>({
         title: '',
         content: '',
@@ -178,68 +173,8 @@ export default function ProfilePage() {
         setIsDialogOpen(true);
     };
 
-    // Función para manejar imagen optimizada (solo una)
-    const handleOptimizedImages = async (optimizedFiles: File[]) => {
-        if (!user?.id) {
-            console.error('Usuario no autenticado');
-            return;
-        }
 
-        // Solo tomar el primer archivo ya que maxFiles=1
-        const file = optimizedFiles[0];
-        if (!file) return;
 
-        setUploadingImages(true);
-        try {
-            const result: OptimizeAndUploadResult = await imageOptimizer.optimizeAndUpload(
-                file,
-                `about/${user.id}`, // folder con userId
-                undefined, // options (usa defaults del preset "about")
-                undefined // customFileName
-            );
-
-            if (result.upload && !result.error) {
-                // Reemplazar la imagen actual con la nueva
-                setFormData(prev => ({
-                    ...prev,
-                    image: result.upload!.url, // Imagen principal
-                    images: [result.upload!.url] // Array con la imagen
-                }));
-            } else {
-                console.error('Error al subir la imagen:', result.error);
-                alert('Error al subir la imagen. Por favor, inténtalo de nuevo.');
-            }
-        } catch (error) {
-            console.error('❌ Error al procesar imágenes optimizadas:', error);
-        } finally {
-            setUploadingImages(false);
-        }
-    };
-
-    // Función para remover una imagen
-    const removeImage = async (index: number) => {
-        if (!formData.images || index < 0 || index >= formData.images.length) {
-            return;
-        }
-
-        const imageUrl = formData.images[index];
-        
-        try {
-            // Eliminar de Firebase Storage y Firestore
-            await removeAboutImage(imageUrl);
-            
-            // Actualizar estado local
-            setFormData(prev => ({
-                ...prev,
-                images: prev.images?.filter((_, i) => i !== index) || []
-            }));
-            
-            console.log('✅ Imagen eliminada exitosamente');
-        } catch (error) {
-            console.error('❌ Error al eliminar imagen:', error);
-            // Mostrar mensaje de error al usuario si es necesario
-        }
-    };
 
     if (loading) {
         return (
@@ -411,7 +346,6 @@ export default function ProfilePage() {
                                         images: newValue ? [newValue] : []
                                     });
                                 }}
-                                disabled={uploadingImages}
                             />
                             <p className="text-xs text-muted-foreground">
                                 Ruta relativa a /public (ej: /comic-team-web.webp) o URL de Firebase Storage
@@ -452,7 +386,7 @@ export default function ProfilePage() {
                             </Select>
                         </div>
 
-                        {/* Sección de Galería de Imágenes */}
+                        {/* Sección de Imagen */}
                         <div className="space-y-4 border-t pt-6">
                             <div className="space-y-3">
                                 <Label className="text-base font-semibold">
@@ -464,44 +398,17 @@ export default function ProfilePage() {
                                 </p>
                                 
                                 <div className="mt-4">
-                                    <ImageOptimizer
-                                        preset="about"
+                                    <ImageSelector
+                                        value={formData.image}
+                                        onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                                        label="Imagen de About"
+                                        placeholder="URL de la imagen o sube una nueva"
+                                        preset="featured"
                                         maxFiles={1}
                                         multiple={false}
-                                        onImagesOptimized={handleOptimizedImages}
-                                        onValidationError={(errors) => {
-                                            console.error('Error de validación:', errors);
-                                            alert(`Error: ${Array.isArray(errors) ? errors.join(', ') : errors}`);
-                                        }}
-                                        disabled={uploadingImages}
                                     />
                                 </div>
                             </div>
-
-                            {/* Mostrar imagen actual */}
-                            {formData.images && formData.images.length > 0 && (
-                                <div className="space-y-2">
-                                    <Label>Imagen Actual</Label>
-                                    <div className="max-w-xs">
-                                        <div className="relative group">
-                                            <img
-                                                src={formData.images[0]}
-                                                alt="Imagen de la sección"
-                                                className="w-full h-32 object-cover rounded border"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="sm"
-                                                className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                onClick={() => removeImage(0)}
-                                            >
-                                                <X className="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
                             {/* Mostrar URL para copiar */}
                             {formData.images && formData.images.length > 0 && (
