@@ -189,6 +189,12 @@ export class AboutService {
     return getAboutData();
   }
 
+  // Método para forzar recarga desde Firestore (útil en admin)
+  static async getAboutDataFresh(): Promise<AboutData> {
+    clearAboutCache();
+    return getAboutData();
+  }
+
   // Actualizar datos del About
   static async updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
     return updateAboutData(data);

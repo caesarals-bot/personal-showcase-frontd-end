@@ -75,7 +75,8 @@ export default function ProfilePage() {
     const loadData = async () => {
         setLoading(true);
         try {
-            const data = await AboutService.getAboutData();
+            // Usar getAboutDataFresh para forzar carga desde Firestore
+            const data = await AboutService.getAboutDataFresh();
             setSections([...data.sections]);
         } catch (error) {
             console.error('Error al cargar datos:', error);
