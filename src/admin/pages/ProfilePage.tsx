@@ -41,6 +41,7 @@ import type { AboutSection } from '@/types/about.types';
 import { AboutService } from '@/services/aboutService';
 import ImageSelector from '@/components/ui/ImageSelector';
 import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
+import { cleanLocalUrl, cleanLocalUrls } from '@/utils/firebaseImageValidator';
 
 interface SectionFormData {
     title: string;
@@ -98,15 +99,20 @@ export default function ProfilePage() {
 
     const handleCreate = async () => {
         try {
+            // Filtrar rutas locales antes de guardar
+            const cleanImages = cleanLocalUrls(formData.images);
+            const cleanImage = cleanLocalUrl(formData.image);
+            const finalImage = cleanImages[0] || cleanImage;
+            
             const newSection: AboutSection = {
                 id: `section-${Date.now()}`,
                 title: formData.title,
                 content: formData.content,
-                image: formData.images[0] || formData.image, // Usar la primera imagen del array o la imagen individual
+                image: finalImage, // Solo URLs de Firebase Storage
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
-                images: formData.images, // Mantener el array completo
-                gallery: formData.images, // También asignar a gallery para compatibilidad
+                images: cleanImages, // Solo URLs de Firebase Storage
+                gallery: cleanImages, // También asignar a gallery para compatibilidad
             };
             const updatedSections = [...sections, newSection];
             await AboutService.updateAboutData({ sections: updatedSections });
@@ -123,16 +129,21 @@ export default function ProfilePage() {
         if (!editingSection) return;
         
         try {
+            // Filtrar rutas locales antes de guardar
+            const cleanImages = cleanLocalUrls(formData.images);
+            const cleanImage = cleanLocalUrl(formData.image);
+            const finalImage = cleanImages[0] || cleanImage;
+            
             const updatedSections = sections.map(s => 
                 s.id === editingSection.id ? {
                     ...s,
                     title: formData.title,
                     content: formData.content,
-                    image: formData.images[0] || formData.image, // Usar la primera imagen del array o la imagen individual
+                    image: finalImage, // Solo URLs de Firebase Storage
                     imageAlt: formData.imageAlt,
                     imagePosition: formData.imagePosition,
-                    images: formData.images, // Mantener el array completo
-                    gallery: formData.images, // También asignar a gallery para compatibilidad
+                    images: cleanImages, // Solo URLs de Firebase Storage
+                    gallery: cleanImages, // También asignar a gallery para compatibilidad
                 } : s
             );
             await AboutService.updateAboutData({ sections: updatedSections });
@@ -162,13 +173,18 @@ export default function ProfilePage() {
 
     const openEditDialog = (section: AboutSection) => {
         setEditingSection(section);
+        
+        // Filtrar rutas locales y mantener solo URLs de Firebase Storage
+        const cleanImage = cleanLocalUrl(section.image || '');
+        const cleanImages = cleanLocalUrls(section.images || []);
+        
         setFormData({
             title: section.title,
             content: section.content,
-            image: section.image,
+            image: cleanImage,
             imageAlt: section.imageAlt,
             imagePosition: section.imagePosition,
-            images: section.images || [],
+            images: cleanImages,
         });
         setIsDialogOpen(true);
     };
@@ -403,7 +419,7 @@ export default function ProfilePage() {
                                         onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
                                         label="Imagen de About"
                                         placeholder="URL de la imagen o sube una nueva"
-                                        preset="featured"
+                                        preset="about"
                                         maxFiles={1}
                                         multiple={false}
                                     />

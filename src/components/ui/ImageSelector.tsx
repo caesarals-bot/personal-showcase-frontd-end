@@ -19,6 +19,8 @@ import { blogImageService } from '../../services/blogImageService';
 import type { BlogImageUploadResult } from '../../services/blogImageService';
 import { projectImageService } from '../../services/projectImageService';
 import type { ProjectImageUploadResult } from '../../services/projectImageService';
+import { aboutImageService } from '../../services/aboutImageService';
+import type { AboutImageUploadResult } from '../../services/aboutImageService';
 import { useAuthContext } from '../../contexts/AuthContext';
 
 export interface ImageSelectorProps {
@@ -30,7 +32,7 @@ export interface ImageSelectorProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  preset?: 'blog' | 'project' | 'avatar' | 'featured' | 'gallery';
+  preset?: 'blog' | 'project' | 'avatar' | 'featured' | 'gallery' | 'about';
   maxFiles?: number;
   multiple?: boolean;
   className?: string;
@@ -41,7 +43,7 @@ interface UploadedImage {
   file: File;
   url: string;
   status: 'uploading' | 'completed' | 'error';
-  uploadResult?: BlogImageUploadResult | ProjectImageUploadResult;
+  uploadResult?: BlogImageUploadResult | ProjectImageUploadResult | AboutImageUploadResult;
 }
 
 // Helper function to format file size
@@ -102,8 +104,8 @@ export default function ImageSelector({
         setUploadedImages(prev => [...prev, uploadedImage]);
 
         try {
-          // Usar el servicio de blog para subir la imagen
-          let uploadResult: BlogImageUploadResult | ProjectImageUploadResult;
+          // Usar el servicio apropiado según el preset
+          let uploadResult: BlogImageUploadResult | ProjectImageUploadResult | AboutImageUploadResult;
           
           if (preset === 'blog' || preset === 'featured' || preset === 'gallery') {
             // Para blog, featured y gallery, usar el servicio específico
@@ -125,6 +127,12 @@ export default function ImageSelector({
               throw new Error('Usuario no autenticado');
             }
             uploadResult = await projectImageService.uploadProjectImage(file, user.id, postId);
+          } else if (preset === 'about') {
+            // Para about, usar el servicio de about
+            if (!user?.id) {
+              throw new Error('Usuario no autenticado');
+            }
+            uploadResult = await aboutImageService.uploadAboutImage(file, user.id);
           } else {
             // Para otros presets, usar el servicio general (implementar si es necesario)
             throw new Error('Preset no soportado aún');
