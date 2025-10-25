@@ -359,7 +359,7 @@ export default function ProfilePage() {
                                     setFormData({ 
                                         ...formData, 
                                         image: newValue,
-                                        images: newValue ? [newValue] : []
+                                        images: newValue ? [newValue] : []  // ✅ Mantener sincronización
                                     });
                                 }}
                             />
@@ -416,7 +416,11 @@ export default function ProfilePage() {
                                 <div className="mt-4">
                                     <ImageSelector
                                         value={formData.image}
-                                        onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                                        onChange={(url) => setFormData(prev => ({ 
+                                            ...prev, 
+                                            image: url,
+                                            images: url ? [url] : []  // ✅ Actualizar también el array
+                                        }))}
                                         label="Imagen de About"
                                         placeholder="URL de la imagen o sube una nueva"
                                         preset="about"
