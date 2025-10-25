@@ -400,12 +400,20 @@ export default function ProfilePage() {
                             </Label>
                             <Input
                                 id="image"
-                                placeholder="/comic-team-web.webp"
-                                value={formData.image}
-                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                placeholder="/comic-team-web.webp o URL de Firebase"
+                                value={formData.images && formData.images.length > 0 ? formData.images[0] : formData.image}
+                                onChange={(e) => {
+                                    const newValue = e.target.value;
+                                    setFormData({ 
+                                        ...formData, 
+                                        image: newValue,
+                                        images: newValue ? [newValue] : []
+                                    });
+                                }}
+                                disabled={uploadingImages}
                             />
                             <p className="text-xs text-muted-foreground">
-                                Ruta relativa a la carpeta public (ej: /comic-team-web.webp)
+                                Ruta relativa a /public (ej: /comic-team-web.webp) o URL de Firebase Storage
                             </p>
                         </div>
 
@@ -516,7 +524,12 @@ export default function ProfilePage() {
                         </Button>
                         <Button
                             onClick={editingSection ? handleEdit : handleCreate}
-                            disabled={!formData.title || !formData.content || !formData.image || !formData.imageAlt}
+                            disabled={
+                                !formData.title || 
+                                !formData.content || 
+                                (!formData.image && (!formData.images || formData.images.length === 0)) || 
+                                !formData.imageAlt
+                            }
                         >
                             {editingSection ? 'Guardar Cambios' : 'Crear Sección'}
                         </Button>
