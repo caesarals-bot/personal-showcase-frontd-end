@@ -33,7 +33,7 @@ type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
 // Función para evaluar la fortaleza de la contraseña
 const getPasswordStrength = (password: string) => {
   let score = 0;
-  let feedback = [];
+  const feedback: string[] = [];
 
   if (password.length >= 8) score += 1;
   else feedback.push('Al menos 8 caracteres');

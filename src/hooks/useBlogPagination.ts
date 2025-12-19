@@ -80,7 +80,7 @@ export function useBlogPagination({ posts, postsPerPage = 6 }: UseBlogPagination
 
         const half = Math.floor(maxVisible / 2)
         let start = Math.max(current - half, 1)
-        let end = Math.min(start + maxVisible - 1, totalPages)
+        const end = Math.min(start + maxVisible - 1, totalPages)
 
         if (end - start + 1 < maxVisible) {
             start = Math.max(end - maxVisible + 1, 1)

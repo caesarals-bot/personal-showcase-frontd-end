@@ -274,7 +274,7 @@ export interface Profile {
 /**
  * Datos para actualizar el perfil
  */
-export interface UpdateProfileData extends Partial<Omit<Profile, 'id' | 'updatedAt'>> {}
+export type UpdateProfileData = Partial<Omit<Profile, 'id' | 'updatedAt'>>
 
 // ============================================================================
 // TIPOS PARA PORTFOLIO
@@ -351,7 +351,7 @@ export interface CreateProjectData {
 /**
  * Datos para actualizar un proyecto
  */
-export interface UpdateProjectData extends Partial<CreateProjectData> {}
+export type UpdateProjectData = Partial<CreateProjectData>
 
 // ============================================================================
 // TIPOS PARA NAVEGACIÓN DEL ADMIN
