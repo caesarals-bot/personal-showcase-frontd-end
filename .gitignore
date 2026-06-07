@@ -65,5 +65,5 @@ public/comic-*.webp
 *.tmp
 
 # Archivos de desarrollo y notas
-agent.md
+#agent.md
 AGENT.md

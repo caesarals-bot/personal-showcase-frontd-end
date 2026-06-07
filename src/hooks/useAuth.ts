@@ -5,7 +5,7 @@ import { auth } from '../firebase/config'
 import { loginUser, logoutUser, registerUser, loginWithGoogle, resendEmailVerification, isEmailVerified, reloadUserInfo } from '../services/authService'
 import { getUserById } from '../services/userService'
 import { safeJsonParse } from '../utils/safeJsonParse'
-// import { getUserRole } from '../services/roleService' // Comentado temporalmente - CORS en desarrollo
+import { getUserRole } from '../services/roleService'
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -84,9 +84,8 @@ export function useAuth(): AuthState & {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             setIsLoading(true)
             if (firebaseUser) {
-                // Determinar rol basado en email (sin Firestore por ahora)
-                const { shouldBeAdmin } = await import('../services/roleService');
-                const role = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
+                // Determinar rol consultando Firestore
+                const role = await getUserRole(firebaseUser.uid);
                 
                 const userData: User = {
                     id: firebaseUser.uid,
@@ -198,8 +197,7 @@ export function useAuth(): AuthState & {
             await reloadUserInfo()
             // Actualizar el estado del usuario después de recargar
             if (auth.currentUser) {
-                const { shouldBeAdmin } = await import('../services/roleService');
-                const role = shouldBeAdmin(auth.currentUser.email || '') ? 'admin' : 'user';
+                const role = await getUserRole(auth.currentUser.uid);
                 
                 const userData: User = {
                     id: auth.currentUser.uid,

@@ -48,10 +48,3 @@ export const createUserDocument = async (
     }
 };
 
-const ADMIN_EMAILS = [
-    'caesarals@gmail.com', 
-];
-
-export const shouldBeAdmin = (email: string): boolean => {
-    return ADMIN_EMAILS.includes(email.toLowerCase());
-};

@@ -14,7 +14,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import type { User } from '../types/blog.types';
-import { createUserDocument, shouldBeAdmin } from './roleService';
+import { createUserDocument } from './roleService';
 
 // Función para convertir un usuario de Firebase a nuestro tipo User
 // NOTA: Comentada temporalmente para evitar CORS - se reemplazó por código inline
@@ -59,7 +59,7 @@ export const registerUser = async (email: string, password: string, name: string
         email: email,
         isVerified: false,
         isActive: true,
-        role: shouldBeAdmin(email) ? 'admin' : 'user',
+        role: 'user', // Rol se determina desde Firestore
         createdAt: new Date().toISOString()
       };
 
@@ -89,8 +89,8 @@ export const registerUser = async (email: string, password: string, name: string
       // No lanzar error - el usuario se registró exitosamente
     }
 
-    // Determinar rol inicial
-    const initialRole = shouldBeAdmin(email) ? 'admin' : 'user';
+    // Determinar rol inicial (default 'user', se actualiza desde Firestore)
+    const initialRole: 'admin' | 'user' = 'user';
 
     // Crear documento de usuario en Firestore
     try {
@@ -155,7 +155,7 @@ export const loginUser = async (email: string, password: string): Promise<User> 
         email: email,
         isVerified: true,
         isActive: true,
-        role: shouldBeAdmin(email) ? 'admin' : 'user',
+        role: 'user', // Rol se determina desde Firestore
         createdAt: new Date().toISOString()
       };
 
@@ -177,8 +177,8 @@ export const loginUser = async (email: string, password: string): Promise<User> 
       throw new Error('INACTIVE_USER');
     }
     
-    // Determinar rol basado en email o datos de Firestore
-    const role = userFromFirestore?.role || (shouldBeAdmin(userCredential.user.email || '') ? 'admin' : 'user');
+    // Determinar rol basado en datos de Firestore
+    const role = userFromFirestore?.role || 'user';
     
     return {
       id: userCredential.user.uid,
@@ -295,8 +295,8 @@ export const loginWithGoogle = async (): Promise<User> => {
     const userCredential = await signInWithPopup(auth, provider);
     const firebaseUser = userCredential.user;
 
-    // Determinar rol inicial (admin si es el email configurado)
-    const initialRole = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
+    // Determinar rol inicial (default 'user', se actualiza desde Firestore)
+    const initialRole: 'admin' | 'user' = 'user';
 
     // Crear documento de usuario en Firestore
     try {
