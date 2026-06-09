@@ -19,3 +19,35 @@
 
 ### Commits relacionados
 - security: remove hardcoded admin email array, use Firestore for roles
+
+---
+
+## [2026-06-09] - feat(blog): add BlogHero editorial layout
+
+### Archivos creados
+- `src/pages/blog/components/BlogHero.tsx` - Container grid 60/40
+- `src/pages/blog/components/BlogHeroFeatured.tsx` - Artículo principal (Playfair headline, imagen full-width)
+- `src/pages/blog/components/BlogHeroSidebar.tsx` - Sidebar con artículos secundarios
+- `src/pages/blog/components/BlogHeroLatest.tsx` - Fila numerada (01, 02, 03)
+
+### Archivos modificados
+- `index.html` - Agregado Google Fonts Playfair Display
+- `src/pages/blog/BlogPage.tsx` - Integrado BlogHero, removida sección featured cards antigua
+- `src/pages/blog/components/BlogHeroFeatured.tsx` - Fix TS para post.gallery possibly undefined
+
+### Diseño implementado
+- Layout editorial estilo periódico/diario
+- Grid asimétrico: 60% destacado + 40% sidebar
+- Headlines en Playfair Display, decks en serif
+- Números editoriales en Oswald bold (01, 02, 03)
+- Separadores con borders sólidos 1px (sin cards con shadow)
+- Responsive: colapsa a columna única en mobile
+
+### Razón
+- Nueva página principal del blog con layout editorial
+- Reemplaza la sección de "featured posts" con cards tradicionales
+
+### Testing manual
+- Build exitoso ✅
+- Lint sin errores en archivos nuevos ✅
+- No se ha hecho commit (pendiente confirmación usuario)

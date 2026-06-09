@@ -1,11 +1,12 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, TrendingUp, Calendar } from 'lucide-react'
+import { Search, Filter, Calendar } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import BlogCard from './components/BlogCard'
 import { BlogHeader } from './components/BlogHeader'
+import { BlogHero } from './components/BlogHero'
 import { useBlogData } from '@/hooks/useBlogData'
 import CollaborationSection from './components/CollaborationSection'
 import { BlogCardSkeleton } from '@/components/skeletons'
@@ -13,7 +14,6 @@ import { BlogCardSkeleton } from '@/components/skeletons'
 const BlogPage = () => {
     const {
         posts,
-        featuredPosts,
         categories,
         tags,
         loading,
@@ -76,9 +76,9 @@ const BlogPage = () => {
                 publishedCount={posts.length}
             />
 
-            <div className="container mx-auto px-4 py-8 lg:py-12">
+            <div className="container mx-auto px-4 py-6 lg:py-8 max-w-5xl">
 
-                {/* Sección de artículos destacados */}
+                {/* Blog Hero - Grid editorial */}
                 {loading !== 'success' ? (
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
@@ -86,47 +86,24 @@ const BlogPage = () => {
                         transition={{ duration: 0.6, delay: 0.5 }}
                         className="mb-12"
                     >
-                        <div className="mb-6 flex items-center gap-3">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            <h2 className="text-2xl font-bold tracking-tight">Artículos Destacados</h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            <BlogCardSkeleton count={3} />
+                        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                            <div className="lg:col-span-3">
+                                <div className="h-64 bg-muted animate-pulse" />
+                            </div>
+                            <div className="lg:col-span-2 space-y-4">
+                                <div className="h-32 bg-muted animate-pulse" />
+                                <div className="h-32 bg-muted animate-pulse" />
+                            </div>
                         </div>
                     </motion.section>
-                ) : featuredPosts.length > 0 && (
+                ) : posts.length > 0 && (
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.5 }}
                         className="mb-12"
                     >
-                        <div className="mb-6 flex items-center gap-3">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            <h2 className="text-2xl font-bold tracking-tight">Artículos Destacados</h2>
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {featuredPosts.map((post, index) => (
-                                <motion.div
-                                    key={post.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                                >
-                                    <BlogCard
-                                        post={post}
-                                        variant={index === 0 ? 'featured' : 'default'}
-                                        onLike={handleLike}
-                                        isLiked={isPostLiked(post.id)}
-                                        currentUser={user}
-                                        likesCount={getLikesCount(post)}
-                                        commentsCount={getCommentsCount(post)}
-                                    />
-                                </motion.div>
-                            ))}
-                        </div>
+                        <BlogHero posts={posts} />
                     </motion.section>
                 )}
 
