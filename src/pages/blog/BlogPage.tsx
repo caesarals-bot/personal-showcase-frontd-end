@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion'
-import { Search, Filter, BookOpen, TrendingUp, Calendar } from 'lucide-react'
+import { Search, Filter, TrendingUp, Calendar } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import BlogCard from './components/BlogCard'
+import { BlogHeader } from './components/BlogHeader'
 import { useBlogData } from '@/hooks/useBlogData'
 import CollaborationSection from './components/CollaborationSection'
 import { BlogCardSkeleton } from '@/components/skeletons'
@@ -67,31 +68,15 @@ const BlogPage = () => {
 
     return (
         <div className="min-h-screen">
+            <BlogHeader
+                categories={categories.map(cat => ({
+                    id: cat.slug,
+                    label: cat.name.toUpperCase()
+                }))}
+                publishedCount={posts.length}
+            />
+
             <div className="container mx-auto px-4 py-8 lg:py-12">
-                {/* Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="mb-12 text-center"
-                >
-                    <div className="mb-4 flex justify-center">
-                        <div className="rounded-full bg-primary/10 p-4">
-                            <BookOpen className="h-8 w-8 text-primary" />
-                        </div>
-                    </div>
-
-                    <h1 className="mb-4 text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-                        <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                            Blog
-                        </span>
-                    </h1>
-
-                    <p className="mx-auto max-w-2xl text-lg text-foreground/70 md:text-xl">
-                        Artículos sobre desarrollo web, tecnología y mejores prácticas.
-                        Comparto conocimientos y experiencias del mundo del desarrollo.
-                    </p>
-                </motion.div>
 
                 {/* Sección de artículos destacados */}
                 {loading !== 'success' ? (
