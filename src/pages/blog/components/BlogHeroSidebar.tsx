@@ -24,8 +24,8 @@ export function BlogHeroSidebar({ posts }: BlogHeroSidebarProps) {
     }
 
     return (
-        <aside className="flex flex-col h-full items-start">
-            <div className="flex flex-col h-full divide-y divide-foreground/10">
+        <aside className="flex flex-col h-full items-start w-full lg:max-h-[520px]">
+            <div className="flex flex-col h-full min-h-0 divide-y divide-foreground/10 overflow-y-auto scrollbar-thin scrollbar-thumb-foreground/30 scrollbar-track-transparent hover:scrollbar-thumb-foreground/50 transition-colors pr-2 w-full">
                 {posts.map((post, index) => (
                     <article
                         key={post.id}
@@ -33,7 +33,6 @@ export function BlogHeroSidebar({ posts }: BlogHeroSidebarProps) {
                     >
                         <Link to={`/blog/${post.slug}`} className="block no-underline">
                             <div className="space-y-2">
-                                {/* Kicker de categoría */}
                                 <CategoryBadge
                                     variant="outline"
                                     className="text-[10px] border-foreground/20 text-foreground/50"
@@ -41,17 +40,14 @@ export function BlogHeroSidebar({ posts }: BlogHeroSidebarProps) {
                                     {post.category.name}
                                 </CategoryBadge>
 
-                                {/* Headline en serif */}
                                 <h3 className="font-serif text-base md:text-lg font-semibold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-3">
                                     {post.title}
                                 </h3>
 
-                                {/* Excerpt corto */}
                                 <p className="font-serif text-sm text-foreground/60 leading-relaxed hidden sm:block">
                                     {truncateWords(post.excerpt, 18)}
                                 </p>
 
-                                {/* Metadatos */}
                                 <div className="pt-1">
                                     <DateLine
                                         date={formatDate(post.publishedAt)}

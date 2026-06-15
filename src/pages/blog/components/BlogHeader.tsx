@@ -18,6 +18,8 @@ interface BlogHeaderProps {
     publishedCount: number;
     location?: string;
     degree?: string;
+    searchTerm?: string;
+    onSearchChange?: (term: string) => void;
 }
 
 export function BlogHeader({
@@ -25,6 +27,8 @@ export function BlogHeader({
     publishedCount,
     location = "Santiago, Chile",
     degree = "Ingeniería en Informática",
+    searchTerm = "",
+    onSearchChange
 }: BlogHeaderProps) {
     const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -47,7 +51,11 @@ export function BlogHeader({
             <header className="border-b border-foreground/15">
                 <BlogTopBar isPanelOpen={isPanelOpen} onTogglePanel={togglePanel} />
                 <BlogDateBar location={location} />
-                <BlogCategoryNav categories={blogCategories} />
+                <BlogCategoryNav
+                    categories={blogCategories}
+                    searchTerm={searchTerm}
+                    onSearchChange={onSearchChange}
+                />
                 <BlogInfoBar
                     location={location}
                     degree={degree}
