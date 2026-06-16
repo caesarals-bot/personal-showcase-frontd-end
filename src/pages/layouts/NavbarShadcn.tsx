@@ -52,7 +52,7 @@ const NavbarShadcn = () => {
         <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-gradient-to-r from-muted/80 via-background/80 to-muted/80 backdrop-blur-md supports-[backdrop-filter]:bg-gradient-to-r supports-[backdrop-filter]:from-muted/60 supports-[backdrop-filter]:via-background/60 supports-[backdrop-filter]:to-muted/60">
             <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link to="/" aria-label="Ir al inicio" className="flex items-center">
-                    <Logo align="left" color={getLogoColor()} width={150} height={40} />
+                    <Logo align="left" color={getLogoColor()} width={72} height={54} />
                 </Link>
 
                 <div className="flex items-center gap-4">

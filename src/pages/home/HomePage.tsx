@@ -93,7 +93,7 @@ const HomePage = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="mx-auto mb-2 w-64 max-w-[90vw] sm:w-[30rem]"
                 >
-                    <Logo align="center" color={getLogoColor()} width={480} height={136} className="mb-2" />
+                    <Logo align="center" color={getLogoColor()} width={240} height={181} className="mb-2" />
                 </motion.div>
 
                 {/* Foto principal */}

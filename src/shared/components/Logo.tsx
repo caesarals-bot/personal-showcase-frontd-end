@@ -1,4 +1,5 @@
 // Logo: componente reutilizable del logotipo basado en un SVG público
+// - Monograma "CL" + wordmark (proporción casi cuadrada, ratio ~1.32)
 // - Alineación: left | center | right
 // - Color opcional: si se especifica, colorea el logo usando CSS mask sobre el SVG
 // - Tamaño opcional: width/height (px o cualquier unidad CSS)
@@ -7,6 +8,7 @@
 //
 // NOTA: el archivo SVG vive en /public y se sirve desde la raíz del sitio por Vite.
 //       Si el SVG admite currentColor podrías simplificar a <img> + color de texto.
+//       Backup del logo anterior disponible en public/logocesar.svg.bak por si se requiere revertir.
 
 import React from 'react'
 
@@ -26,7 +28,7 @@ export interface LogoProps {
 }
 
 // Ruta del SVG en /public
-const LOGO_SRC = "/logocesar.svg"
+const LOGO_SRC = "/logo-new.svg"
 
 const Logo: React.FC<LogoProps> = ({
     align = 'left',
@@ -34,7 +36,7 @@ const Logo: React.FC<LogoProps> = ({
     width = 160,
     height = 56,
     fluid = false,
-    aspectRatio = 480 / 136,
+    aspectRatio = 157.78807 / 119.22471,
     className = '',
     title = 'Logo de Cesar Londoño',
 }) => {
