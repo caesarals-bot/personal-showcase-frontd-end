@@ -50,4 +50,21 @@
 ### Testing manual
 - Build exitoso ✅
 - Lint sin errores en archivos nuevos ✅
-- No se ha hecho commit (pendiente confirmación usuario)
+
+---
+
+## [2026-06-18] - style(blog): reduce header logo size
+
+### Archivos modificados
+- `src/pages/blog/components/BlogTopBar.tsx` - Logo reducido de 96×72 a 72×54 px (manteniendo proporción ~1.33)
+
+### Razón
+- Equilibrio editorial: el logo del header del blog se sentía dominante y competía con la barra de categorías y el buscador.
+- Reduce un 25% del tamaño, alineándose con el peso visual del resto de elementos del header editorial.
+
+### Commits relacionados
+- `style(blog): reduce header logo size (96→72 / 72→54) for editorial balance`
+
+### Merge
+- Rama `feature/blog-editorial-design` mergeada a `main` (fast-forward).
+- Rama eliminada local y remotamente.
