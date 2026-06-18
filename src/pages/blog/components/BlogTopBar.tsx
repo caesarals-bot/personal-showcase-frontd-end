@@ -22,7 +22,7 @@ export function BlogTopBar({ isPanelOpen, onTogglePanel }: BlogTopBarProps) {
         <div className="max-w-5xl mx-auto px-4 flex items-center justify-between py-4 gap-4">
             <div className="flex items-center gap-2">
                 <Link to="/" className="flex items-center">
-                    <Logo align="left" width={96} height={72} />
+                    <Logo align="left" width={72} height={54} />
                 </Link>
                 <button
                     onClick={onTogglePanel}
