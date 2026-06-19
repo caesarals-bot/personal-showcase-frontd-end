@@ -1,5 +1,54 @@
 # Changelog
 
+## [2026-06-19] - Security: C3 — Retry + rollback en `createUserDocument`
+
+### Archivos modificados
+- `src/services/authService.ts` — `registerUser` ahora reintenta `createUserDocument` con backoff y hace rollback de Auth si Firestore falla persistentemente
+
+### Issue resuelto
+- 🔴 **C3**: catch silencioso en `createUserDocument` dejaba usuarios en "limbo" (Auth creado, Firestore sin documento)
+
+### Cambios aplicados
+
+**Antes (catch silencioso):**
+```
+try {
+  await createUserDocument(...);
+} catch (firestoreError) {
+  console.error('⚠️ Error...', firestoreError);
+  // Continuar aunque falle Firestore - el usuario ya está en Auth
+}
+```
+
+**Después (retry + rollback):**
+- 3 intentos con backoff lineal (500ms, 1000ms)
+- Si los 3 intentos fallan → `deleteUser()` para revertir el registro en Auth
+- Si el rollback también falla → log crítico (usuario huérfano)
+- Throw con mensaje claro al usuario
+
+### Razón
+- Cualquier usuario que se registraba durante una falla de Firestore quedaba en limbo.
+- No podía ser promovido a admin porque su documento no existía.
+- El sistema de roles lo degradaba a `'user'` por defecto sin explicación.
+
+### Razonamiento del diseño
+- **Reintentos primero**: blip transitorio de Firestore es más común que caída total.
+- **Rollback de Auth**: si Firestore está caído, no queremos usuarios huérfanos.
+- **Mensaje claro**: el usuario sabe qué pasó y qué hacer.
+
+### Edge cases manejados
+| Escenario | Comportamiento |
+|-----------|----------------|
+| Firestore OK al primer intento | ✅ Registro exitoso normal |
+| Firestore falla 1 vez, OK al 2° | ✅ Registro exitoso con retry transparente |
+| Firestore falla 3 veces | ❌ Rollback de Auth + error al usuario |
+| Rollback de Auth también falla | ⚠️ Log crítico, usuario huérfano en Auth |
+
+### Commits relacionados
+- `64622bd` security: retry createUserDocument with rollback on persistent Firestore failure (C3)
+
+---
+
 ## [2026-06-19] - Security: A4 — Restricción de `posts.create` por rol
 
 ### Archivos modificados
