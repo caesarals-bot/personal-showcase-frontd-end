@@ -36,8 +36,17 @@ service cloud.firestore {
       // LECTURA: Todos pueden leer posts (igual que profile/portfolio)
       allow read: if true;
       
-      // ESCRITURA: Solo usuarios autenticados pueden crear posts
-      allow create: if isAuthenticated();
+      // ESCRITURA: Solo admin y collaborator pueden crear posts
+      // Valida: rol permitido, authorId coincide con usuario autenticado,
+      // y schema mínimo (title y content no vacíos)
+      allow create: if isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+        in ['admin', 'collaborator'] &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.title is string &&
+        request.resource.data.title.size() > 0 &&
+        request.resource.data.content is string &&
+        request.resource.data.content.size() > 0;
       
       // ACTUALIZAR: Solo el autor o admin puede editar
       allow update: if isAuthenticated() && 
