@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { motion } from 'framer-motion';
+import { RECAPTCHA_SITE_KEY } from '@/utils/recaptchaConfig';
 
 interface RecaptchaWrapperProps {
   onChange: (token: string | null) => void;
@@ -10,9 +11,6 @@ interface RecaptchaWrapperProps {
   size?: 'compact' | 'normal';
   className?: string;
 }
-
-// Clave pública de reCAPTCHA (debe estar en variables de entorno)
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'; // Clave de prueba
 
 export const RecaptchaWrapper = forwardRef<ReCAPTCHA, RecaptchaWrapperProps>(
   ({ onChange, onError, onExpired, theme = 'light', size = 'normal', className = '' }, ref) => {
