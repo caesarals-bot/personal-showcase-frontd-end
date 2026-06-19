@@ -19,8 +19,8 @@ export const getUserRole = async (uid: string): Promise<'admin' | 'user' | 'gues
 
         return 'user';
     } catch (error) {
-        // No se pudo obtener rol desde Firestore (CORS en desarrollo). Usando rol por defecto
-        // Retornar rol por defecto si falla
+        // No se pudo obtener rol desde Firestore. Log explícito para visibilidad.
+        console.error('No se pudo obtener rol desde Firestore:', error);
         return 'user';
     }
 };
