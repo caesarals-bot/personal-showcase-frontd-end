@@ -16,31 +16,6 @@ import { auth } from '../firebase/config';
 import type { User } from '../types/blog.types';
 import { createUserDocument } from './roleService';
 
-// Función para convertir un usuario de Firebase a nuestro tipo User
-// NOTA: Comentada temporalmente para evitar CORS - se reemplazó por código inline
-/* const mapFirebaseUser = async (firebaseUser: FirebaseUser): Promise<User> => {
-  // Obtener rol desde Firestore (con fallback si falla por CORS)
-  let role: 'admin' | 'user' | 'guest' = 'user';
-  try {
-    role = await getUserRole(firebaseUser.uid);
-  } catch (error) {
-    console.warn('⚠️ No se pudo obtener rol desde Firestore. Usando rol por defecto.');
-    // Determinar rol basado en email si no se puede obtener de Firestore
-    role = shouldBeAdmin(firebaseUser.email || '') ? 'admin' : 'user';
-  }
-
-  return {
-    id: firebaseUser.uid,
-    displayName: firebaseUser.displayName || 'Usuario',
-    email: firebaseUser.email || '',
-    avatar: firebaseUser.photoURL || undefined,
-    isVerified: firebaseUser.emailVerified,
-    isActive: true,
-    role,
-    createdAt: firebaseUser.metadata.creationTime || new Date().toISOString()
-  };
-}; */
-
 // Modo de desarrollo para pruebas (sin Firebase)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';// Cambiar a false cuando Firebase esté configurado correctamente
 
