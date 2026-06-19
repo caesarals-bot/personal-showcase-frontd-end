@@ -1,5 +1,54 @@
 # Changelog
 
+## [2026-06-19] - Security: C1 — Hardening de modo DEV (eliminar admin auto-asignado)
+
+### Archivos modificados
+- `src/hooks/useAuth.ts` — Eliminado fallback que creaba admin automático en DEV
+- `src/services/authService.ts` — Throw error si `VITE_DEV_MODE=true` en producción
+- `src/auth/pages/LoginPage.tsx` — Integrado `DevQuickLogin` component
+- `src/components/dev/DevQuickLogin.tsx` — **Nuevo**. Botones de login rápido para DEV
+
+### Issue resuelto
+- 🔴 **C1**: cualquier visitante podía obtener sesión admin si `VITE_DEV_MODE=true` se servía en producción
+
+### Cambios aplicados
+
+**Antes:**
+- Modo DEV con `localStorage` vacío → se creaba automáticamente usuario admin
+- Email real `caesarals@gmail.com` hardcodeado en el bundle JS
+- Sin validación en build de producción
+
+**Después:**
+- Modo DEV sin usuario → muestra pantalla de login normal (sin auto-login)
+- Componente `DevQuickLogin` solo visible en DEV (no aparece en producción)
+- 3 botones: Admin Mock / User Mock / Guest Mock
+- Throw error si `VITE_DEV_MODE=true` en producción (defensa en profundidad)
+
+### Razón
+- Error humano de configuración → admin global
+- Email personal del autor expuesto en bundle JS
+- Viola regla `agent.md §6` (no hardcodear datos críticos)
+
+### Decisión de diseño
+- **Opción C** elegida: botones de login rápido en lugar de eliminar el modo DEV
+- Mantiene la conveniencia de testing (cambiar de rol con 1 click)
+- No compromete seguridad (botones solo visibles en `import.meta.env.DEV`)
+
+### Testing manual recomendado
+- [ ] `npm run dev` con `VITE_DEV_MODE=true` → aparece `DevQuickLogin` arriba del formulario ✅
+- [ ] Click "Entrar como Admin" → usuario admin mock activo ✅
+- [ ] Click "Entrar como User" → usuario user mock activo ✅
+- [ ] Click "Entrar como Guest" → usuario guest mock activo ✅
+- [ ] `npm run build` sin `VITE_DEV_MODE` → build OK ✅
+- [ ] `npm run build` con `VITE_DEV_MODE=true` en `.env.production` → build falla con error claro ✅
+
+### Commits relacionados
+- `d2044fe` security: remove hardcoded admin fallback in DEV mode (C1)
+- `6d3fda1` feat(auth): add DevQuickLogin component for role-based testing in DEV mode
+- `c87d7ab` security: throw error if VITE_DEV_MODE is true in production build
+
+---
+
 ## [2026-06-19] - Security: C3 — Retry + rollback en `createUserDocument`
 
 ### Archivos modificados
