@@ -18,6 +18,17 @@ import type { User } from '../types/blog.types';
 import { createUserDocument } from './roleService';
 import { ADMIN_CONTACT_MESSAGE } from '../constants/contact';
 
+// Validación de seguridad: VITE_DEV_MODE nunca debe ser true en producción.
+// Si se sirve con esta var activa en producción, cualquier visitante
+// tendría acceso admin a través del fallback de mock user.
+if (!import.meta.env.DEV && import.meta.env.VITE_DEV_MODE === 'true') {
+  throw new Error(
+    '[SECURITY] VITE_DEV_MODE es true en producción. ' +
+    'Esto permite acceso admin automático a cualquier visitante. ' +
+    'Cambia VITE_DEV_MODE=false en .env.production.'
+  );
+}
+
 // Modo de desarrollo para pruebas (sin Firebase)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';// Cambiar a false cuando Firebase esté configurado correctamente
 
