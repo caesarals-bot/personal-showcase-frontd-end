@@ -9,6 +9,7 @@ import {
   sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
+  deleteUser,
   EmailAuthProvider,
   type User as FirebaseUser
 } from 'firebase/auth';
@@ -68,17 +69,50 @@ export const registerUser = async (email: string, password: string, name: string
     // Determinar rol inicial (default 'user', se actualiza desde Firestore)
     const initialRole: 'admin' | 'user' = 'user';
 
-    // Crear documento de usuario en Firestore
-    try {
-      await createUserDocument(
-        userCredential.user.uid,
-        email,
-        name,
-        initialRole
+    // Crear documento de usuario en Firestore con reintentos.
+    // Si todos los reintentos fallan, hacemos rollback del usuario en Auth
+    // para evitar el "limbo" (usuario en Auth sin documento en Firestore).
+    const MAX_RETRIES = 3;
+    let firestoreSuccess = false;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        await createUserDocument(
+          userCredential.user.uid,
+          email,
+          name,
+          initialRole
+        );
+        firestoreSuccess = true;
+        break;
+      } catch (firestoreError) {
+        console.error(
+          `⚠️ Intento ${attempt}/${MAX_RETRIES} falló al crear documento en Firestore:`,
+          firestoreError
+        );
+        if (attempt < MAX_RETRIES) {
+          // Backoff lineal: 500ms, 1000ms
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        }
+      }
+    }
+
+    if (!firestoreSuccess) {
+      // Rollback: borrar el usuario de Auth para evitar limbo
+      try {
+        await deleteUser(userCredential.user);
+        console.error('Rollback de Auth exitoso tras falla persistente en Firestore.');
+      } catch (rollbackError) {
+        console.error(
+          'Error crítico: rollback de Auth también falló. Usuario huérfano creado:',
+          userCredential.user.uid,
+          rollbackError
+        );
+      }
+      throw new Error(
+        `No se pudo completar el registro porque el servicio de base de datos no está disponible. ` +
+        `Por favor, intenta nuevamente en unos minutos. Si el problema persiste, ${ADMIN_CONTACT_MESSAGE}.`
       );
-    } catch (firestoreError) {
-      console.error('⚠️ Error al crear documento en Firestore:', firestoreError);
-      // Continuar aunque falle Firestore - el usuario ya está en Auth
     }
     
     // Crear usuario manualmente sin llamar a getUserRole (evita CORS)
