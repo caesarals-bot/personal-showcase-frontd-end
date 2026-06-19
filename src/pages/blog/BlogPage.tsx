@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { BlogHeader } from './components/BlogHeader'
 import { BlogHero } from './components/BlogHero'
 import { useBlogData } from '@/hooks/useBlogData'
 import CollaborationSection from './components/CollaborationSection'
 
 const BlogPage = () => {
+    const navigate = useNavigate()
     const {
         posts,
         categories,
@@ -15,7 +17,7 @@ const BlogPage = () => {
     } = useBlogData()
 
     const handleContactClick = () => {
-        window.location.href = '/contactme'
+        navigate('/contactme')
     }
 
     if (loading === 'loading' || loading === 'idle') {
