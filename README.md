@@ -481,12 +481,9 @@ Ver `LIKES_COMMENTS_TROUBLESHOOTING.md` para más soluciones.
 
 - **`FIREBASE_SCHEMA.md`** - Esquema completo de la base de datos
 - **`EMAILJS_SETUP.md`** - Guía de configuración de EmailJS
-- **`LIKES_COMMENTS_TROUBLESHOOTING.md`** - Solución de problemas
 - **`RATE_LIMITING_GUIDE.md`** - Guía de rate limiting
-- **`FAVICON_INSTRUCTIONS.md`** - Cómo cambiar el favicon
-- **`ESTADO_ACTUAL_PROYECTO.md`** - Estado actual del proyecto
 - **`CONFIGURACION_ENV.md`** - Configuración de variables de entorno
-- **`TAREAS_PENDIENTES.md`** - Tareas planificadas para mañana
+- **`SECURITY_ANALYSIS_2026-06-18.md`** - Análisis de seguridad del proyecto
 
 ## 🎯 Roadmap
 

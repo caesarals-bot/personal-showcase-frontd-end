@@ -68,3 +68,70 @@
 ### Merge
 - Rama `feature/blog-editorial-design` mergeada a `main` (fast-forward).
 - Rama eliminada local y remotamente.
+
+---
+
+## [2026-06-18] - docs: Análisis de seguridad + limpieza de documentación
+
+### Archivos creados
+- `SECURITY_ANALYSIS_2026-06-18.md` - Análisis de seguridad general del proyecto. 21 issues identificados (3 críticos, 5 altos, 8 medios, 5 bajos) con plan de trabajo en 4 fases.
+
+### Archivos eliminados (limpieza de docs)
+**Huérfanos (no referenciados desde README/CHANGELOG, sin mantenimiento desde 2025-10-04):**
+- `docs/architecture.md` - Duplicaba contenido de `FRONTEND_DOCUMENTATION.md`
+- `docs/components.md` - Sin referencias y desactualizado
+- `docs/guia-proyecto.md` - Versión inicial del proyecto, obsoleta
+- `docs/FIRESTORE_SCHEMA.md` - Duplicado de `FIREBASE_SCHEMA.md` (raíz, vigente)
+
+**Históricos/caducados (problemas ya resueltos, planes descartados):**
+- `ABOUT_PERSISTENCE_ISSUE.md` - Problema resuelto en commits posteriores
+- `ABOUT_IMAGE_PERSISTENCE_FIX.md` - Fix ya aplicado y mergeado
+- `ABOUT_IMAGES_PERSISTENCE_ANALYSIS.md` - Análisis previo al fix, redundante
+- `TAREAS_MANANA.md` - Fecha "20 de Enero 2025" caducada
+- `TAREAS_PENDIENTES.md` - Tareas ya implementadas
+- `TAREAS_SESIONES_ADMIN.md` - Plan original, consolidado en `PLAN_ACCION_SESIONES_CONSOLIDADO.md`
+- `recomendaciones.md` - Integrado en plan consolidado
+- `PLAN_ACCION_SESIONES_CONSOLIDADO.md` - **Descartado por el usuario** explícitamente
+
+### Razón
+- **Reducción de ruido documental**: 23 → 11 archivos `.md` en raíz (52% menos).
+- Eliminar archivos huérfanos que no son referenciados desde el README ni mantenidos.
+- Archivar problemas ya resueltos (no aportan valor mantenerlos en raíz).
+- `SECURITY_ANALYSIS_2026-06-18.md` queda como punto de entrada para issues de seguridad pendientes.
+
+### Estructura final de `.md` en raíz
+**Documentación central:**
+- `README.md` - Punto de entrada principal
+- `CHANGELOG.md` - Este archivo (corazón del proyecto)
+- `agent.md` - Reglas de calidad de código
+
+**Guías operativas:**
+- `EMAILJS_SETUP.md` - Configuración EmailJS
+- `RATE_LIMITING_GUIDE.md` - Rate limiting
+- `CONFIGURACION_ENV.md` - Variables de entorno
+- `FIREBASE_SCHEMA.md` - Esquema Firestore
+
+**Documentación técnica:**
+- `FRONTEND_DOCUMENTATION.md` - Arquitectura frontend
+- `BLOG_EDITORIAL_PROGRESS.md` - Feature blog editorial
+- `PROPUESTA_TESTING_AUTENTICACION.md` - Propuesta de testing
+
+**Seguridad:**
+- `SECURITY_ANALYSIS_2026-06-18.md` - Análisis de seguridad (nuevo)
+
+### Estado del commit
+- **Pendiente**: Los cambios de esta entrada (limpieza de docs + creación de `SECURITY_ANALYSIS_2026-06-18.md`) están staged en working tree pero **NO se commiteó ni se hizo push** todavía.
+- **Acción programada**: Commit y push al retomar la sesión el 2026-06-19.
+- **Comando planificado**:
+  ```bash
+  git add CHANGELOG.md SECURITY_ANALYSIS_2026-06-18.md \
+          ABOUT_IMAGE_PERSISTENCE_FIX.md ABOUT_IMAGES_PERSISTENCE_ANALYSIS.md \
+          ABOUT_PERSISTENCE_ISSUE.md PLAN_ACCION_SESIONES_CONSOLIDADO.md \
+          TAREAS_MANANA.md TAREAS_PENDIENTES.md TAREAS_SESIONES_ADMIN.md \
+          recomendaciones.md \
+          docs/architecture.md docs/components.md docs/guia-proyecto.md \
+          docs/FIRESTORE_SCHEMA.md
+  git commit -m "docs: cleanup obsolete markdown files and add security analysis"
+  git push origin main
+  ```
+- **Nota**: Antes del push, se hará test manual con `npm run dev` para confirmar que ningún cambio afecta el build (la limpieza es solo de docs, sin código de producción).
