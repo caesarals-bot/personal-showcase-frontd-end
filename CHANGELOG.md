@@ -1,5 +1,64 @@
 # Changelog
 
+## [2026-06-19] - Security: A4 — Hardening de regla `posts.create` en Firestore
+
+### Archivos modificados
+- `firestore.rules` — Línea 40: regla de `posts.create` endurecida con validación de rol + schema
+
+### Issue resuelto
+- 🟠 **A4**: regla `posts.create` permitía a cualquier usuario autenticado crear posts, sin validar rol ni schema.
+
+### Cambios en la regla
+
+**Antes:**
+```
+allow create: if isAuthenticated();
+```
+
+**Después (5 validaciones en cascada):**
+```
+allow create: if isAuthenticated() &&
+  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+  in ['admin', 'collaborator'] &&
+  request.resource.data.authorId == request.auth.uid &&
+  request.resource.data.title is string &&
+  request.resource.data.title.size() > 0 &&
+  request.resource.data.content is string &&
+  request.resource.data.content.size() > 0;
+```
+
+### Validaciones agregadas
+| # | Condición | Previene |
+|---|-----------|----------|
+| 1 | `isAuthenticated()` | Acceso anónimo (ya estaba) |
+| 2 | `role in ['admin', 'collaborator']` | Usuarios con rol `user` o `guest` no pueden crear posts |
+| 3 | `authorId == request.auth.uid` | Spoofing de autor (crear posts "como" otro usuario) |
+| 4 | `title is string && size() > 0` | Posts sin título |
+| 5 | `content is string && size() > 0` | Posts vacíos |
+
+### Razón
+- Cualquier usuario autenticado podía crear posts en el blog público, sin moderación.
+- El sistema de roles (admin/collaborator/user/guest) estaba solo en el cliente, no validado en el servidor.
+- Riesgo: spam, contenido no moderado, phishing en blog público.
+
+### Acción manual requerida (post-merge)
+1. Firebase Console → Firestore → Rules
+2. Pegar el contenido actualizado de `firestore.rules`
+3. Click "Publish"
+4. Verificar log de deploy
+
+### Testing manual recomendado (post-deploy)
+- [ ] Login admin → crear post desde UI → ✅ debe pasar
+- [ ] Login user normal → intentar crear post vía DevTools → ❌ debe rechazar
+- [ ] Login collaborator → crear post → ✅ debe pasar
+- [ ] Como admin, intentar crear post con authorId falso → ❌ debe rechazar
+- [ ] Como admin, intentar crear post sin title → ❌ debe rechazar
+
+### Commits relacionados
+- `c10f9aa` security: restrict posts.create to admin/collaborator with schema validation (A4)
+
+---
+
 ## [2026-06-19] - Security: Fase 1 — Quick wins (5 issues resueltos)
 
 ### Archivos modificados
