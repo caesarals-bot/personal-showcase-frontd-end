@@ -88,7 +88,8 @@ export function useRateLimit(
         blockedUntil: null,
         isBlocked: false,
       };
-    } catch {
+    } catch (error) {
+      console.warn('localStorage no disponible en useRateLimit, rate limit desactivado para esta sesión:', error);
       localStorage.removeItem(storageKey);
       return null;
     }
