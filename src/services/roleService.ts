@@ -1,11 +1,14 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
+const ROLE_TIMEOUT_MS = Number(import.meta.env.VITE_ROLE_TIMEOUT_MS) || 5000;
+
 export const getUserRole = async (uid: string): Promise<'admin' | 'user' | 'guest'> => {
     try {
-        // Timeout de 3 segundos para evitar que se quede colgado por CORS
+        // Timeout configurable para evitar que la consulta quede colgada.
+        // Default 5s. Ajustable via VITE_ROLE_TIMEOUT_MS en .env.
         const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout al obtener rol')), 3000)
+            setTimeout(() => reject(new Error('Timeout al obtener rol')), ROLE_TIMEOUT_MS)
         );
 
         const getUserPromise = getDoc(doc(db, 'users', uid));
