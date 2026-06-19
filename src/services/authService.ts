@@ -15,6 +15,7 @@ import {
 import { auth } from '../firebase/config';
 import type { User } from '../types/blog.types';
 import { createUserDocument } from './roleService';
+import { ADMIN_CONTACT_MESSAGE } from '../constants/contact';
 
 // Modo de desarrollo para pruebas (sin Firebase)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';// Cambiar a false cuando Firebase esté configurado correctamente
@@ -170,7 +171,7 @@ export const loginUser = async (email: string, password: string): Promise<User> 
     
     // Manejar usuario inactivo con mensaje específico
     if (error instanceof Error && error.message === 'INACTIVE_USER') {
-      throw new Error('Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información. Email: admin@tudominio.com');
+      throw new Error(`Tu cuenta ha sido desactivada. Por favor, ${ADMIN_CONTACT_MESSAGE}.`);
     }
     
     // Si el error es auth/operation-not-allowed, dar un mensaje más claro

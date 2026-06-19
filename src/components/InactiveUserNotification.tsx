@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Mail, Phone, MessageCircle } from 'lucide-react';
 import { getProfile } from '@/services/aboutService';
 import type { Profile } from '@/types/about.types';
+import { ADMIN_EMAIL } from '@/constants/contact';
 
 interface InactiveUserNotificationProps {
   message?: string;
@@ -31,7 +32,7 @@ export const InactiveUserNotification: React.FC<InactiveUserNotificationProps> =
   }, []);
 
   // Datos de fallback si no se puede cargar el perfil
-  const adminEmail = profile?.contact?.email || 'admin@tudominio.com';
+  const adminEmail = profile?.contact?.email || ADMIN_EMAIL;
   const adminPhone = profile?.contact?.phone || '+1 (555) 123-4567';
   const adminName = profile?.fullName || 'Administrador';
 

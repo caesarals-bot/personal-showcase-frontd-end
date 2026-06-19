@@ -6,6 +6,7 @@ import { loginUser, logoutUser, registerUser, loginWithGoogle, resendEmailVerifi
 import { getUserById } from '../services/userService'
 import { safeJsonParse } from '../utils/safeJsonParse'
 import { getUserRole } from '../services/roleService'
+import { ADMIN_CONTACT_MESSAGE } from '../constants/contact'
 
 // Constante para modo desarrollo (debe coincidir con authService.ts)
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -36,7 +37,7 @@ export function useAuth(): AuthState & {
             if (userFromFirestore && !userFromFirestore.isActive) {
                 // Cerrar sesión automáticamente
                 await logout();
-                setError('Tu cuenta ha sido desactivada. Por favor, contacta al administrador para más información. Email: admin@tudominio.com');
+                setError(`Tu cuenta ha sido desactivada. Por favor, ${ADMIN_CONTACT_MESSAGE}.`);
             }
         } catch (err) {
             console.warn('Error al verificar estado del usuario:', err);
