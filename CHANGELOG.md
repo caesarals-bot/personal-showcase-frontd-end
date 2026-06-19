@@ -1,5 +1,47 @@
 # Changelog
 
+## [2026-06-19] - Security: Fase 1 — Quick wins (5 issues resueltos)
+
+### Archivos modificados
+- `src/services/authService.ts` — Eliminado código muerto con `shouldBeAdmin` (C2)
+- `src/constants/contact.ts` — **Nuevo**. Helper centralizado para `ADMIN_EMAIL` desde env (A1)
+- `src/hooks/useAuth.ts` — Usa `ADMIN_CONTACT_MESSAGE` en vez de email hardcodeado (A1)
+- `src/components/InactiveUserNotification.tsx` — Usa `ADMIN_EMAIL` como fallback (A1)
+- `src/utils/recaptchaConfig.ts` — Throw error en prod si falta `VITE_RECAPTCHA_SITE_KEY` (B4)
+- `src/components/RecaptchaWrapper.tsx` — Importa clave desde `recaptchaConfig.ts` (B4, DRY)
+- `src/pages/blog/BlogPage.tsx` — Usa `navigate('/contactme')` en vez de `window.location.href` (M7)
+- `.env.example` — Documentadas `VITE_RECAPTCHA_SITE_KEY`, `VITE_EMAILJS_*`, `VITE_ADMIN_EMAIL` (B2+B3)
+
+### Issues resueltos (5/21)
+- 🔴 **C2**: código muerto con referencia rota a función inexistente
+- 🟠 **A1**: email admin hardcodeado en 3 archivos → externalizado a `VITE_ADMIN_EMAIL`
+- 🟢 **B2+B3**: vars de entorno no documentadas → agregadas a `.env.example`
+- 🟢 **B4**: fallback a reCAPTCHA test key en producción → throw error si falta env var
+- 🟡 **M7**: navegación con `window.location.href` → `react-router` `navigate()`
+
+### Razón
+- Cerrar 5 quick wins del `SECURITY_ANALYSIS_2026-06-18.md` (Fase 1)
+- Cumplir `agent.md §9` (documentar cambios significativos)
+- Eliminar datos hardcodeados críticos (email admin, test keys)
+
+### Commits relacionados
+- `62c0407` security: remove dead code referencing non-existent shouldBeAdmin (C2)
+- `f338cbd` docs: document VITE_RECAPTCHA_SITE_KEY, VITE_EMAILJS_* and VITE_ADMIN_EMAIL (B2, B3)
+- `b42fa8f` refactor(blog): use react-router navigate instead of window.location.href (M7)
+- `52db103` security: externalize admin email to VITE_ADMIN_EMAIL via constants module (A1)
+- `7c7cc16` security: throw error in production if VITE_RECAPTCHA_SITE_KEY is missing (B4)
+
+### Merge
+- Rama `feature/security-fase-1-quick-wins` mergeada a `main` (fast-forward).
+- Push a `origin/main` completado.
+- Rama eliminada post-merge.
+
+### ⚠️ Acción requerida en Netlify
+- Verificar que `VITE_RECAPTCHA_SITE_KEY` está configurada en Netlify Environment Variables.
+- Si no está → el deploy puede haber fallado. Agregar la clave y redesplegar.
+
+---
+
 ## [2026-06-06 18:30] - Security: Eliminado admin hardcodeado
 
 ### Archivos modificados
