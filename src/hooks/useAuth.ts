@@ -58,24 +58,9 @@ export function useAuth(): AuthState & {
                     localStorage.removeItem('mockUser');
                 }
             } else {
-                // Si no hay usuario en localStorage, configurar usuario administrador por defecto
-                const adminUser: User = {
-                    id: 'admin-mock-01',
-                    email: 'caesarals@gmail.com',
-                    displayName: 'César Alvarado',
-                    role: 'admin',
-                    isVerified: true,
-                    isActive: true,
-                    createdAt: new Date().toISOString(),
-                    firstName: 'César',
-                    lastName: 'Alvarado',
-                    userName: 'caesarals',
-                    avatar: 'https://i.pravatar.cc/150?u=admin',
-                    bio: 'Administrador del sitio'
-                };
-                localStorage.setItem('mockUser', JSON.stringify(adminUser));
-                setUser(adminUser);
-                // Usuario administrador configurado automáticamente en modo desarrollo
+                // Sin usuario mock: dejar null para mostrar pantalla de login.
+                // DevQuickLogin (visible solo en DEV) permite crear mocks por rol.
+                setUser(null);
             }
             setIsLoading(false);
             return () => {}; // No hay nada que limpiar en modo desarrollo
