@@ -5,6 +5,16 @@
 
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import {
+    SITE_URL,
+    SITE_NAME,
+    SITE_DESCRIPTION,
+    SITE_KEYWORDS,
+    AUTHOR,
+    DEFAULT_OG_IMAGE,
+    DEFAULT_OG_IMAGE_WIDTH,
+    DEFAULT_OG_IMAGE_HEIGHT,
+} from '@/constants/site'
 
 interface SEOProps {
     title?: string
@@ -12,6 +22,8 @@ interface SEOProps {
     keywords?: string[]
     author?: string
     image?: string
+    imageWidth?: number
+    imageHeight?: number
     url?: string
     type?: 'website' | 'article' | 'profile'
     publishedTime?: string
@@ -21,12 +33,21 @@ interface SEOProps {
 }
 
 const DEFAULT_SEO = {
-    title: 'César Londoño | Full Stack Developer',
-    description: 'Full Stack Developer especializado en React, Vue.js, Ruby on Rails y Firebase. Portfolio personal con blog técnico sobre desarrollo web, arquitectura de software y mejores prácticas.',
-    keywords: ['césar londoño', 'full stack developer', 'react', 'vue.js', 'ruby on rails', 'typescript', 'firebase', 'desarrollo web', 'portfolio', 'blog técnico'],
-    author: 'César Londoño',
-    image: '/comic-team-web.webp',
-    type: 'website' as const
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    keywords: SITE_KEYWORDS,
+    author: AUTHOR.name,
+    image: DEFAULT_OG_IMAGE,
+    imageWidth: DEFAULT_OG_IMAGE_WIDTH,
+    imageHeight: DEFAULT_OG_IMAGE_HEIGHT,
+    type: 'website' as const,
+}
+
+function toAbsoluteUrl(url: string | undefined, base: string): string {
+    if (!url) return `${base}${DEFAULT_OG_IMAGE}`
+    if (/^https?:\/\//i.test(url)) return url
+    if (url.startsWith('/')) return `${base}${url}`
+    return `${base}/${url}`
 }
 
 export default function SEO({
@@ -35,6 +56,8 @@ export default function SEO({
     keywords,
     author,
     image,
+    imageWidth,
+    imageHeight,
     url,
     type = 'website',
     publishedTime,
@@ -44,17 +67,17 @@ export default function SEO({
 }: SEOProps) {
     const location = useLocation()
 
-    // Construir título completo
-    const fullTitle = title 
-        ? `${title} | César Londoño`
+    const fullTitle = title
+        ? `${title} | ${AUTHOR.name}`
         : DEFAULT_SEO.title
 
-    // Usar valores por defecto si no se proporcionan
     const seoDescription = description || DEFAULT_SEO.description
     const seoKeywords = keywords || DEFAULT_SEO.keywords
     const seoAuthor = author || DEFAULT_SEO.author
-    const seoImage = image || DEFAULT_SEO.image
-    const seoUrl = url || `${window.location.origin}${location.pathname}`
+    const seoImage = toAbsoluteUrl(image || DEFAULT_SEO.image, SITE_URL)
+    const seoImageWidth = imageWidth || DEFAULT_SEO.imageWidth
+    const seoImageHeight = imageHeight || DEFAULT_SEO.imageHeight
+    const seoUrl = url || `${SITE_URL}${location.pathname}`
 
     useEffect(() => {
         // Actualizar título
@@ -83,15 +106,24 @@ export default function SEO({
         updateMetaTag('og:title', fullTitle, true)
         updateMetaTag('og:description', seoDescription, true)
         updateMetaTag('og:image', seoImage, true)
+        updateMetaTag('og:image:width', String(seoImageWidth), true)
+        updateMetaTag('og:image:height', String(seoImageHeight), true)
+        updateMetaTag('og:image:alt', fullTitle, true)
         updateMetaTag('og:url', seoUrl, true)
         updateMetaTag('og:type', type, true)
-        updateMetaTag('og:site_name', 'César Londoño - Full Stack Developer', true)
+        updateMetaTag('og:site_name', SITE_NAME, true)
+        updateMetaTag('og:locale', 'es_CO', true)
 
         // Twitter Card
         updateMetaTag('twitter:card', 'summary_large_image')
         updateMetaTag('twitter:title', fullTitle)
         updateMetaTag('twitter:description', seoDescription)
         updateMetaTag('twitter:image', seoImage)
+        updateMetaTag('twitter:image:alt', fullTitle)
+        if (AUTHOR.twitter) {
+            updateMetaTag('twitter:creator', AUTHOR.twitter)
+            updateMetaTag('twitter:site', AUTHOR.twitter)
+        }
 
         // Article specific (para posts de blog)
         if (type === 'article') {
@@ -139,7 +171,7 @@ export default function SEO({
             document.head.appendChild(viewport)
         }
 
-    }, [fullTitle, seoDescription, seoKeywords, seoAuthor, seoImage, seoUrl, type, publishedTime, modifiedTime, section, tags])
+    }, [fullTitle, seoDescription, seoKeywords, seoAuthor, seoImage, seoImageWidth, seoImageHeight, seoUrl, type, publishedTime, modifiedTime, section, tags])
 
     // Este componente no renderiza nada visible
     return null

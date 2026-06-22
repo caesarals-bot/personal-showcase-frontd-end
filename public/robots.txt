@@ -1,28 +1,10 @@
-# robots.txt para Portfolio Personal
+# robots.txt - Generado en build
 
-# Permitir a todos los bots
 User-agent: *
 Allow: /
-
-# Sitemap
-Sitemap: https://tu-sitio.netlify.app/sitemap.xml
-
-# Crawl-delay (opcional, para evitar sobrecarga)
-Crawl-delay: 1
-
-# Bloquear acceso a archivos sensibles (por seguridad)
+Disallow: /admin/
+Disallow: /auth/
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /admin/
-Disallow: /private/
 
-# Permitir acceso a assets
-Allow: /assets/
-Allow: /*.css$
-Allow: /*.js$
-Allow: /*.png$
-Allow: /*.jpg$
-Allow: /*.jpeg$
-Allow: /*.webp$
-Allow: /*.svg$
-Allow: /*.gif$
+Sitemap: https://cesarlondño.dev/sitemap.xml

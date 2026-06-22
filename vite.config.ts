@@ -2,10 +2,11 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
+import { seoBuildPlugin } from './scripts/seo-build-plugin'
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), seoBuildPlugin()],
   base: '/', // ✅ Asegura rutas correctas en Netlify y SPA
   esbuild: {
     drop: mode === 'production' ? ['console', 'debugger'] : [], // Solo en producción

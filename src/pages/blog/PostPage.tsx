@@ -16,6 +16,9 @@ import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { getPosts, incrementPostViews } from '@/services/postService';
 import type { BlogPost } from '@/types/blog.types';
 import { PostDetailSkeleton } from '@/components/skeletons';
+import SEO from '@/components/SEO';
+import { JsonLd, SchemaBuilders } from '@/components/JsonLd';
+import { SITE_URL, AUTHOR } from '@/constants/site';
 
 export default function PostPage() {
     const { slug } = useParams<{ slug: string }>();
@@ -68,6 +71,39 @@ export default function PostPage() {
 
     return (
         <div className="min-h-screen bg-background">
+            <SEO
+                title={post.title}
+                description={post.excerpt || `Lee "${post.title}" en el blog de César Londoño.`}
+                keywords={post.tags?.map(t => t.name) || ['desarrollo web', 'programación']}
+                type="article"
+                publishedTime={post.publishedAt}
+                modifiedTime={post.updatedAt}
+                section={post.category?.name}
+                tags={post.tags?.map(t => t.name) || []}
+            />
+            <JsonLd
+                id={`post-${post.id || post.slug}`}
+                data={SchemaBuilders.article({
+                    headline: post.title,
+                    description: post.excerpt || `Lee "${post.title}" en el blog de César Londoño.`,
+                    url: `${SITE_URL}/blog/${post.slug}`,
+                    authorName: AUTHOR.name,
+                    authorUrl: SITE_URL,
+                    publishedTime: post.publishedAt,
+                    modifiedTime: post.updatedAt,
+                    section: post.category?.name,
+                    keywords: post.tags?.map(t => t.name) || [],
+                    inLanguage: 'es',
+                })}
+            />
+            <JsonLd
+                id={`post-breadcrumb-${post.id || post.slug}`}
+                data={SchemaBuilders.breadcrumb([
+                    { name: 'Inicio', url: SITE_URL },
+                    { name: 'Blog', url: `${SITE_URL}/blog` },
+                    { name: post.title, url: `${SITE_URL}/blog/${post.slug}` },
+                ])}
+            />
             {/* Hero Section */}
             <div className="relative bg-gradient-to-br from-primary/10 via-background to-background border-b">
                 <div className="container mx-auto px-6 md:px-8 py-12 md:py-16 max-w-5xl">
