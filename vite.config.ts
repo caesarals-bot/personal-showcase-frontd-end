@@ -25,7 +25,8 @@ export default defineConfig(({ mode }) => ({
           'vendor-ui': ['framer-motion', 'lucide-react'],
           'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
           'vendor-utils': ['date-fns', 'clsx', 'tailwind-merge'],
-          
+          'vendor-markdown': ['react-markdown', 'remark-gfm'],
+
           // Feature chunks - funcionalidades específicas
           'auth': [
             './src/auth/components/LoginForm.tsx',

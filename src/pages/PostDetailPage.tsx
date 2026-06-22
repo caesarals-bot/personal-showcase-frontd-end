@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LikeButton } from '@/components/LikeButton';
 import { CommentsSection } from '@/components/CommentsSection';
 import { SocialShareButtons } from '@/components/SocialShareButtons';
-import { MarkdownRendererOptimized as MarkdownRenderer } from '@/components/MarkdownRenderer.optimized';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { getPosts } from '@/services/postService';
 import type { BlogPost } from '@/types/blog.types';
 import { PostDetailSkeleton } from '@/components/skeletons';
