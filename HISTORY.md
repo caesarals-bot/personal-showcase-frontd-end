@@ -5,6 +5,58 @@
 
 ---
 
+## [2026-06-22] - perf(build): Paso 1 — Eliminar syntax highlighter del bundle global
+
+### Archivos modificados
+- `src/components/MarkdownRenderer.tsx` — **Reescrito**. Migrado de `react-syntax-highlighter` a `prismjs` + `prism-react-renderer`. Subset de 9 lenguajes (js/ts/tsx/jsx/html/css/bash/json/markdown) registrados selectivamente.
+- `src/components/ProjectMarkdownRenderer.tsx` — **Simplificado**. Ahora delega en `MarkdownRenderer` con `preset="project"`. Eliminadas ~250 líneas duplicadas.
+- `src/pages/PostDetailPage.tsx` — Import actualizado a `MarkdownRenderer` (antes `MarkdownRendererOptimized`).
+- `vite.config.ts` — Agregado chunk `vendor-markdown` para aislar `react-markdown` + `remark-gfm`.
+- `BUILD_OPTIMIZATION_PROPOSAL.md` — Plan completo + análisis de Pasos 2-4 con decisión de cierre del ciclo.
+- `CHANGELOG.md` — Separado en wip (liviano) + histórico (este archivo).
+
+### Archivos eliminados
+- `src/components/MarkdownRenderer.optimized.tsx` — Consolidado en canónico.
+- `src/components/MarkdownRenderer.ultra.tsx` — **Huérfano** (0 imports detectados), consolidado.
+
+### Archivos de dependencias
+- `package.json` — **Eliminado** `react-syntax-highlighter@^15.6.6` + `@types/react-syntax-highlighter`. **Agregado** `prismjs@^1.30.0` + `@types/prismjs@^1.26.6` + `prism-react-renderer@^2.4.1`.
+
+### Métricas (medidas con `npm run build`)
+
+| Métrica | Antes | Después | Δ |
+|---------|-------|---------|---|
+| `dist/assets/` | 4.2 MB | **2.1 MB** | **-50%** |
+| Total `dist/` | 4.2 MB+ | **2.1 MB** | **-50%** |
+| Archivos JS | 490 | **23** | **-95%** |
+| `blog-*.js` | 1.85 MB | **67 KB** | **-96%** |
+| Build time | ~22s | **19s** | **-14%** |
+| Vulnerabilidades npm | 19 | 16 | -3 |
+
+### Razón
+- **Causa raíz:** `react-syntax-highlighter` registra **~190 lenguajes** en el core. Rollup los empaquetaba todos en un chunk lazy de 1.6 MB.
+- **Solución:** `prismjs` permite importar **solo** los lenguajes que se usan (tree-shakeable real).
+- Posts/proyectos actuales **no tienen bloques de código** con `language-*`, así que el subset inicial es conservador (9 lenguajes). Expandir según demanda real.
+
+### Pasos 2-4 descartados
+Después del análisis detallado del Paso 2, se decidió cerrar el ciclo de optimización aquí:
+- **Paso 2** (Radix lazy + framer-motion): Radix UI ya estaba aislado por `manualChunks` + lazy routes. Reemplazar framer-motion requería migrar 32 archivos públicos (ROI bajo).
+- **Paso 3** (self-host fuentes): Mejora marginal con `font-display: swap` ya activo.
+- **Paso 4** (compresión + limpieza): Netlify ya sirve brotli, residuos en `public/` son pequeños.
+
+Detalle completo en `BUILD_OPTIMIZATION_PROPOSAL.md`.
+
+### Validaciones
+- ✅ `npm run build` — compila sin errores TS.
+- ✅ `npm run lint` — 0 errores (64 warnings preexistentes).
+- ✅ `npm run dev` — navegación manual OK (caché resuelta con `rm -rf node_modules/.vite`).
+- ✅ Bundle inicial público ya no carga syntax highlighter.
+
+### Commits relacionados
+- `f451911` perf(build): Paso 1 — replace react-syntax-highlighter with prismjs
+
+---
+
 ## [2026-06-19] - Security: C1 — Hardening de modo DEV (eliminar admin auto-asignado)
 
 ### Archivos modificados
