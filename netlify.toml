@@ -10,14 +10,7 @@
   [build.environment]
     NODE_VERSION = "20"
 
-# Redirect 301 dominio Punycode → dominio canónico con ñ
-[[redirects]]
-  from = "https://xn--cesarlondoo-beb.dev/*"
-  to = "https://cesarlondoño.dev/:splat"
-  status = 301
-  force = true
-
-# Redirects para SPA (React Router)
+# Redirects para SPA (React Router) — el cross-domain se define en public/_redirects
 [[redirects]]
   from = "/*"
   to = "/index.html"
