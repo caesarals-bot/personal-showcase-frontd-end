@@ -9,6 +9,8 @@ import { useEffect, useState } from 'react'
 import Logo from '@/shared/components/Logo'
 import { useTheme } from '@/components/theme-provider'
 import SEO from '@/components/SEO'
+import { JsonLd, SchemaBuilders } from '@/components/JsonLd'
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, AUTHOR, SOCIAL_PROFILES } from '@/constants/site'
 import { usePreloadRoutes } from '@/hooks/usePreloadRoutes'
 import { getHomeHeroImage, getHomeTextSettings } from '@/services/siteSettingsService'
 
@@ -82,6 +84,30 @@ const HomePage = () => {
                 keywords={['portfolio', 'desarrollo web', 'react', 'typescript', 'firebase', 'desarrollador full stack', 'ingeniero informático']}
                 type="website"
             />
+            <JsonLd
+                id="schema-person"
+                data={SchemaBuilders.person({
+                    name: AUTHOR.name,
+                    url: SITE_URL,
+                    jobTitle: AUTHOR.jobTitle,
+                    description: SITE_DESCRIPTION,
+                    image: `${SITE_URL}${AUTHOR.avatar}`,
+                    sameAs: SOCIAL_PROFILES,
+                })}
+            />
+            <JsonLd
+                id="schema-website"
+                data={SchemaBuilders.website({
+                    name: SITE_NAME,
+                    url: SITE_URL,
+                    description: SITE_DESCRIPTION,
+                    inLanguage: 'es',
+                })}
+            />
+
+            <h1 className="sr-only">
+                César Londoño — Ingeniero informático y desarrollador web Full Stack
+            </h1>
 
             <section className="relative mx-auto flex min-h-[calc(100vh-4rem)] max-w-4xl flex-col items-center justify-center px-4 text-center">
             {/* Contenedor relativo para superponer elementos respecto a la foto */}

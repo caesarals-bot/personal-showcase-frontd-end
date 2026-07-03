@@ -18,6 +18,7 @@ import { getProjectBySlug } from '@/services/projectService';
 import type { Project } from '@/types/portfolio';
 import type { Project as AdminProject } from '@/types/admin.types';
 import { ProjectDetailSkeleton } from '@/components/skeletons';
+import SEO from '@/components/SEO';
 
 // Función para convertir proyecto de admin a formato portfolio
 const convertAdminProjectToPortfolio = (adminProject: AdminProject): Project => {
@@ -105,6 +106,13 @@ export default function ProjectDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={project.title}
+        description={project.description}
+        keywords={project.technologies || ['proyecto', 'portfolio']}
+        type="article"
+        image={project.images?.[0]?.url}
+      />
       {/* Hero Section */}
       <div className="relative bg-gradient-to-br from-primary/10 via-background to-background border-b">
         <div className="container mx-auto px-8 md:px-12 lg:px-16 py-8">

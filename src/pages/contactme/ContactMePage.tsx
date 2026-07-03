@@ -3,10 +3,17 @@ import { MessageCircle, Send } from 'lucide-react'
 
 import ContactForm from './components/ContactForm'
 import ContactInfoDisplay from './components/ContactInfoDisplay'
+import SEO from '@/components/SEO'
 
 const ContactMePage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
+            <SEO
+                title="Contacto"
+                description="Ponte en contacto con César Londoño para colaboraciones, proyectos freelance, oportunidades laborales o simplemente para charlar sobre tecnología."
+                keywords={['contacto', 'colaboración', 'freelance', 'proyectos', 'consultoría']}
+                type="website"
+            />
             <div className="container mx-auto px-4 py-8 lg:py-12">
                 {/* Header */}
                 <motion.div

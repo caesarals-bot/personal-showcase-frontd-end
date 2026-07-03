@@ -4,6 +4,7 @@ import { BlogHeader } from './components/BlogHeader'
 import { BlogHero } from './components/BlogHero'
 import { useBlogData } from '@/hooks/useBlogData'
 import CollaborationSection from './components/CollaborationSection'
+import SEO from '@/components/SEO'
 
 const BlogPage = () => {
     const navigate = useNavigate()
@@ -49,6 +50,13 @@ const BlogPage = () => {
 
     return (
         <div className="min-h-screen">
+            <SEO
+                title="Blog"
+                description="Artículos sobre desarrollo web, React, TypeScript, Firebase, arquitectura de software y mejores prácticas. Por César Londoño."
+                keywords={['blog', 'desarrollo web', 'react', 'typescript', 'firebase', 'arquitectura', 'mejores prácticas']}
+                type="website"
+            />
+            <h1 className="sr-only">Blog de César Londoño — Artículos sobre desarrollo web</h1>
             <BlogHeader
                 categories={categories.map(cat => ({
                     id: cat.slug,
