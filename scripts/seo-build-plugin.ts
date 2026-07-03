@@ -14,7 +14,7 @@ import { writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fetchPublishedPosts, fetchPublishedProjects } from './fetch-published-content'
 
-const SITE_URL = process.env.VITE_SITE_URL || 'https://cesarlondño.dev'
+const SITE_URL = process.env.VITE_SITE_URL || 'https://cesarlondoño.dev'
 
 interface SitemapUrl {
   loc: string
