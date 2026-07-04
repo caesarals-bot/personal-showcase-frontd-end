@@ -5,7 +5,7 @@
  * Usar SIEMPRE estas constantes en lugar de hardcodear URLs.
  */
 
-const DEFAULT_SITE_URL = 'https://cesarlondoño.dev'
+const DEFAULT_SITE_URL = 'https://xn--cesarlondoo-beb.dev'
 
 export const SITE_URL: string =
   (import.meta.env.VITE_SITE_URL as string | undefined) || DEFAULT_SITE_URL
@@ -33,7 +33,7 @@ export const SITE_KEYWORDS = [
 export const AUTHOR = {
   name: 'César Londoño',
   jobTitle: 'Full Stack Developer',
-  email: 'contacto@cesarlondoño.dev',
+  email: 'proyectosenevolucion@gmail.com',
   twitter: '@cesarlondono',
   github: 'caesarals',
   linkedin: 'cesarlondono',
