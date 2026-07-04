@@ -5,6 +5,52 @@
 
 ---
 
+## [2026-07-04] - fix(deploy): Eliminar redirect cross-domain con encoding inválido + unificar dominio canónico
+
+### Issue resuelto
+- 🔴 **Deploy roto**: visitantes de `xn--cesarlondoo-beb.dev` recibían redirect a `https://cesarlondooÃ±o.dev/` (mojibake). El dominio `cesarlondoño.dev` no estaba registrado en DNS, por lo que la cadena de redirección terminaba en `DNS_PROBE_FINISHED_NXDOMAIN`.
+
+### Causa raíz
+- Regla en `public/_redirects` con carácter `ñ` literal UTF-8 (`0xC3 0xB1`) en el destino del header HTTP `Location:`. Los headers HTTP solo admiten ASCII, punycode o percent-encoding. Cuando Netlify serializaba el destino a ASCII, reinterpretó los bytes UTF-8 como Latin-1, generando el mojibake `Ã±`.
+- Además, la regla apuntaba a un dominio (`cesarlondoño.dev`) que no estaba registrado en Namecheap, sacando visitantes de su propio dominio primario hacia un dominio muerto.
+
+### Archivos modificados
+- `public/_redirects` — Eliminada regla `https://xn--cesarlondoo-beb.dev/* https://cesarlondoño.dev/:splat 301!` y su comentario. Solo permanece el redirect SPA `/* /index.html 200`.
+- `index.html` — 4 meta tags actualizadas: `og:url`, `og:image`, `twitter:image`, `canonical`. Pasaron de `https://cesarlondoño.dev/...` a `https://xn--cesarlondoo-beb.dev/...` (punycode ASCII canónico).
+- `src/constants/site.ts` — `DEFAULT_SITE_URL` cambiada a `https://xn--cesarlondoo-beb.dev`. `AUTHOR.email` corregido de `contacto@cesarlondoño.dev` (placeholder inexistente) a `proyectosenevolucion@gmail.com` (email real de contacto).
+- `scripts/seo-build-plugin.ts` — Fallback `SITE_URL` alineado con `site.ts` (punycode).
+- `public/sitemap.xml` — Regenerado por el plugin de build con URLs en punycode.
+- `public/robots.txt` — Regenerado por el plugin de build; `Sitemap:` apunta a URL canónica.
+
+### Archivos NO modificados (decisión consciente)
+- `scripts/generate-og-image.mjs:59` — Texto SVG `cesarlondoño.dev` dentro del `og-default.png`. Es texto Unicode serializado en SVG (no header HTTP), se renderiza correctamente al compartir en Twitter/LinkedIn, y migrarlo a punycode produciría un resultado visual feo.
+
+### Validaciones
+- ✅ `npm run lint` — 0 errores (64 warnings preexistentes no relacionadas).
+- ✅ `npm run build` — 0 errores, build completo en 29.36s. Sitemap y robots regenerados correctamente.
+- ✅ `grep -rn cesarlondoño src/ scripts/` — Solo 1 match residual en `generate-og-image.mjs` (texto SVG, intencionalmente no modificado).
+- ✅ `grep -n punycode dist/sitemap.xml dist/robots.txt dist/index.html` — Todos los artifacts apuntan a `xn--cesarlondoo-beb.dev`.
+- ✅ `curl -sIL https://xn--cesarlondoo-beb.dev/` (post-deploy Netlify) — Confirma 1 solo 301 (forced HTTPS) + 200, sin `Location:` corrupto.
+
+### Razón
+- Cumplir `agent.md §9` (documentar cambios significativos).
+- Restaurar capacidad de deploy. El sitio no desplegaba por el redirect a un dominio DNS muerto.
+- Corregir email real de contacto (el anterior era placeholder inventado).
+- Unificar la forma canónica del dominio a punycode ASCII en todos los archivos fuente para evitar inconsistencias entre codificaciones.
+
+### Riesgos identificados y mitigados
+| Riesgo | Mitigación |
+|--------|------------|
+| Netlify Edge cache reteniendo redirect viejo | Documentado en handoff: usar "Clear cache and redeploy" desde dashboard si `curl` sigue mostrando `Location:` corrupto post-deploy |
+| Email personal en bundle JS | Preexistente; externalizar a `VITE_ADMIN_EMAIL` queda como tarea separada del `SECURITY_ANALYSIS_2026-06-18.md` |
+| Cambio visual en OG image si dominio futuro se compra | Regenerable con `node scripts/generate-og-image.mjs` |
+| Bundle regenera con texto `proyectosenevolucion@gmail.com` embebido | Aceptable, preexistente patrón con `contacto@...`; externalización es tarea aparte |
+
+### Commits relacionados
+- `1828f32` fix(deploy): remove encoding-broken cross-domain redirect + unify domain refs + real contact email
+
+---
+
 ## [2026-06-22] - perf(build): Paso 1 — Eliminar syntax highlighter del bundle global
 
 ### Archivos modificados
