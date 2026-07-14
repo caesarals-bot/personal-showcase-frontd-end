@@ -1,8 +1,14 @@
 import type { Handler } from '@netlify/functions';
 import ImageKit from '@imagekit/nodejs';
 
+const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+
+if (!privateKey) {
+  throw new Error('IMAGEKIT_PRIVATE_KEY environment variable is not set');
+}
+
 const imagekit = new ImageKit({
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  privateKey,
 });
 
 export const handler: Handler = async (event) => {
@@ -31,6 +37,7 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify({
         error: 'Failed to generate authentication parameters',
         message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
       }),
     };
   }
