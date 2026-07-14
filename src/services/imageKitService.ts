@@ -49,7 +49,7 @@ export class ImageKitService {
     formData.append('signature', authParams.signature);
     formData.append('publicKey', imageKitConfig.publicKey);
 
-    const response = await fetch(imageKitConfig.urlEndpoint + 'api/v1/files/upload', {
+    const response = await fetch('https://upload.imagekit.io/api/v2/files/upload', {
       method: 'POST',
       body: formData,
     });
