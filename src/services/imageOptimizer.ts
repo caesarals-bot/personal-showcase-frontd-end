@@ -9,8 +9,8 @@
  * - Subir imágenes a Firebase Storage
  */
 
-import { ImageUploadService } from './imageUploadService'
-import type { UploadResult, UploadProgress } from './imageUploadService'
+import { ImageKitService } from './imageKitService'
+import type { UploadResult, UploadProgress } from './imageKitService'
 
 export interface ImageOptimizationOptions {
   maxWidth?: number;
@@ -398,7 +398,7 @@ class ImageOptimizerService {
 
       // Luego subir la imagen optimizada
       try {
-        const uploadResult = await ImageUploadService.uploadImage(
+        const uploadResult = await ImageKitService.uploadImage(
           optimizationResult.optimizedFile,
           folder,
           customFileName

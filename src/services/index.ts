@@ -5,4 +5,5 @@ export * from './postService';
 export * from './categoryService';
 export * from './tagService';
 export * from './userService';
+export * from './imageKitService';
 
