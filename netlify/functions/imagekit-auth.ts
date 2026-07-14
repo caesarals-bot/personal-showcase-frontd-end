@@ -2,9 +2,7 @@ import type { Handler } from '@netlify/functions';
 import ImageKit from '@imagekit/nodejs';
 
 const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || '',
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || '',
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
 });
 
 export const handler: Handler = async (event) => {
@@ -16,7 +14,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const authParams = imagekit.getAuthenticationParameters();
+    const authParams = imagekit.helper.getAuthenticationParameters();
     return {
       statusCode: 200,
       headers: {
