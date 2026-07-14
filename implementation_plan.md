@@ -1,8 +1,9 @@
 # Implementación: Migración de Storage a ImageKit (Firebase queda solo para Auth + DB)
 
-> **Estado:** EN PLANIFICACIÓN
-> **Rama:** `feature/imagekit-storage`
+> **Estado:** ✅ COMPLETADO (2026-07-14)
+> **Rama:** `main` (merge de `feature/imagekit-storage` el 2026-07-14)
 > **Última actualización:** 2026-07-14
+> **Imagen de prueba subida a ImageKit con éxito:** `connection_pooler_flow_optimized.webp`
 
 ---
 
