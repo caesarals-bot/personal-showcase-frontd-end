@@ -1,16 +1,6 @@
 import type { Handler } from '@netlify/functions';
 import ImageKit from '@imagekit/nodejs';
 
-const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
-
-if (!privateKey) {
-  throw new Error('IMAGEKIT_PRIVATE_KEY environment variable is not set');
-}
-
-const imagekit = new ImageKit({
-  privateKey,
-});
-
 const corsHeaders = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
@@ -35,6 +25,18 @@ export const handler: Handler = async (event) => {
     };
   }
 
+  const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+  if (!privateKey) {
+    console.error('IMAGEKIT_PRIVATE_KEY environment variable is not set');
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        error: 'Server misconfiguration: missing ImageKit credentials',
+      }),
+    };
+  }
+
   let imagePath: string;
   try {
     const body = event.body ? JSON.parse(event.body) : {};
@@ -55,6 +57,7 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    const imagekit = new ImageKit({ privateKey });
     await imagekit.deleteFile(imagePath);
     return {
       statusCode: 200,
