@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import AboutSection from './components/AboutSection'
 import Timeline from './components/Timeline'
 import { useOfflineData } from '@/hooks/useOfflineData'
@@ -8,6 +9,7 @@ import { defaultAboutData } from '@/data/defaults/defaultAbout'
 import { defaultTimelineData } from '@/data/defaults/defaultTimeline'
 import OfflineBanner from '@/components/OfflineBanner'
 import SEO from '@/components/SEO'
+import { cacheService } from '@/services/cacheService'
 
 export default function AboutPage() {
     // Sistema offline para About data
@@ -43,6 +45,16 @@ export default function AboutPage() {
     const handleRefetch = async () => {
         await Promise.all([refetchAbout(), refetchTimeline()])
     }
+
+    // Escuchar cambios desde admin (post/put/delete) para invalidar caché
+    useEffect(() => {
+        const handleAboutReload = () => {
+            cacheService.removeCache('about-data')
+            refetchAbout()
+        }
+        window.addEventListener('about-reload', handleAboutReload)
+        return () => window.removeEventListener('about-reload', handleAboutReload)
+    }, [refetchAbout])
 
     if (aboutLoading || timelineLoading) {
         return (

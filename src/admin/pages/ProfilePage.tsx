@@ -39,9 +39,7 @@ import {
 import { Plus, Edit, Trash2, FileText, Image as ImageIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { AboutSection } from '@/types/about.types';
 import { AboutService } from '@/services/aboutService';
-import ImageSelector from '@/components/ui/ImageSelector';
-import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
-import { cleanLocalUrl } from '@/utils/firebaseImageValidator';
+import { ImageUrlField } from '@/components/ui/ImageUrlField';
 
 interface SectionFormData {
     title: string;
@@ -96,19 +94,17 @@ export default function ProfilePage() {
 
     const handleCreate = async () => {
         try {
-            // Filtrar rutas locales antes de guardar
-            const cleanImage = cleanLocalUrl(formData.image);
-            
             const newSection: AboutSection = {
                 id: `section-${Date.now()}`,
                 title: formData.title,
                 content: formData.content,
-                image: cleanImage, // Solo URLs de Firebase Storage
+                image: formData.image,
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
             };
             const updatedSections = [...sections, newSection];
             await AboutService.updateAboutData({ sections: updatedSections });
+            window.dispatchEvent(new Event('about-reload'));
             setIsDialogOpen(false);
             resetForm();
             loadData();
@@ -122,20 +118,18 @@ export default function ProfilePage() {
         if (!editingSection) return;
         
         try {
-            // Filtrar rutas locales antes de guardar
-            const cleanImage = cleanLocalUrl(formData.image);
-            
             const updatedSections = sections.map(s => 
                 s.id === editingSection.id ? {
                     ...s,
                     title: formData.title,
                     content: formData.content,
-                    image: cleanImage, // Solo URLs de Firebase Storage
+                    image: formData.image,
                     imageAlt: formData.imageAlt,
                     imagePosition: formData.imagePosition,
                 } : s
             );
             await AboutService.updateAboutData({ sections: updatedSections });
+            window.dispatchEvent(new Event('about-reload'));
             setEditingSection(null);
             resetForm();
             loadData();
@@ -153,6 +147,7 @@ export default function ProfilePage() {
         try {
             const updatedSections = sections.filter(s => s.id !== section.id);
             await AboutService.updateAboutData({ sections: updatedSections });
+            window.dispatchEvent(new Event('about-reload'));
             loadData();
         } catch (error: any) {
             // Error al eliminar sección
@@ -162,14 +157,11 @@ export default function ProfilePage() {
 
     const openEditDialog = (section: AboutSection) => {
         setEditingSection(section);
-        
-        // Filtrar rutas locales y mantener solo URLs de Firebase Storage
-        const cleanImage = cleanLocalUrl(section.image || '');
-        
+
         setFormData({
             title: section.title,
             content: section.content,
-            image: cleanImage,  // ✅ Solo image
+            image: section.image || '',
             imageAlt: section.imageAlt,
             imagePosition: section.imagePosition,
         });
@@ -332,21 +324,17 @@ export default function ProfilePage() {
                             />
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="image">
-                                <ImageIcon className="inline h-4 w-4 mr-2" />
-                                Imagen URL *
-                            </Label>
-                            <Input
-                                id="image"
-                                placeholder="/comic-team-web.webp o URL de Firebase"
-                                value={formData.image}
-                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Ruta relativa a /public (ej: /comic-team-web.webp) o URL de Firebase Storage
-                            </p>
-                        </div>
+                        <ImageUrlField
+                            id="image"
+                            label="Imagen URL"
+                            placeholder="/comic-team-web.webp o https://ik.imagekit.io/..."
+                            value={formData.image}
+                            onChange={(url) => setFormData({ ...formData, image: url })}
+                            preset="about"
+                            required
+                            helperText="Ruta local (/imagen.webp), URL de ImageKit o cualquier URL pública válida."
+                            sectionTitle={formData.title || editingSection?.title}
+                        />
 
                         <div className="space-y-2">
                             <Label htmlFor="imageAlt">Texto Alternativo *</Label>
@@ -360,8 +348,8 @@ export default function ProfilePage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="imagePosition">Posición de la Imagen</Label>
-                            <Select 
-                                value={formData.imagePosition} 
+                            <Select
+                                value={formData.imagePosition}
                                 onValueChange={(value: 'left' | 'right') => setFormData({ ...formData, imagePosition: value })}
                             >
                                 <SelectTrigger>
@@ -380,42 +368,6 @@ export default function ProfilePage() {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                        </div>
-
-                        {/* Sección de Imagen */}
-                        <div className="space-y-4 border-t pt-6">
-                            <div className="space-y-3">
-                                <Label className="text-base font-semibold">
-                                    <ImageIcon className="inline h-5 w-5 mr-2" />
-                                    Imagen de la Sección
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    Sube una imagen para la sección About (opcional, formato WebP optimizado)
-                                </p>
-                                
-                                <div className="mt-4">
-                                    <ImageSelector
-                                        value={formData.image}
-                                        onChange={(url) => setFormData(prev => ({ 
-                                            ...prev, 
-                                            image: url  // ✅ Solo actualizar image
-                                        }))}
-                                        label="Imagen de About"
-                                        placeholder="URL de la imagen o sube una nueva"
-                                        preset="about"
-                                        maxFiles={1}
-                                        multiple={false}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Mostrar URL para copiar */}
-                            {formData.image && (
-                                <div className="space-y-2">
-                                    <Label>URL de la Imagen</Label>
-                                    <ImageUrlDisplay urls={[formData.image]} />
-                                </div>
-                            )}
                         </div>
                     </div>
 

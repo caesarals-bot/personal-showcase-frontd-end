@@ -234,3 +234,105 @@ npm run dev
 3. **Estructura de carpetas:** Verificar que `blog-images/featured`, `projects/`, etc. se crean correctamente en ImageKit
 4. **Imágenes históricas en Firebase:** Verificar que las URLs antiguas siguen cargando (lectura pública), sin depender de que la escritura esté disponible
 5. **Firebase Auth + Firestore:** Confirmar que el login y las operaciones de base de datos del blog siguen funcionando sin cambios (no deberían verse afectadas por este trabajo, pero vale la pena una verificación rápida de regresión)
+
+---
+
+# Fix: Imágenes del About no se muestran tras migración a ImageKit
+
+> **Estado:** 🟡 EN PROGRESO
+> **Rama:** `fix/about-image-display`
+> **Inicio:** 2026-07-15
+> **Reportado por:** usuario (admin)
+
+---
+
+## Contexto y diagnóstico
+
+Tras la migración a ImageKit (commit `c449a6b`), la página pública `/about` dejó de mostrar las imágenes de las secciones. Firebase Storage está bloqueado para escritura, pero el código del About seguía dependiendo de él de tres formas:
+
+### Causa raíz
+
+1. **`AboutSection.tsx` (público) filtra URLs por `isFirebaseStorageUrl()`** (`src/pages/about/components/AboutSection.tsx:14-19`). Las URLs de ImageKit (`https://ik.imagekit.io/...`) no matchean el patrón, por lo que la imagen nunca se renderiza aunque exista en Firestore.
+
+2. **`ProfilePage.tsx` (admin) aplica `cleanLocalUrl()` antes de guardar** (`src/admin/pages/ProfilePage.tsx:100, 126, 167`). Esta utility (`src/utils/firebaseImageValidator.ts:66-71`) devuelve `''` si la URL no es Firebase Storage ni ruta local válida, por lo que cualquier URL pegada manualmente (incluidas las de ImageKit) se vacía al guardar.
+
+3. **`AboutPage.tsx` usa `useOfflineData` con `cacheTTL: 24h`** (`src/pages/about/AboutPage.tsx:24`). Tras editar en admin, el visitante público sigue viendo datos cacheados hasta 24h.
+
+### Comparación con Posts (que sí funciona)
+
+`PostsPage.tsx` no aplica `cleanLocalUrl`, el render público (`BlogCard.tsx`) no filtra URLs, y `BlogPage` no usa caché de larga duración. Esa es la razón de la asimetría.
+
+### Decisión de arquitectura: reutilización
+
+Se evaluó reutilizar el formulario completo de Posts en About, pero los dominios son distintos:
+
+| Aspecto | Post | About section |
+|---|---|---|
+| Servicio | CRUD individual | array dentro de un solo documento |
+| Campos únicos | slug, excerpt, category, tags, status, sources, markdown, gallery | imageAlt, imagePosition, texto plano |
+| Workflow | draft/review/published/archived | ninguno |
+
+Reutilizar el formulario completo generaría configuración genérica compleja con props de más. **Lo único realmente compartido es el campo de imagen**, que también es donde está el bug. Decisión: extraer solo `<ImageUrlField>` y dejar cada formulario con su forma específica.
+
+---
+
+## Plan por pasos
+
+Cada paso se ejecuta, se verifica (`npm run build && npm run lint`) y se commitea antes de pasar al siguiente.
+
+### PASO 1 — Fix mínimo viable del About
+
+**Objetivo:** que el admin About guarde y muestre imágenes correctamente.
+
+| # | Acción | Archivos |
+|---|---|---|
+| 1.1 | Crear `ImageUrlField.tsx` (componente con input URL manual + ImageSelector + preview, sin filtros Firebase) | `src/components/admin/ImageUrlField.tsx` (nuevo) |
+| 1.2 | Reemplazar el bloque duplicado de imagen en `ProfilePage.tsx` (líneas 336-419) por `<ImageUrlField>` | `src/admin/pages/ProfilePage.tsx` |
+| 1.3 | Eliminar import y uso de `cleanLocalUrl` / `isFirebaseStorageUrl` en `ProfilePage.tsx` | `src/admin/pages/ProfilePage.tsx` |
+| 1.4 | Quitar filtro `isFirebaseStorageUrl` en `AboutSection.tsx`, usar `<img>` directo (patrón de `BlogCard`) | `src/pages/about/components/AboutSection.tsx` |
+| 1.5 | Añadir `window.dispatchEvent('about-reload')` en `handleCreate`/`handleEdit`/`handleDelete` | `src/admin/pages/ProfilePage.tsx` |
+| 1.6 | Escuchar `about-reload` en `AboutPage.tsx` → limpiar `cacheService('about-data')` + re-fetchar | `src/pages/about/AboutPage.tsx` |
+| 1.7 | Build + lint + test manual | — |
+
+**Criterio de éxito:**
+- Subir imagen desde admin About → llega a ImageKit.
+- URL manual pegada de ImageKit se guarda y muestra.
+- Visitante ve la imagen inmediatamente tras editar (sin esperar 24h).
+
+**Testing manual:**
+1. Login en admin → About → "Nueva Sección".
+2. Subir una imagen vía ImageSelector → verificar URL de ImageKit en Firestore console (`about/data`).
+3. Pegar manualmente una URL de ImageKit en input → guardar → verificar que persiste.
+4. Abrir `/about` en otra pestaña/incógnito → imagen debe verse (sin esperar 24h).
+
+### PASO 2 — Pendiente de evaluación
+
+Limpieza de `firebaseImageValidator.ts` (renombrar a `imageUrlValidator.ts` y agregar `isImageKitUrl()`). **NO se incluye en esta sesión** — alto riesgo de regresión con poco beneficio inmediato. Queda como tarea separada si se decide atacar.
+
+---
+
+## Archivos a crear/modificar
+
+### Nuevos
+- `src/components/admin/ImageUrlField.tsx`
+
+### Modificados
+- `src/admin/pages/ProfilePage.tsx`
+- `src/pages/about/components/AboutSection.tsx`
+- `src/pages/about/AboutPage.tsx`
+
+### NO afectados
+- `PostsPage.tsx`, `BlogCard.tsx`, `BlogPage.tsx` (Posts ya funciona)
+- `postService.ts`, `aboutService.ts` (no se toca la lógica de servicios en este fix)
+- `src/utils/firebaseImageValidator.ts` (queda como tarea separada)
+
+---
+
+## Decisiones técnicas
+
+| Tema | Decisión | Razón |
+|------|----------|-------|
+| Componente compartido | `<ImageUrlField>` solo | Reutilizar el form completo agregaría complejidad sin ganancia |
+| Validación de URL | Aceptar todo (locales, Firebase legacy, ImageKit, http) | El About tiene imágenes locales en `/public` que deben seguir funcionando |
+| Caché de AboutPage | Evento `about-reload` + `cacheService.removeCache` | Patrón ya usado por `blog-reload` en `PostPage.tsx:115` |
+| Migración de imágenes existentes | NO se migran en este fix | Si el usuario quiere, lo hace manualmente desde admin una por una |

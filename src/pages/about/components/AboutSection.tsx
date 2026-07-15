@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import type { AboutSection as AboutSectionType } from '@/types/about.types'
-import { isFirebaseStorageUrl } from '@/utils/firebaseImageValidator'
 
 interface AboutSectionProps {
     section: AboutSectionType
@@ -9,17 +8,7 @@ interface AboutSectionProps {
 
 export default function AboutSection({ section, index }: AboutSectionProps) {
     const isImageLeft = section.imagePosition === 'left'
-
-    // Solo usar URLs de Firebase Storage válidas
-    const getImageUrl = (imageUrl: string): string => {
-        if (!imageUrl || !isFirebaseStorageUrl(imageUrl)) {
-            return ''
-        }
-        return imageUrl
-    }
-
-    const imageUrl = getImageUrl(section.image)
-    const hasValidImage = !!imageUrl
+    const hasValidImage = !!section.image
 
     return (
         <motion.div
@@ -31,7 +20,6 @@ export default function AboutSection({ section, index }: AboutSectionProps) {
                 hasValidImage ? `md:flex-row md:gap-6 ${isImageLeft ? 'md:flex-row' : 'md:flex-row-reverse'}` : ''
             }`}
         >
-            {/* Imagen solo si es válida */}
             {hasValidImage && (
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -42,9 +30,12 @@ export default function AboutSection({ section, index }: AboutSectionProps) {
                 >
                     <div className="relative mx-auto h-32 w-32 sm:h-40 sm:w-40 md:h-36 md:w-36">
                         <img
-                            src={imageUrl}
+                            src={section.image}
                             alt={section.imageAlt}
                             className="h-full w-full rounded-lg object-cover shadow-md transition-transform duration-300 hover:scale-105 sm:rounded-xl"
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                            }}
                         />
                     </div>
                 </motion.div>

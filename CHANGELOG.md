@@ -6,6 +6,39 @@
 
 ---
 
+## [2026-07-15] - Fix: imágenes del About no se muestran tras migración a ImageKit
+
+### Descripción
+El admin About y la página pública `/about` no mostraban imágenes desde la migración a ImageKit. El código seguía acoplado a Firebase Storage por tres vías que ahora se corrigen.
+
+### Archivos creados
+- `src/components/ui/ImageUrlField.tsx` — campo combinado agnóstico al proveedor (input manual + ImageSelector + preview)
+
+### Archivos modificados
+- `src/admin/pages/ProfilePage.tsx` — reemplazo del bloque de imagen duplicado por `<ImageUrlField>`, eliminación de `cleanLocalUrl`, emisión de `about-reload` al guardar/editar/eliminar
+- `src/pages/about/components/AboutSection.tsx` — eliminado filtro `isFirebaseStorageUrl`, render directo de `<img>` (mismo patrón que `BlogCard`)
+- `src/pages/about/AboutPage.tsx` — listener de `about-reload` que limpia `cacheService('about-data')` y re-fetchea
+- `implementation_plan.md` — sección "Fix: Imágenes del About no se muestran tras migración a ImageKit"
+
+### Razón
+- `cleanLocalUrl()` (en `firebaseImageValidator.ts`) devolvía `''` para URLs que no fueran Firebase ni locales válidas, borrando URLs de ImageKit al guardar.
+- `AboutSection.tsx` filtraba por `isFirebaseStorageUrl()` y rechazaba URLs de ImageKit.
+- `AboutPage` cacheaba 24h sin invalidación al cambiar desde admin.
+
+### Decisiones técnicas
+- Se extrae solo `<ImageUrlField>` (no el formulario completo) porque Posts y AboutSection tienen dominios distintos (CRUD individual vs array en un solo documento).
+- El componente es agnóstico al proveedor: acepta URLs locales (`/img.webp`), Firebase legacy, ImageKit o cualquier URL pública.
+- Patrón de invalidación via `window.dispatchEvent` consistente con el `blog-reload` ya existente (`src/pages/blog/PostPage.tsx:115`).
+- No se migra `firebaseImageValidator.ts` en esta sesión — queda como tarea separada en el plan.
+
+### Testing manual pendiente
+- [ ] Login en admin → About → "Nueva Sección"
+- [ ] Subir imagen vía ImageSelector → verificar URL de ImageKit en Firestore console (`about/data`)
+- [ ] Pegar manualmente URL de ImageKit en input → guardar → verificar persistencia
+- [ ] Abrir `/about` en pestaña incógnita → imagen debe verse sin esperar 24h
+
+---
+
 ## [2026-07-14] - ImageKit como proveedor único de storage (migración desde Firebase Storage)
 
 ### Descripción
