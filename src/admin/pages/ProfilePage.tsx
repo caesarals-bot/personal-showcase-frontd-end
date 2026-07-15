@@ -94,16 +94,13 @@ export default function ProfilePage() {
 
     const handleCreate = async () => {
         try {
-            const newSection: AboutSection = {
-                id: `section-${Date.now()}`,
+            await AboutService.createSection({
                 title: formData.title,
                 content: formData.content,
                 image: formData.image,
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
-            };
-            const updatedSections = [...sections, newSection];
-            await AboutService.updateAboutData({ sections: updatedSections });
+            });
             window.dispatchEvent(new Event('about-reload'));
             setIsDialogOpen(false);
             resetForm();
@@ -116,19 +113,15 @@ export default function ProfilePage() {
 
     const handleEdit = async () => {
         if (!editingSection) return;
-        
+
         try {
-            const updatedSections = sections.map(s => 
-                s.id === editingSection.id ? {
-                    ...s,
-                    title: formData.title,
-                    content: formData.content,
-                    image: formData.image,
-                    imageAlt: formData.imageAlt,
-                    imagePosition: formData.imagePosition,
-                } : s
-            );
-            await AboutService.updateAboutData({ sections: updatedSections });
+            await AboutService.updateSection(editingSection.id, {
+                title: formData.title,
+                content: formData.content,
+                image: formData.image,
+                imageAlt: formData.imageAlt,
+                imagePosition: formData.imagePosition,
+            });
             window.dispatchEvent(new Event('about-reload'));
             setEditingSection(null);
             resetForm();
@@ -145,12 +138,11 @@ export default function ProfilePage() {
         }
 
         try {
-            const updatedSections = sections.filter(s => s.id !== section.id);
-            await AboutService.updateAboutData({ sections: updatedSections });
+            await AboutService.deleteSection(section.id);
             window.dispatchEvent(new Event('about-reload'));
             loadData();
         } catch (error: any) {
-            // Error al eliminar sección
+            console.error('Error al eliminar sección:', error);
             alert(`❌ ${error.message || 'Error al eliminar la sección'}`);
         }
     };

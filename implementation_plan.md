@@ -336,3 +336,66 @@ Limpieza de `firebaseImageValidator.ts` (renombrar a `imageUrlValidator.ts` y ag
 | Validación de URL | Aceptar todo (locales, Firebase legacy, ImageKit, http) | El About tiene imágenes locales en `/public` que deben seguir funcionando |
 | Caché de AboutPage | Evento `about-reload` + `cacheService.removeCache` | Patrón ya usado por `blog-reload` en `PostPage.tsx:115` |
 | Migración de imágenes existentes | NO se migran en este fix | Si el usuario quiere, lo hace manualmente desde admin una por una |
+
+---
+
+# Refactor: `aboutService` adopta el patrón de `postService`
+
+> **Estado:** ✅ COMPLETADO (2026-07-15)
+> **Rama:** `fix/about-service-refactor`
+> **Reportado por:** usuario (admin en producción)
+
+---
+
+## Síntoma en producción
+
+En admin → About, tras subir una imagen a ImageKit, la imagen no se persiste en la página pública ni aparece al editar la sección. La subida a ImageKit es exitosa (la imagen queda en el CDN), pero Firestore nunca recibe la URL.
+
+## Causa raíz
+
+`aboutService.updateAboutData` tiene tres problemas acoplados:
+
+1. **Merge con estado en memoria stale**: `{ ...aboutDataDB, ...data }` puede usar una copia en memoria desactualizada.
+2. **Errores silenciados**: el `try/catch` interno hace `console.error` pero NO lanza el error. El admin nunca se entera si Firestore rechaza la escritura.
+3. **No relee Firestore tras escribir**: confía en `mergedData` local.
+
+El servicio análogo `postService` ya tenía el patrón correcto (lectura + merge + escritura + throw). El de About quedó con una versión más primitiva.
+
+## Plan ejecutado
+
+Dos commits separados:
+
+### Commit 1 — Refactor estructural del servicio
+- Añadir `createSection`, `updateSection`, `deleteSection` que siguen el patrón de `createPostInFirestore` / `updatePostInFirestore` / `deletePostFromFirestore`.
+- Cada uno lee el doc actual de Firestore, hace la mutación y escribe.
+- Los errores se propagan (`throw`).
+- `updateAboutData` se mantiene como wrapper legacy, ahora también leyendo desde Firestore primero.
+- Sin cambios visibles — ProfilePage aún usa `updateAboutData`.
+
+### Commit 2 — Migración de ProfilePage
+- `handleCreate` → `AboutService.createSection(section)`.
+- `handleEdit` → `AboutService.updateSection(id, updates)`.
+- `handleDelete` → `AboutService.deleteSection(id)`.
+- Los errores que ya se capturaban con `alert()` ahora se muestran correctamente porque los servicios propagan.
+
+## Archivos modificados
+
+- `src/services/aboutService.ts` — refactor estructural
+- `src/admin/pages/ProfilePage.tsx` — migración de handlers
+- `CHANGELOG.md` — entrada nueva
+
+## NO afectado
+
+- `PostsPage.tsx`, `BlogCard.tsx`, `BlogPage.tsx`, `postService.ts` — Posts ya funciona.
+- `ProfileEditPage.tsx`, `PersonalProfilePage.tsx`, `getProfile`, `updateProfile` — operan sobre `profile/about`, otro documento. Sin cambios.
+- `removeAboutImage` / `removeAboutImages` — se mantienen sin cambios (no se llaman desde admin). Queda como tarea separada la migración a ImageKit del regex `extractStoragePathFromUrl`.
+
+## Criterio de éxito
+
+- [x] `npm run lint` pasa con 0 errores.
+- [x] `npm run build` compila OK.
+- [ ] Crear sección con imagen → Firestore `about/data.sections[]` contiene la URL.
+- [ ] Editar sección → Firestore actualiza el campo `image`.
+- [ ] Eliminar sección → Firestore remueve del array.
+- [ ] `/about` muestra los cambios inmediatamente.
+- [ ] Si Firestore rechaza el write, aparece `alert()` (ya no falla silenciosamente).

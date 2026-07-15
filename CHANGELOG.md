@@ -6,6 +6,42 @@
 
 ---
 
+## [2026-07-15] - Fix: persistencia de About en producción (refactor a patrón postService)
+
+### Descripción
+En admin → About, las imágenes se subían correctamente a ImageKit pero no se persistían en Firestore. Causa: `aboutService.updateAboutData` hacía un merge con estado en memoria stale y silenciaba los errores de Firestore, dejando al admin sin feedback. Se refactoriza el servicio siguiendo el patrón de `postService` (que sí funciona en producción).
+
+### Archivos modificados
+- `src/services/aboutService.ts` — nuevos métodos `createSection`/`updateSection`/`deleteSection` (lectura + mutación + escritura + `throw`)
+- `src/admin/pages/ProfilePage.tsx` — handlers migrados a los nuevos métodos granulares
+- `implementation_plan.md` — sección "Refactor: aboutService adopta el patrón de postService"
+
+### Archivos sin cambios (pero antes candidatos)
+- `PostsPage.tsx`, `postService.ts`, `BlogCard.tsx` — Posts ya funcionaba
+- `ProfileEditPage.tsx`, `PersonalProfilePage.tsx`, `getProfile`/`updateProfile` — operan sobre `profile/about` (otro doc), sin cambios
+- `removeAboutImage`/`removeAboutImages` — sin cambios (no se invocan desde admin)
+
+### Razón
+- El servicio de About usaba `try { await updateAboutDataInFirestore(...) } catch { console.error(...) }` (sin `throw`), enmascarando fallos.
+- El merge `{ ...aboutDataDB, ...data }` podía usar datos viejos si la caché en memoria estaba desincronizada con Firestore.
+- postService ya implementaba el patrón correcto (createPostInFirestore/updatePostInFirestore) y funciona en producción.
+
+### Decisiones técnicas
+- Refactor en 2 commits separados para revertir granularmente si falla algo.
+- Mantener `updateAboutData` legacy como wrapper por compatibilidad.
+- Mantener `alert()` en ProfilePage para errores (consistente con el resto del admin).
+- `clearAboutCache()` se invoca tras cada write exitoso.
+
+### Testing manual pendiente
+- [ ] Login admin → About → Nueva Sección con imagen subida a ImageKit
+- [ ] Verificar en Firestore Console `about/data.sections[]` que la URL está persistida
+- [ ] Editar sección cambiando imagen → Firestore actualiza
+- [ ] Eliminar sección → Firestore remueve
+- [ ] Abrir `/about` en otra pestaña → ver cambios inmediatamente
+- [ ] Provocar error (ej. sin permisos admin en reglas) → debe aparecer `alert()`, no fallar silenciosamente
+
+---
+
 ## [2026-07-15] - Fix: imágenes del About no se muestran tras migración a ImageKit
 
 ### Descripción
