@@ -20,7 +20,6 @@ import {
 import { ImageKitService } from './imageKitService';
 import { db } from '@/firebase/config';
 import { safeJsonParse } from '@/utils/safeJsonParse';
-import { extractStoragePathFromUrl } from '@/utils/imageUrlParser';
 
 // Flag para usar Firebase o localStorage
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -759,26 +758,20 @@ async function deletePostFromFirestore(id: string): Promise<void> {
       throw new Error('Post no encontrado');
     }
 
-    const imagesToDelete: string[] = [];
-    if (post.featuredImage) imagesToDelete.push(post.featuredImage);
-    if (post.gallery && post.gallery.length) imagesToDelete.push(...post.gallery);
+    const fileIdsToDelete: string[] = [];
+    if (post.featuredImageFileId) fileIdsToDelete.push(post.featuredImageFileId);
+    if (post.galleryFileIds) fileIdsToDelete.push(...post.galleryFileIds);
 
-    if (imagesToDelete.length > 0) {
-      const imagePaths = imagesToDelete
-        .map(extractStoragePathFromUrl)
-        .filter(Boolean) as string[];
-
-      if (imagePaths.length > 0) {
-        await Promise.allSettled(
-          imagePaths.map((path) => ImageKitService.deleteImage(path))
-        ).then((results) => {
-          results.forEach((r, i) => {
-            if (r.status === 'rejected') {
-              console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${imagePaths[i]}`, r.reason)
-            }
-          })
+    if (fileIdsToDelete.length > 0) {
+      await Promise.allSettled(
+        fileIdsToDelete.map((fileId) => ImageKitService.deleteImage(fileId))
+      ).then((results) => {
+        results.forEach((r, i) => {
+          if (r.status === 'rejected') {
+            console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${fileIdsToDelete[i]}`, r.reason)
+          }
         })
-      }
+      })
     }
 
     const postRef = doc(db, 'posts', id);
@@ -892,21 +885,19 @@ export async function removeFeaturedImage(postId: string): Promise<void> {
   if (USE_FIREBASE) {
     const post = await getPostById(postId);
 
-    if (!post || !post.featuredImage) {
+    if (!post || !post.featuredImage || !post.featuredImageFileId) {
       return;
     }
 
-    const path = extractStoragePathFromUrl(post.featuredImage);
-    if (path) {
-      try {
-        await ImageKitService.deleteImage(path);
-      } catch (err) {
-        console.warn(`⚠️ No se pudo eliminar la imagen destacada de ImageKit: ${path}`, err);
-      }
+    const fileId = post.featuredImageFileId;
+    try {
+      await ImageKitService.deleteImage(fileId);
+    } catch (err) {
+      console.warn(`⚠️ No se pudo eliminar la imagen destacada de ImageKit: ${fileId}`, err);
     }
 
     const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, { featuredImage: '' });
+    await updateDoc(postRef, { featuredImage: '', featuredImageFileId: '' });
 
     clearPostsCache();
     return;
@@ -916,6 +907,7 @@ export async function removeFeaturedImage(postId: string): Promise<void> {
   const postIndex = postsDB.findIndex(p => p.id === postId);
   if (postIndex !== -1) {
     postsDB[postIndex].featuredImage = '';
+    postsDB[postIndex].featuredImageFileId = '';
     persistPostsDB();
   }
 }
@@ -928,18 +920,22 @@ export async function removeGalleryImage(postId: string, imageUrl: string): Prom
     const post = await getPostById(postId);
     if (!post || !post.gallery || !post.gallery.length) return;
 
-    const path = extractStoragePathFromUrl(imageUrl);
-    if (path) {
+    const indexInGallery = post.gallery.indexOf(imageUrl);
+    if (indexInGallery === -1) return;
+
+    const fileId = post.galleryFileIds?.[indexInGallery];
+    if (fileId) {
       try {
-        await ImageKitService.deleteImage(path);
+        await ImageKitService.deleteImage(fileId);
       } catch (err) {
-        console.warn(`⚠️ No se pudo eliminar la imagen de galería de ImageKit: ${path}`, err);
+        console.warn(`⚠️ No se pudo eliminar la imagen de galería de ImageKit: ${fileId}`, err);
       }
     }
 
     const newGallery = post.gallery.filter(url => url !== imageUrl);
+    const newGalleryFileIds = (post.galleryFileIds || []).filter((_, i) => i !== indexInGallery);
     const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, { gallery: newGallery });
+    await updateDoc(postRef, { gallery: newGallery, galleryFileIds: newGalleryFileIds });
 
     clearPostsCache();
     return;
@@ -949,6 +945,10 @@ export async function removeGalleryImage(postId: string, imageUrl: string): Prom
   const postIndex = postsDB.findIndex(p => p.id === postId);
   if (postIndex !== -1) {
     postsDB[postIndex].gallery = (postsDB[postIndex].gallery || []).filter(url => url !== imageUrl);
+    if (postsDB[postIndex].galleryFileIds) {
+      const localIndex = (postsDB[postIndex].gallery || []).indexOf(imageUrl)
+      postsDB[postIndex].galleryFileIds = postsDB[postIndex].galleryFileIds!.filter((_, i) => i !== localIndex)
+    }
     persistPostsDB();
   }
 }

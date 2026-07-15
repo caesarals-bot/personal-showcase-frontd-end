@@ -4,7 +4,6 @@ import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { safeJsonParse } from '@/utils/safeJsonParse';
 import { ImageKitService } from './imageKitService';
-import { extractStoragePathFromUrl } from '@/utils/imageUrlParser';
 
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
 
@@ -282,8 +281,8 @@ export class AboutService {
   }
 
   // Eliminar la imagen de una sección (la borra de ImageKit y limpia Firestore)
-  static async removeAboutImage(imageUrl: string, sectionId?: string): Promise<void> {
-    return removeAboutImage(imageUrl, sectionId);
+  static async removeAboutImage(section: AboutSection): Promise<void> {
+    return removeAboutImage(section);
   }
 
   // Actualizar datos del About (compatibilidad — preferir createSection/updateSection/deleteSection)
@@ -548,45 +547,28 @@ sections: updatedSections,
 }
 
 /**
- * Eliminar una imagen específica de las secciones About
+ * Eliminar la imagen de una sección del About.
+ * Borra de ImageKit usando el imageFileId persistido, y limpia image + imageFileId en Firestore.
  */
-export async function removeAboutImage(imageUrl: string, sectionId?: string): Promise<void> {
-  await removeAboutImages([imageUrl], sectionId);
-}
-
-/**
- * Eliminar múltiples imágenes de las secciones About.
- * Borra de ImageKit (best-effort) y limpia el campo image en Firestore.
- */
-export async function removeAboutImages(imageUrls: string[], sectionId?: string): Promise<void> {
-  const uniqueUrls = Array.from(new Set(imageUrls.filter(Boolean)));
-  if (uniqueUrls.length === 0) return;
+export async function removeAboutImage(section: AboutSection): Promise<void> {
+  if (!section.imageFileId && !section.image) {
+    return;
+  }
 
   if (USE_FIREBASE) {
-    // 1) Borrar de ImageKit (best effort: si falla, igual limpiamos Firestore)
-    await Promise.allSettled(
-      uniqueUrls.map(async (url) => {
-        const path = extractStoragePathFromUrl(url);
-        if (!path) return;
-        try {
-          await ImageKitService.deleteImage(path);
-        } catch (err) {
-          console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${path}`, err);
-        }
-      })
-    );
+    if (section.imageFileId) {
+      try {
+        await ImageKitService.deleteImage(section.imageFileId);
+      } catch (err) {
+        console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${section.imageFileId}`, err);
+      }
+    }
 
-    // 2) Limpiar el campo image de las secciones afectadas en Firestore
     const currentData = await getAboutDataFromFirestore();
     const sections = currentData.sections || [];
-    const updatedSections = sections.map((section) => {
-      if (sectionId && section.id !== sectionId) {
-        return section;
-      }
-      return uniqueUrls.includes(section.image)
-        ? { ...section, image: '' }
-        : section;
-    });
+    const updatedSections = sections.map((s) =>
+      s.id === section.id ? { ...s, image: '', imageFileId: '' } : s
+    );
 
     if (updatedSections.some((s, i) => s !== sections[i])) {
       await updateAboutDataInFirestore({ ...currentData, sections: updatedSections });
@@ -601,14 +583,10 @@ export async function removeAboutImages(imageUrls: string[], sectionId?: string)
   // Modo local
   aboutDataDB = {
     ...aboutDataDB,
-    sections: (aboutDataDB.sections || []).map((section) => {
-      if (sectionId && section.id !== sectionId) {
-        return section;
-      }
-      return uniqueUrls.includes(section.image)
-        ? { ...section, image: '' }
-        : section;
-    }),
+    sections: (aboutDataDB.sections || []).map((s) =>
+      s.id === section.id ? { ...s, image: '', imageFileId: '' } : s
+    ),
   };
   persistAboutDB();
+  clearAboutCache();
 }
