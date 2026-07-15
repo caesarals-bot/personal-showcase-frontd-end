@@ -37,15 +37,15 @@ export const handler: Handler = async (event) => {
     };
   }
 
-  let imagePath: string;
+  let fileId: string;
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    imagePath = body.imagePath;
-    if (!imagePath) {
+    fileId = body.fileId;
+    if (!fileId) {
       return {
         statusCode: 400,
         headers: corsHeaders,
-        body: JSON.stringify({ error: 'imagePath is required' }),
+        body: JSON.stringify({ error: 'fileId is required' }),
       };
     }
   } catch {
@@ -58,11 +58,11 @@ export const handler: Handler = async (event) => {
 
   try {
     const imagekit = new ImageKit({ privateKey });
-    await imagekit.deleteFile(imagePath);
+    await imagekit.files.delete(fileId);
     return {
       statusCode: 200,
       headers: corsHeaders,
-      body: JSON.stringify({ success: true, imagePath }),
+      body: JSON.stringify({ success: true, fileId }),
     };
   } catch (error) {
     console.error('ImageKit delete error:', error);
