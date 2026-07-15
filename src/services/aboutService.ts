@@ -281,6 +281,11 @@ export class AboutService {
     return deleteSection(id);
   }
 
+  // Eliminar la imagen de una sección (la borra de ImageKit y limpia Firestore)
+  static async removeAboutImage(imageUrl: string, sectionId?: string): Promise<void> {
+    return removeAboutImage(imageUrl, sectionId);
+  }
+
   // Actualizar datos del About (compatibilidad — preferir createSection/updateSection/deleteSection)
   static async updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
     return updateAboutData(data);

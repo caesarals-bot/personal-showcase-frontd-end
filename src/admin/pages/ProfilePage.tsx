@@ -328,6 +328,35 @@ export default function ProfilePage() {
                             sectionTitle={formData.title || editingSection?.title}
                         />
 
+                        {editingSection && editingSection.image && (
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={async () => {
+                                        if (!editingSection) return
+                                        const previousImage = editingSection.image
+                                        if (!previousImage) return
+                                        if (!confirm('¿Eliminar la imagen actual? Esto la borrará también de ImageKit.')) return
+                                        try {
+                                            await AboutService.removeAboutImage(previousImage, editingSection.id)
+                                            setFormData(prev => ({ ...prev, image: '' }))
+                                            setEditingSection(prev => prev ? { ...prev, image: '' } : null)
+                                            window.dispatchEvent(new Event('about-reload'))
+                                            loadData()
+                                            alert('✅ Imagen eliminada')
+                                        } catch (error: any) {
+                                            console.error('Error al eliminar imagen:', error)
+                                            alert(`❌ ${error.message || 'Error al eliminar la imagen'}`)
+                                        }
+                                    }}
+                                >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Eliminar imagen actual
+                                </Button>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
                             <Label htmlFor="imageAlt">Texto Alternativo *</Label>
                             <Input

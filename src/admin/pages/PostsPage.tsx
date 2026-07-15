@@ -527,7 +527,7 @@ export default function PostsPage() {
                                             variant="destructive"
                                             size="sm"
                                             onClick={async () => {
-                                                const confirmed = confirm('¿Eliminar la imagen destacada también de Firebase Storage?')
+                                                const confirmed = confirm('¿Eliminar la imagen destacada también de ImageKit?')
                                                 if (!confirmed) return
                                                 try {
                                                     // removeFeaturedImage ya actualiza Firestore internamente
@@ -601,9 +601,9 @@ export default function PostsPage() {
                                     const previous = Array.isArray(formData.gallery) ? formData.gallery : [];
                                     const removed = previous.filter(url => !images.includes(url));
                                 
-                                    // Confirmar antes de eliminar de Firebase Storage las imágenes removidas
+                                    // Confirmar antes de eliminar de ImageKit las imágenes removidas
                                     if (editingPost?.id && removed.length > 0) {
-                                        const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de Firebase Storage?`)
+                                        const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
                                         if (confirmed) {
                                             try {
                                                 await Promise.all(removed.map(url => removeGalleryImage(editingPost.id!, url)));
