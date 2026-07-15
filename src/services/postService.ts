@@ -17,9 +17,10 @@ import {
   serverTimestamp,
   increment
 } from 'firebase/firestore';
-import { ImageUploadService } from './imageUploadService';
+import { ImageKitService } from './imageKitService';
 import { db } from '@/firebase/config';
 import { safeJsonParse } from '@/utils/safeJsonParse';
+import { extractStoragePathFromUrl } from '@/utils/imageUrlParser';
 
 // Flag para usar Firebase o localStorage
 const USE_FIREBASE = import.meta.env.VITE_USE_FIREBASE === 'true';
@@ -743,16 +744,20 @@ async function deletePostFromFirestore(id: string): Promise<void> {
     if (post.gallery && post.gallery.length) imagesToDelete.push(...post.gallery);
 
     if (imagesToDelete.length > 0) {
-      try {
-        const imagePaths = imagesToDelete
-          .map(extractStoragePathFromUrl)
-          .filter(Boolean) as string[];
-        if (imagePaths.length > 0) {
-          await ImageUploadService.deleteMultipleImages(imagePaths);
-        }
-      } catch (err) {
-        console.warn('⚠️ Error eliminando imágenes del Storage:', err);
-        // No lanzar error, continuar con la eliminación del post
+      const imagePaths = imagesToDelete
+        .map(extractStoragePathFromUrl)
+        .filter(Boolean) as string[];
+
+      if (imagePaths.length > 0) {
+        await Promise.allSettled(
+          imagePaths.map((path) => ImageKitService.deleteImage(path))
+        ).then((results) => {
+          results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+              console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${imagePaths[i]}`, r.reason)
+            }
+          })
+        })
       }
     }
 
@@ -861,64 +866,30 @@ export function resetPostsDB(): void {
 }
 
 /**
- * Extrae la ruta de Storage desde una URL pública de Firebase Storage
- */
-function extractStoragePathFromUrl(url: string): string | null {
-  try {
-    // Patrón para URLs de Firebase Storage
-    // Ejemplo: https://firebasestorage.googleapis.com/v0/b/bucket/o/path%2Fto%2Ffile.jpg?alt=media&token=...
-    const match = url.match(/\/o\/(.+?)\?/);
-    
-    if (match && match[1]) {
-      const decodedPath = decodeURIComponent(match[1]);
-      return decodedPath;
-    }
-    
-    // Intentar otro patrón si el primero no funciona
-    const altMatch = url.match(/\/([^\/]+\.(jpg|jpeg|png|gif|webp|svg))(\?|$)/i);
-    if (altMatch && altMatch[1]) {
-      return altMatch[1];
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('❌ extractStoragePathFromUrl - Error:', error);
-    return null;
-  }
-}
-
-/**
  * Eliminar solo la imagen destacada de un post
  */
 export async function removeFeaturedImage(postId: string): Promise<void> {
   if (USE_FIREBASE) {
-    try {
-      const post = await getPostById(postId);
-      
-      if (!post || !post.featuredImage) {
-        return;
-      }
+    const post = await getPostById(postId);
 
-      const path = extractStoragePathFromUrl(post.featuredImage);
-      
-      if (path) {
-        try {
-          await ImageUploadService.deleteImage(path);
-        } catch (err) {
-          console.warn('⚠️ No se pudo eliminar la imagen destacada del Storage:', err);
-          // No lanzar error, continuar con la actualización de Firestore
-        }
-      }
-
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, { featuredImage: '' });
-
-      clearPostsCache();
+    if (!post || !post.featuredImage) {
       return;
-    } catch (error) {
-      console.error('❌ Error al eliminar imagen destacada:', error);
-      throw error;
     }
+
+    const path = extractStoragePathFromUrl(post.featuredImage);
+    if (path) {
+      try {
+        await ImageKitService.deleteImage(path);
+      } catch (err) {
+        console.warn(`⚠️ No se pudo eliminar la imagen destacada de ImageKit: ${path}`, err);
+      }
+    }
+
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, { featuredImage: '' });
+
+    clearPostsCache();
+    return;
   }
 
   // Modo local
@@ -934,30 +905,24 @@ export async function removeFeaturedImage(postId: string): Promise<void> {
  */
 export async function removeGalleryImage(postId: string, imageUrl: string): Promise<void> {
   if (USE_FIREBASE) {
-    try {
-      const post = await getPostById(postId);
-      if (!post || !post.gallery || !post.gallery.length) return;
+    const post = await getPostById(postId);
+    if (!post || !post.gallery || !post.gallery.length) return;
 
-      const path = extractStoragePathFromUrl(imageUrl);
-      if (path) {
-        try {
-          await ImageUploadService.deleteImage(path);
-        } catch (err) {
-          console.warn('⚠️ No se pudo eliminar la imagen de galería del Storage:', err);
-          // No lanzar error, continuar con la actualización de Firestore
-        }
+    const path = extractStoragePathFromUrl(imageUrl);
+    if (path) {
+      try {
+        await ImageKitService.deleteImage(path);
+      } catch (err) {
+        console.warn(`⚠️ No se pudo eliminar la imagen de galería de ImageKit: ${path}`, err);
       }
-
-      const newGallery = post.gallery.filter(url => url !== imageUrl);
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, { gallery: newGallery });
-
-      clearPostsCache();
-      return;
-    } catch (error) {
-      console.error('Error al eliminar imagen de galería:', error);
-      throw error;
     }
+
+    const newGallery = post.gallery.filter(url => url !== imageUrl);
+    const postRef = doc(db, 'posts', postId);
+    await updateDoc(postRef, { gallery: newGallery });
+
+    clearPostsCache();
+    return;
   }
 
   // Modo local
