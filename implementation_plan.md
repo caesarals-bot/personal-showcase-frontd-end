@@ -443,3 +443,54 @@ Seis commits atómicos revertibles granularmente:
 
 - Migrar los tipos `UploadResult`/`UploadProgress` desde `imageUploadService.ts` hacia tipos equivalentes en `imageKitService.ts` y eliminar el archivo legacy.
 - Considerar `BroadcastChannel` o `storage` event para que el evento `about-reload` invalide el caché de `useOfflineData` en otras pestañas (hoy solo afecta a la pestaña activa).
+
+---
+
+# Fix: ImageKit deletes realmente borran (persistir fileId)
+
+> **Estado:** ✅ COMPLETADO (2026-07-15)
+> **Rama:** `fix/imagekit-delete-real`
+
+---
+
+## Síntoma
+
+El botón "Eliminar imagen" en admin About/Posts limpiaba Firestore y la página pública, pero la imagen **seguía en ImageKit**. El `cacheService` y el `useOfflineData` ya estaban bien — el bug estaba en el path de delete real.
+
+## Causa raíz
+
+`netlify/functions/imagekit-delete.ts` y los servicios cliente asumían que `imagekit.deleteFile(filePath)` era la API correcta. Dos problemas:
+
+1. `@imagekit/nodejs` no expone `deleteFile`. El método correcto es `imagekit.files.delete(fileId)`.
+2. Estábamos intentando derivar el `filePath` desde la URL pública, pero `extractStoragePathFromUrl` solo entendía el patrón de Firebase Storage legacy. Para URLs de ImageKit retornaba `null`.
+
+En realidad, el problema de fondo es que **el SDK de ImageKit requiere el `fileId` único que se asigna al subir**, y nunca lo persistíamos. Solo guardábamos `url` y `filePath`.
+
+## Plan ejecutado
+
+Seis commits atómicos revertibles granularmente:
+
+| # | Commit | Archivos |
+|---|---|---|
+| 1 | `feat(imagekit): capture and expose fileId on upload` | interfaces de upload + tipos (BlogPost, AboutSection) + firma de deleteImage |
+| 2 | `fix(netlify): imagekit-delete uses files.delete(fileId)` | netlify/functions/imagekit-delete.ts |
+| 3 | `feat(posts): persist featuredImageFileId and galleryFileIds` | postService (create/update) |
+| 4 | `fix(about,posts): delete calls use stored fileIds directly` | postService (delete paths) + aboutService (removeAboutImage nueva firma) |
+| 5 | `feat(admin): plumb imageFileId through ImageSelector to forms` | ImageSelector + ImageUrlField + ProfilePage + PostsPage |
+| 6 | `chore(docs): update CHANGELOG + plan` | CHANGELOG.md, implementation_plan.md |
+
+## Compatibilidad con datos existentes
+
+Imágenes que ya estaban en Firestore sin `fileId`:
+
+- Posts featured: NO se borrarán de ImageKit al usar "Eliminar imagen". El usuario debe resubir la imagen para que el nuevo `fileId` se persista.
+- Posts gallery: mismo caso.
+- About sections: mismo caso.
+- Imágenes legadas se limpian manualmente desde ImageKit Dashboard.
+
+Imágenes **nuevas** (a partir de este fix): el `fileId` se captura en `ImageSelector.onImageUploaded` y se persiste en el mismo write atómico que la URL.
+
+## Pendiente para futuras sesiones
+
+- Extender `ImageSelector.onImagesUploaded` para que entregue `{ url, fileId }[]` en lugar de `string[]`, así `galleryFileIds[]` se puede poblar desde el callback y no solo inferir por índice.
+- Cuando Firebase Storage vuelva a estar disponible, considerar migrar imágenes huérfanas a ImageKit o a una alternativa.

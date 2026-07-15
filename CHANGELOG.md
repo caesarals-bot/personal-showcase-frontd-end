@@ -6,6 +6,43 @@
 
 ---
 
+## [2026-07-15] - Fix: ImageKit deletes realmente borran (persistir fileId)
+
+### Descripción
+El botón "Eliminar imagen" limpiaba Firestore y la página pública, pero **las imágenes seguían en ImageKit** porque el SDK actual `imagekit.deleteFile(filePath)` no existe y `extractStoragePathFromUrl` no devolvía nada para URLs de ImageKit. Causa raíz: solo persistíamos `url` y `filePath`, pero el SDK nuevo requiere `fileId`.
+
+### Archivos modificados
+- `src/services/imageKitService.ts` — `UploadResult.fileId`; `deleteImage(fileId)` (antes recibía path).
+- `src/services/aboutImageService.ts`, `blogImageService.ts`, `projectImageService.ts` — interfaces exponen `fileId`.
+- `src/types/blog.types.ts` — `BlogPost.featuredImageFileId?`, `galleryFileIds?` (paralelo a `gallery[]`).
+- `src/types/about.types.ts` — `AboutSection.imageFileId?`.
+- `src/services/aboutService.ts` — `removeAboutImage(section: AboutSection)` (firma cambia, recibe la sección completa para tener acceso al fileId).
+- `src/services/postService.ts` — `createPost`/`updatePost`/`removeFeaturedImage`/`removeGalleryImage`/`deletePostFromFirestore` propagan fileIds; signature cambia para aceptar `featuredImageFileId` y `galleryFileIds`.
+- `netlify/functions/imagekit-delete.ts` — body usa `fileId`, llama `imagekit.files.delete(fileId)`.
+- `src/components/ui/ImageSelector.tsx` — expone `onImageUploaded({ url, fileId })` además del callback URL-only.
+- `src/components/ui/ImageUrlField.tsx` — propaga `onImageUploaded` como `onFileIdChange`.
+- `src/admin/pages/ProfilePage.tsx` — `SectionFormData.imageFileId`, propagación en create/edit, botón eliminar usa nuevo signature.
+- `src/admin/pages/PostsPage.tsx` — `PostFormData.featuredImageFileId`/`galleryFileIds`, `galleryFileIds` se mantiene alineado con `gallery[]` por índice.
+- `implementation_plan.md` — sección nueva.
+
+### Razón
+`@imagekit/nodejs` requiere `files.delete(fileId)` (no `deleteFile(filePath)`). El upload retorna `data.fileId` pero solo persistíamos `url`, así que ningún delete podía identificar el archivo en ImageKit.
+
+### Decisiones técnicas
+- 6 commits atómicos revertibles granularmente.
+- Nuevos campos son opcionales para mantener compatibilidad con datos existentes (que no se borrarán de ImageKit, pero Firestore sí se limpia).
+- Para la galería de Posts, `galleryFileIds` se mantiene paralelo a `gallery[]` por índice.
+- Helper compartido `extractStoragePathFromUrl` ya no se usa desde los servicios (queda como utility disponible).
+
+### Testing manual pendiente
+- [ ] Login admin → About → crear sección con imagen → Firestore `about/data.sections[]` contiene `image` + `imageFileId`.
+- [ ] Click "Eliminar imagen actual" → confirmar → archivo desaparece de ImageKit Dashboard; Firestore limpia ambos campos.
+- [ ] Posts: editar con imagen destacada → click "Eliminar imagen" → archivo desaparece de ImageKit Dashboard.
+- [ ] Posts: borrar post completo → todas sus imágenes (featured + gallery) se eliminan de ImageKit.
+- [ ] Imágenes viejas (sin fileId en Firestore) NO se borran de ImageKit (limpieza manual desde Dashboard).
+
+---
+
 ## [2026-07-15] - Limpieza + borrado de imágenes en About (y fix de deletes en Posts)
 
 ### Descripción
