@@ -6,6 +6,46 @@
 
 ---
 
+## [2026-07-15] - Limpieza + borrado de imágenes en About (y fix de deletes en Posts)
+
+### Descripción
+Cuatro bugs residuales de la migración a ImageKit: (1) código muerto en `firebaseImageValidator.ts`, (2) `extractStoragePathFromUrl` solo entendía Firebase Storage, (3) `removeAboutImage`/`removeFeaturedImage`/`removeGalleryImage` apuntaban a `ImageUploadService` legacy y dejaban imágenes huérfanas, (4) el admin About no tenía botón para borrar solo la imagen de una sección.
+
+### Archivos eliminados
+- `src/utils/firebaseImageValidator.ts` — código muerto desde dd31148 (cero imports).
+
+### Archivos nuevos
+- `src/utils/imageUrlParser.ts` — helper único agnóstico que extrae el path de ImageKit y de Firebase Storage.
+
+### Archivos modificados
+- `src/services/aboutService.ts` — `removeAboutImage`/`removeAboutImages` usan ImageKit + helper, errores propagados, expuesto `static removeAboutImage`.
+- `src/services/postService.ts` — `removeFeaturedImage`/`removeGalleryImage`/`deletePostFromFirestore` usan ImageKit + helper; eliminada duplicación local de `extractStoragePathFromUrl`.
+- `src/services/imageUploadService.ts` — marcado `@deprecated`. Sigue exportando tipos (`UploadResult`, `UploadProgress`) usados por ProfileEditPage y ProjectForm.
+- `src/admin/pages/ProfilePage.tsx` — botón "Eliminar imagen actual" visible solo en modo edición con imagen; confirma, llama `AboutService.removeAboutImage`, limpia state local, emite `about-reload`.
+- `src/admin/pages/PostsPage.tsx` — textos de confirmación actualizados ("Firebase Storage" → "ImageKit").
+- `implementation_plan.md` — sección nueva documentando esta fase.
+
+### Razón
+- `firebaseImageValidator.ts` generaba 2 warnings de lint sin aportar nada desde la migración.
+- `extractStoragePathFromUrl` duplicado en dos servicios solo entendía Firebase, retornaba `null` para URLs de ImageKit → deletes fallaban en silencio.
+- `ImageUploadService.deleteImage` apuntaba a Firebase Storage (escritura deshabilitada en producción) → todas las llamadas de delete dejaban imágenes huérfanas en ImageKit.
+- Faltaba UI explícita para borrar la imagen de una sección About sin tener que borrar la sección entera.
+
+### Decisiones técnicas
+- 6 commits atómicos, revertibles granularmente.
+- Helper compartido en `src/utils/imageUrlParser.ts` en lugar de duplicar la regex en cada servicio.
+- `Promise.allSettled` en lugar de `Promise.all` para que un fallo de delete no bloquee los demás ni la limpieza de Firestore.
+- `ImageUploadService` marcado `@deprecated` pero no eliminado (sigue exportando tipos).
+- `removeAboutImage` ahora método estático de `AboutService` para simetría con `createSection`/`updateSection`/`deleteSection`.
+
+### Testing manual pendiente
+- [ ] Login admin → About → crear sección con imagen → verificar URL en Firestore
+- [ ] Editar sección → ver botón "Eliminar imagen actual"
+- [ ] Click → confirmar → verificar: archivo desaparece de ImageKit Dashboard, `image: ''` en Firestore, imagen no se ve en `/about`
+- [ ] (Posts) Editar post con imagen destacada → click "Eliminar imagen" → verificar lo mismo
+
+---
+
 ## [2026-07-15] - Fix: persistencia de About en producción (refactor a patrón postService)
 
 ### Descripción

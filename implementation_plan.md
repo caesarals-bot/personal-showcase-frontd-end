@@ -399,3 +399,47 @@ Dos commits separados:
 - [ ] Eliminar sección → Firestore remueve del array.
 - [ ] `/about` muestra los cambios inmediatamente.
 - [ ] Si Firestore rechaza el write, aparece `alert()` (ya no falla silenciosamente).
+
+---
+
+# Limpieza + borrado de imágenes en About (fix de deletes en Posts)
+
+> **Estado:** ✅ COMPLETADO (2026-07-15)
+> **Rama:** `fix/about-delete-image`
+
+---
+
+## Síntomas residuales tras la migración a ImageKit
+
+1. `firebaseImageValidator.ts` quedó como código muerto tras el commit dd31148 (cero imports). Genera 2 warnings de lint residuales.
+2. `extractStoragePathFromUrl` duplicado en `postService.ts` y `aboutService.ts` solo entiende URLs de Firebase Storage. Para ImageKit retorna `null`.
+3. `removeAboutImage`, `removeFeaturedImage`, `removeGalleryImage` llaman a `ImageUploadService.deleteImage` (Firebase Storage legacy, escritura deshabilitada). Resultado: cada delete de post o sección deja la imagen huérfana en ImageKit.
+4. ProfilePage no tiene botón para borrar solo la imagen (solo borrar sección entera).
+
+## Plan ejecutado
+
+Seis commits atómicos revertibles granularmente:
+
+| # | Commit | Archivos |
+|---|---|---|
+| 1 | `chore(cleanup): remove dead firebaseImageValidator.ts` | elimina `src/utils/firebaseImageValidator.ts` |
+| 2 | `feat(utils): add ImageKit-aware extractStoragePathFromUrl helper` | crea `src/utils/imageUrlParser.ts` |
+| 3 | `fix(about): route removeAboutImage through ImageKit + propagate errors` | `src/services/aboutService.ts` |
+| 4 | `fix(posts): route removeFeaturedImage/removeGalleryImage through ImageKit + shared helper` | `src/services/postService.ts` |
+| 5 | `feat(admin): add 'Eliminar imagen' button to About section editor` | `src/admin/pages/ProfilePage.tsx`, `src/admin/pages/PostsPage.tsx` |
+| 6 | `chore(docs): update CHANGELOG + plan; mark legacy services @deprecated` | `CHANGELOG.md`, `implementation_plan.md`, `src/services/imageUploadService.ts` |
+
+## Decisiones técnicas
+
+| Tema | Decisión | Razón |
+|---|---|---|
+| Helper compartido | `src/utils/imageUrlParser.ts` único | Antes había dos copias con drift; centraliza |
+| Patrón de delete con múltiples URLs | `Promise.allSettled` | Un fallo no bloquea a los demás ni a Firestore |
+| `imageUploadService.ts` | Marcado `@deprecated`, no eliminado | Sigue exportando tipos `UploadResult`/`UploadProgress` usados en ProfileEditPage y ProjectForm |
+| Botón de borrado | Solo en modo edición con imagen | Simétrico con PostsPage y no rompe creación |
+| Texto de PostsPage | "Firebase Storage" → "ImageKit" | Alinear con el comportamiento real tras el refactor |
+
+## Pendiente para futuras sesiones
+
+- Migrar los tipos `UploadResult`/`UploadProgress` desde `imageUploadService.ts` hacia tipos equivalentes en `imageKitService.ts` y eliminar el archivo legacy.
+- Considerar `BroadcastChannel` o `storage` event para que el evento `about-reload` invalide el caché de `useOfflineData` en otras pestañas (hoy solo afecta a la pestaña activa).

@@ -17,9 +17,16 @@ export interface UploadProgress {
 
 /**
  * Servicio para manejar uploads de imágenes a Firebase Storage
+ *
+ * @deprecated Firebase Storage ya no es el proveedor activo de imágenes.
+ * El proyecto migró a ImageKit (2026-07-14). Esta clase permanece solo
+ * porque sus tipos (`UploadResult`, `UploadProgress`) aún se importan
+ * desde `ProfileEditPage.tsx` y `ProjectForm.tsx`. No la uses en código
+ * nuevo. Para uploads usa `ImageKitService`; para deletes usa
+ * `ImageKitService.deleteImage` + el helper `extractStoragePathFromUrl`.
  */
 export class ImageUploadService {
-  
+
   /**
    * Sube una imagen a Firebase Storage
    * @param file - Archivo de imagen a subir
