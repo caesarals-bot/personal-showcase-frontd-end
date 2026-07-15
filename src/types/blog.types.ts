@@ -15,7 +15,9 @@ export interface BlogPost {
     category: Category
     tags: Tag[]
     featuredImage?: string
+    featuredImageFileId?: string // ImageKit fileId; required to delete featuredImage from ImageKit CDN
     gallery?: string[] // Galería de imágenes adicionales
+    galleryFileIds?: string[] // Parallel array to gallery[]; entries are ImageKit fileIds (or null for legacy images without fileId)
     sources?: string[] // Fuentes y referencias del post
     status: PostStatus // Estado del post: draft, review, published, archived
     isPublished: boolean // DEPRECATED: Usar 'status' en su lugar

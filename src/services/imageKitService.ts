@@ -2,6 +2,7 @@ import { imageKitConfig } from '../config/imageKitConfig';
 
 export interface UploadResult {
   url: string;
+  fileId: string;
   path: string;
   fileName: string;
   size: number;
@@ -62,6 +63,7 @@ export class ImageKitService {
     const data = await response.json();
     return {
       url: data.url,
+      fileId: data.fileId,
       path: data.filePath,
       fileName: finalFileName,
       size: file.size,
@@ -113,11 +115,11 @@ export class ImageKitService {
     }
   }
 
-  static async deleteImage(imagePath: string): Promise<void> {
+  static async deleteImage(fileId: string): Promise<void> {
     const response = await fetch(imageKitConfig.authenticationEndpoint.replace('imagekit-auth', 'imagekit-delete'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imagePath }),
+      body: JSON.stringify({ fileId }),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

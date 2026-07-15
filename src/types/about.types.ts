@@ -3,6 +3,7 @@ export interface AboutSection {
     title: string
     content: string
     image: string
+    imageFileId?: string // ImageKit fileId; required to delete image from ImageKit CDN
     imageAlt: string
     imagePosition: 'left' | 'right'
 }

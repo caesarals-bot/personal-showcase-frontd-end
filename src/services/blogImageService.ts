@@ -8,6 +8,7 @@ import { imageOptimizer, IMAGE_PRESETS, VALIDATION_RULES } from './imageOptimize
 
 export interface BlogImageUploadResult {
   url: string;
+  fileId: string;
   fileName: string;
   size: number;
   optimizedSize: number;
@@ -51,6 +52,7 @@ class BlogImageService {
 
       return {
         url: result.upload.url,
+        fileId: result.upload.fileId,
         fileName: result.upload.fileName,
         size: result.optimization.originalSize,
         optimizedSize: result.optimization.optimizedSize,
@@ -87,6 +89,7 @@ class BlogImageService {
         if (result.optimization.success && result.upload) {
           results.push({
             url: result.upload.url,
+            fileId: result.upload.fileId,
             fileName: result.upload.fileName,
             size: result.optimization.originalSize,
             optimizedSize: result.optimization.optimizedSize,
