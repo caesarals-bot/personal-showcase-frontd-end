@@ -367,7 +367,9 @@ export async function createPost(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  featuredImageFileId?: string;
   gallery?: string[];
+  galleryFileIds?: string[];
   sources?: string[];
   status: PostStatus;
   isPublished: boolean;
@@ -393,7 +395,9 @@ async function createPostInFirestore(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  featuredImageFileId?: string;
   gallery?: string[];
+  galleryFileIds?: string[];
   sources?: string[];
   status: PostStatus;
   isPublished: boolean;
@@ -422,7 +426,7 @@ async function createPostInFirestore(data: {
       }
     }
     
-    // Crear documento en Firestore
+// Crear documento en Firestore
     const postData = {
       title: data.title.trim(),
       slug: data.slug,
@@ -439,7 +443,9 @@ async function createPostInFirestore(data: {
       publishedAt: serverTimestamp(),
       readingTime: calculateReadingTime(data.content),
       featuredImage: data.featuredImage || '',
+      featuredImageFileId: data.featuredImageFileId || '',
       gallery: data.gallery || [],
+      galleryFileIds: data.galleryFileIds || [],
       sources: data.sources || [],
       status: data.status,
       isPublished: data.isPublished,
@@ -448,14 +454,14 @@ async function createPostInFirestore(data: {
       views: 0,
       commentsCount: 0,
     };
-    
 
-    
+
+
     const docRef = await addDoc(collection(db, 'posts'), postData);
-    
+
     // Limpiar caché al crear post
     clearPostsCache();
-    
+
     // Retornar el post completo
     const newPost: BlogPost = {
       id: docRef.id,
@@ -469,7 +475,9 @@ async function createPostInFirestore(data: {
       category,
       tags,
       featuredImage: data.featuredImage,
+      featuredImageFileId: data.featuredImageFileId,
       gallery: data.gallery || [],
+      galleryFileIds: data.galleryFileIds || [],
       sources: data.sources || [],
       status: data.status,
       isPublished: data.isPublished,
@@ -499,26 +507,28 @@ async function createPostLocal(data: {
   authorName: string;
   authorAvatar?: string;
   featuredImage?: string;
+  featuredImageFileId?: string;
   gallery?: string[];
+  galleryFileIds?: string[];
   sources?: string[];
   status: PostStatus;
   isPublished: boolean;
   isFeatured: boolean;
 }): Promise<BlogPost> {
   await delay();
-  
+
   // Validar que el slug no exista
   const exists = postsDB.some(post => post.slug === data.slug);
   if (exists) {
     throw new Error(`Ya existe un post con el slug: ${data.slug}`);
   }
-  
+
   // Obtener categoría y tags
   const category = await getCategoryById(data.categoryId);
   if (!category) {
     throw new Error('Categoría no encontrada');
   }
-  
+
   const tags: Tag[] = [];
   for (const tagId of data.tagIds) {
     const tag = await getTagById(tagId);
@@ -526,7 +536,7 @@ async function createPostLocal(data: {
       tags.push(tag);
     }
   }
-  
+
   // Crear el nuevo post
   const newPost: BlogPost = {
     id: `post-${Date.now()}`,
@@ -540,7 +550,9 @@ async function createPostLocal(data: {
     category,
     tags,
     featuredImage: data.featuredImage,
+    featuredImageFileId: data.featuredImageFileId,
     gallery: data.gallery || [],
+    galleryFileIds: data.galleryFileIds || [],
     sources: data.sources || [],
     status: data.status,
     isPublished: data.isPublished,
@@ -568,7 +580,9 @@ export async function updatePost(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    featuredImageFileId: string;
     gallery: string[];
+    galleryFileIds: string[];
     sources: string[];
     status: PostStatus;
     isPublished: boolean;
@@ -594,7 +608,9 @@ async function updatePostInFirestore(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    featuredImageFileId: string;
     gallery: string[];
+    galleryFileIds: string[];
     sources: string[];
     status: PostStatus;
     isPublished: boolean;
@@ -617,7 +633,9 @@ async function updatePostInFirestore(
     if (updates.categoryId !== undefined) updateData.categoryId = updates.categoryId;
     if (updates.tagIds !== undefined) updateData.tagIds = updates.tagIds;
     if (updates.featuredImage !== undefined) updateData.featuredImage = updates.featuredImage;
+    if (updates.featuredImageFileId !== undefined) updateData.featuredImageFileId = updates.featuredImageFileId;
     if (updates.gallery !== undefined) updateData.gallery = updates.gallery;
+    if (updates.galleryFileIds !== undefined) updateData.galleryFileIds = updates.galleryFileIds;
     if (updates.sources !== undefined) updateData.sources = updates.sources;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.isPublished !== undefined) updateData.isPublished = updates.isPublished;
@@ -655,7 +673,9 @@ async function updatePostLocal(
     categoryId: string;
     tagIds: string[];
     featuredImage: string;
+    featuredImageFileId: string;
     gallery: string[];
+    galleryFileIds: string[];
     sources: string[];
     status: PostStatus;
     isPublished: boolean;
