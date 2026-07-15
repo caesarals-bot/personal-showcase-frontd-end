@@ -1,4 +1,4 @@
-import type { AboutData, Profile } from '@/types/about.types';
+import type { AboutData, AboutSection, Profile } from '@/types/about.types';
 import { aboutData } from '@/data/about.data';
 import { doc, getDoc, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -157,32 +157,99 @@ async function getAboutDataLocal(): Promise<AboutData> {
 }
 
 /**
- * Actualizar datos de About
+ * Actualizar datos de About (escritura completa del documento).
+ * Mantenido por compatibilidad con código existente. Para mutaciones de secciones,
+ * preferir createSection/updateSection/deleteSection que no dependen de cache en memoria.
  */
 export async function updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
-  // 🔹 Crear datos merged de forma segura
-  const mergedData = {
-    ...aboutDataDB,
+  const currentData = await getAboutData();
+  const mergedData: AboutData = {
+    ...currentData,
     ...data,
   };
 
-  // 🔹 Persistir localmente (opcional)
   aboutDataDB = mergedData;
   persistAboutDB();
-  
-  // Limpiar caché
   clearAboutCache();
 
   if (USE_FIREBASE) {
-    try {
-      await updateAboutDataInFirestore(mergedData);
-    } catch (error) {
-      console.error('Error al actualizar datos de About en Firebase (datos guardados localmente):', error);
-      // No lanzar error porque los datos ya están guardados localmente
-    }
+    await updateAboutDataInFirestore(mergedData);
   }
 
   return { ...mergedData };
+}
+
+/**
+ * Crear una nueva sección en About.
+ * Lee el documento actual, agrega la sección al array, escribe en Firestore.
+ * Patrón equivalente a createPostInFirestore.
+ */
+export async function createSection(sectionInput: Omit<AboutSection, 'id'>): Promise<AboutSection> {
+  const newSection: AboutSection = {
+    id: `section-${Date.now()}`,
+    ...sectionInput,
+  };
+
+  if (USE_FIREBASE) {
+    await createSectionInFirestore(newSection);
+  } else {
+    aboutDataDB = {
+      ...aboutDataDB,
+      sections: [...(aboutDataDB.sections || []), newSection],
+    };
+    persistAboutDB();
+  }
+
+  clearAboutCache();
+  return newSection;
+}
+
+/**
+ * Actualizar una sección existente por id.
+ * Lee el documento, hace merge campo por campo, escribe en Firestore.
+ * Patrón equivalente a updatePostInFirestore.
+ */
+export async function updateSection(id: string, updates: Partial<AboutSection>): Promise<AboutSection> {
+  if (USE_FIREBASE) {
+    const updated = await updateSectionInFirestore(id, updates);
+    clearAboutCache();
+    return updated;
+  }
+
+  // Modo local
+  const sections = aboutDataDB.sections || [];
+  const index = sections.findIndex(s => s.id === id);
+  if (index === -1) {
+    throw new Error(`Sección con id "${id}" no encontrada`);
+  }
+  const merged = { ...sections[index], ...updates };
+  const newSections = [...sections];
+  newSections[index] = merged;
+  aboutDataDB = { ...aboutDataDB, sections: newSections };
+  persistAboutDB();
+  clearAboutCache();
+  return merged;
+}
+
+/**
+ * Eliminar una sección por id.
+ * Lee el documento, filtra del array, escribe en Firestore.
+ */
+export async function deleteSection(id: string): Promise<void> {
+  if (USE_FIREBASE) {
+    await deleteSectionInFirestore(id);
+    clearAboutCache();
+    return;
+  }
+
+  // Modo local
+  const sections = aboutDataDB.sections || [];
+  aboutDataDB = {
+    ...aboutDataDB,
+    sections: sections.filter(s => s.id !== id),
+  };
+  persistAboutDB();
+  clearAboutCache();
 }
 
 // Simulación de API/Firebase
@@ -198,7 +265,22 @@ export class AboutService {
     return getAboutData();
   }
 
-  // Actualizar datos del About
+  // Crear una nueva sección
+  static async createSection(section: Omit<AboutSection, 'id'>): Promise<AboutSection> {
+    return createSection(section);
+  }
+
+  // Actualizar una sección existente
+  static async updateSection(id: string, updates: Partial<AboutSection>): Promise<AboutSection> {
+    return updateSection(id, updates);
+  }
+
+  // Eliminar una sección
+  static async deleteSection(id: string): Promise<void> {
+    return deleteSection(id);
+  }
+
+  // Actualizar datos del About (compatibilidad — preferir createSection/updateSection/deleteSection)
   static async updateAboutData(data: Partial<AboutData>): Promise<AboutData> {
     return updateAboutData(data);
   }
@@ -368,6 +450,95 @@ async function updateAboutDataInFirestore(data: AboutData): Promise<void> {
     console.error('Error al actualizar datos About en Firestore:', error);
     throw error;
   }
+}
+
+/**
+ * Crear una sección en Firestore.
+ * Si el documento about/data no existe, lo crea con la primera sección.
+ * Si existe, hace append al array sections.
+ */
+async function createSectionInFirestore(section: AboutSection): Promise<void> {
+  const docRef = doc(db, 'about', 'data');
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    await setDoc(docRef, {
+      sections: [section],
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+    return;
+  }
+
+  const currentData = docSnap.data() as AboutData;
+  const currentSections = currentData.sections || [];
+  await updateDoc(docRef, {
+    sections: [...currentSections, section],
+    updatedAt: Timestamp.now(),
+  });
+}
+
+/**
+ * Actualizar una sección existente en Firestore.
+ * Lee el doc actual, localiza la sección por id, hace merge, escribe.
+ * Patrón equivalente a updatePostInFirestore (campo por campo, sin estado en memoria).
+ */
+async function updateSectionInFirestore(id: string, updates: Partial<AboutSection>): Promise<AboutSection> {
+  const docRef = doc(db, 'about', 'data');
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    throw new Error('No se encontró el documento de About para actualizar');
+  }
+
+  const currentData = docSnap.data() as AboutData;
+  const currentSections = currentData.sections || [];
+  const index = currentSections.findIndex(s => s.id === id);
+
+  if (index === -1) {
+    throw new Error(`Sección con id "${id}" no encontrada`);
+  }
+
+  const merged: AboutSection = {
+    ...currentSections[index],
+    ...updates,
+  };
+
+  const updatedSections = [...currentSections];
+  updatedSections[index] = merged;
+
+  await updateDoc(docRef, {
+    sections: updatedSections,
+    updatedAt: Timestamp.now(),
+  });
+
+  return merged;
+}
+
+/**
+ * Eliminar una sección por id en Firestore.
+ * Lee el doc actual, filtra el array, escribe.
+ */
+async function deleteSectionInFirestore(id: string): Promise<void> {
+  const docRef = doc(db, 'about', 'data');
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    return;
+  }
+
+  const currentData = docSnap.data() as AboutData;
+  const currentSections = currentData.sections || [];
+  const updatedSections = currentSections.filter(s => s.id !== id);
+
+  if (updatedSections.length === currentSections.length) {
+    return;
+  }
+
+  await updateDoc(docRef, {
+    sections: updatedSections,
+    updatedAt: Timestamp.now(),
+  });
 }
 
 /**
