@@ -28,6 +28,7 @@ export interface ImageSelectorProps {
   onChange?: (url: string) => void;
   onImagesChange?: (urls: string[]) => void;
   onImagesUploaded?: (urls: string[]) => void;
+  onImageUploaded?: (info: { url: string; fileId: string }) => void;
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -60,6 +61,7 @@ export default function ImageSelector({
   onChange,
   onImagesChange,
   onImagesUploaded,
+  onImageUploaded,
   label = 'Imagen',
   placeholder = 'https://ejemplo.com/imagen.jpg',
   required = false,
@@ -90,7 +92,7 @@ export default function ImageSelector({
     setUploadError(null);
 
     try {
-      const uploadedUrls: string[] = [];
+      const uploadedItems: { url: string; fileId: string }[] = [];
 
       for (const file of files) {
         // Crear entrada temporal para mostrar progreso
@@ -106,7 +108,7 @@ export default function ImageSelector({
         try {
           // Usar el servicio apropiado según el preset
           let uploadResult: BlogImageUploadResult | ProjectImageUploadResult | AboutImageUploadResult;
-          
+
           if (preset === 'blog' || preset === 'featured' || preset === 'gallery') {
             // Para blog, featured y gallery, usar el servicio específico
             if (multiple || preset === 'gallery') {
@@ -142,28 +144,28 @@ export default function ImageSelector({
           URL.revokeObjectURL(tempUrl);
 
           // Actualizar estado con resultado exitoso
-          setUploadedImages(prev => 
-            prev.map(img => 
-              img.file === file 
-                ? { 
-                    ...img, 
-                    url: uploadResult.url, 
+          setUploadedImages(prev =>
+            prev.map(img =>
+              img.file === file
+                ? {
+                    ...img,
+                    url: uploadResult.url,
                     status: 'completed',
-                    uploadResult 
+                    uploadResult
                   }
                 : img
             )
           );
 
-          uploadedUrls.push(uploadResult.url);
+          uploadedItems.push({ url: uploadResult.url, fileId: uploadResult.fileId });
 
         } catch (error) {
           console.error('Error uploading file:', file.name, error);
-          
+
           // Marcar esta imagen como error
-          setUploadedImages(prev => 
-            prev.map(img => 
-              img.file === file 
+          setUploadedImages(prev =>
+            prev.map(img =>
+              img.file === file
                 ? { ...img, status: 'error' }
                 : img
             )
@@ -175,36 +177,39 @@ export default function ImageSelector({
       }
 
       // Si es una sola imagen, actualizar el valor principal
-      if (!multiple && uploadedUrls.length > 0 && onChange) {
-        onChange(uploadedUrls[0]);
+      if (!multiple && uploadedItems.length > 0 && onChange) {
+        onChange(uploadedItems[0].url);
+        if (onImageUploaded) {
+          onImageUploaded(uploadedItems[0]);
+        }
       }
 
       // Si es múltiple o gallery, usar onImagesChange
-      if ((multiple || preset === 'gallery') && uploadedUrls.length > 0 && onImagesChange) {
+      if ((multiple || preset === 'gallery') && uploadedItems.length > 0 && onImagesChange) {
         // Mantener las imágenes existentes y agregar las nuevas
         const existingImages = Array.isArray(value) ? value : [];
-        const allImages = [...existingImages, ...uploadedUrls];
+        const allImages = [...existingImages, ...uploadedItems.map(i => i.url)];
 
         onImagesChange(allImages);
       }
 
       // Notificar todas las URLs subidas exitosamente
-      if (onImagesUploaded && uploadedUrls.length > 0) {
-        onImagesUploaded(uploadedUrls);
+      if (onImagesUploaded && uploadedItems.length > 0) {
+        onImagesUploaded(uploadedItems.map(i => i.url));
       }
 
 
 
-      if (uploadedUrls.length === 0) {
+      if (uploadedItems.length === 0) {
         setUploadError('No se pudo subir ninguna imagen. Inténtalo de nuevo.');
       }
 
     } catch (error) {
       console.error('Error uploading images:', error);
       setUploadError('Error al subir las imágenes. Inténtalo de nuevo.');
-      
+
       // Marcar todas las imágenes como error
-      setUploadedImages(prev => 
+      setUploadedImages(prev =>
         prev.map(img => ({ ...img, status: 'error' }))
       );
     } finally {

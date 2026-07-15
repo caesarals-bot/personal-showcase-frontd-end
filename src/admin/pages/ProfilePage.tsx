@@ -45,6 +45,7 @@ interface SectionFormData {
     title: string;
     content: string;
     image: string;
+    imageFileId: string;
     imageAlt: string;
     imagePosition: 'left' | 'right';
 }
@@ -59,6 +60,7 @@ export default function ProfilePage() {
         title: '',
         content: '',
         image: '',
+        imageFileId: '',
         imageAlt: '',
         imagePosition: 'right',
     });
@@ -86,6 +88,7 @@ export default function ProfilePage() {
             title: '',
             content: '',
             image: '',
+            imageFileId: '',
             imageAlt: '',
             imagePosition: 'right',
         });
@@ -98,6 +101,7 @@ export default function ProfilePage() {
                 title: formData.title,
                 content: formData.content,
                 image: formData.image,
+                imageFileId: formData.imageFileId,
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
             });
@@ -119,6 +123,7 @@ export default function ProfilePage() {
                 title: formData.title,
                 content: formData.content,
                 image: formData.image,
+                imageFileId: formData.imageFileId,
                 imageAlt: formData.imageAlt,
                 imagePosition: formData.imagePosition,
             });
@@ -154,6 +159,7 @@ export default function ProfilePage() {
             title: section.title,
             content: section.content,
             image: section.image || '',
+            imageFileId: section.imageFileId || '',
             imageAlt: section.imageAlt,
             imagePosition: section.imagePosition,
         });
@@ -322,6 +328,7 @@ export default function ProfilePage() {
                             placeholder="/comic-team-web.webp o https://ik.imagekit.io/..."
                             value={formData.image}
                             onChange={(url) => setFormData({ ...formData, image: url })}
+                            onFileIdChange={(fileId) => setFormData(prev => ({ ...prev, imageFileId: fileId }))}
                             preset="about"
                             required
                             helperText="Ruta local (/imagen.webp), URL de ImageKit o cualquier URL pública válida."
@@ -335,13 +342,12 @@ export default function ProfilePage() {
                                     size="sm"
                                     onClick={async () => {
                                         if (!editingSection) return
-                                        const previousImage = editingSection.image
-                                        if (!previousImage) return
+                                        if (!editingSection.image) return
                                         if (!confirm('¿Eliminar la imagen actual? Esto la borrará también de ImageKit.')) return
                                         try {
-                                            await AboutService.removeAboutImage(previousImage, editingSection.id)
-                                            setFormData(prev => ({ ...prev, image: '' }))
-                                            setEditingSection(prev => prev ? { ...prev, image: '' } : null)
+                                            await AboutService.removeAboutImage(editingSection)
+                                            setFormData(prev => ({ ...prev, image: '', imageFileId: '' }))
+                                            setEditingSection(prev => prev ? { ...prev, image: '', imageFileId: '' } : null)
                                             window.dispatchEvent(new Event('about-reload'))
                                             loadData()
                                             alert('✅ Imagen eliminada')

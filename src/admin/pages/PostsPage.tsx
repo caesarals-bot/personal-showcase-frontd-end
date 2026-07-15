@@ -75,7 +75,9 @@ interface PostFormData {
     categoryId: string;
     tagIds: string[];
     featuredImage?: string;
+    featuredImageFileId?: string;
     gallery?: string[];
+    galleryFileIds?: string[];
     sources?: string[];
     status: PostStatus;
     isPublished: boolean;
@@ -100,7 +102,9 @@ export default function PostsPage() {
         categoryId: '',
         tagIds: [],
         featuredImage: '',
+        featuredImageFileId: '',
         gallery: [],
+        galleryFileIds: [],
         sources: [],
         status: 'draft',
         isPublished: false,
@@ -162,7 +166,9 @@ export default function PostsPage() {
             categoryId: '',
             tagIds: [],
             featuredImage: '',
+            featuredImageFileId: '',
             gallery: [],
+            galleryFileIds: [],
             sources: [],
             status: 'draft',
             isPublished: false,
@@ -239,7 +245,9 @@ export default function PostsPage() {
             categoryId: post.category.id,
             tagIds: post.tags.map(t => t.id),
             featuredImage: post.featuredImage,
+            featuredImageFileId: post.featuredImageFileId,
             gallery: post.gallery || [],
+            galleryFileIds: post.galleryFileIds || [],
             sources: post.sources || [],
             status: post.status,
             isPublished: post.isPublished,
@@ -518,7 +526,10 @@ export default function PostsPage() {
                                     value={formData.featuredImage}
                                     postId={editingPost?.id}
                                     onChange={(url) => {
-                                        setFormData({ ...formData, featuredImage: url });
+                                        setFormData({ ...formData, featuredImage: url, featuredImageFileId: '' });
+                                    }}
+                                    onImageUploaded={(info) => {
+                                        setFormData({ ...formData, featuredImage: info.url, featuredImageFileId: info.fileId });
                                     }}
                                 />
                                 {editingPost?.id && formData.featuredImage && (
@@ -600,7 +611,7 @@ export default function PostsPage() {
                                     // Detectar imágenes eliminadas por el usuario
                                     const previous = Array.isArray(formData.gallery) ? formData.gallery : [];
                                     const removed = previous.filter(url => !images.includes(url));
-                                
+
                                     // Confirmar antes de eliminar de ImageKit las imágenes removidas
                                     if (editingPost?.id && removed.length > 0) {
                                         const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
@@ -613,9 +624,15 @@ export default function PostsPage() {
                                             }
                                         }
                                     }
-                                
-                                    // Actualizar estado del formulario
-                                    setFormData({ ...formData, gallery: images });
+
+                                    // Sincronizar galleryFileIds con la nueva lista de URLs,
+                                    // conservando los fileIds conocidos por índice.
+                                    const previousFileIds = formData.galleryFileIds || []
+                                    const newFileIds = images.map(url => {
+                                        const idx = previous.indexOf(url)
+                                        return idx >= 0 ? (previousFileIds[idx] || '') : ''
+                                    })
+                                    setFormData({ ...formData, gallery: images, galleryFileIds: newFileIds });
                                 }}
                             />
                         </div>

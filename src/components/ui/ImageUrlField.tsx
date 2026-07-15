@@ -23,6 +23,7 @@ export interface ImageUrlFieldProps {
   placeholder?: string;
   value: string;
   onChange: (url: string) => void;
+  onFileIdChange?: (fileId: string) => void;
   preset?: 'about' | 'featured' | 'gallery' | 'blog' | 'project' | 'avatar';
   required?: boolean;
   helperText?: string;
@@ -35,6 +36,7 @@ export function ImageUrlField({
   placeholder = '/imagen.webp o https://ik.imagekit.io/...',
   value,
   onChange,
+  onFileIdChange,
   preset = 'about',
   required = false,
   helperText,
@@ -78,6 +80,7 @@ export function ImageUrlField({
         <ImageSelector
           value={value}
           onChange={(url) => onChange(url)}
+          onImageUploaded={onFileIdChange ? (info) => onFileIdChange(info.fileId) : undefined}
           preset={preset}
           multiple={false}
           maxFiles={1}
