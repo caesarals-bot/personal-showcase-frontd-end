@@ -256,7 +256,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>
             {project ? 'Editar Proyecto' : 'Nuevo Proyecto'}
@@ -515,14 +515,16 @@ const proyecto = 'Mi proyecto';
                 />
               </div>
             )}
-            <ImageSelector
-              preset="project"
-              multiple={false}
-              value={formData.coverImage}
-              postId={project?.id}
-              onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
-              onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
-            />
+            <div className="w-full min-w-0">
+              <ImageSelector
+                preset="project"
+                multiple={false}
+                value={formData.coverImage}
+                postId={project?.id}
+                onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
+                onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
+              />
+            </div>
           </div>
 
           {/* Images Gallery */}
@@ -533,36 +535,38 @@ const proyecto = 'Mi proyecto';
                 {(formData.images?.length ?? 0)} / 6 imágenes
               </span>
             </div>
-            <ImageSelector
-              preset="project"
-              multiple={true}
-              maxFiles={6}
-              value={formData.images}
-              postId={project?.id}
-              onImagesChange={async (images) => {
-                const previous = Array.isArray(formData.images) ? formData.images : []
-                const removed = previous.filter(url => !images.includes(url))
+            <div className="w-full min-w-0">
+              <ImageSelector
+                preset="project"
+                multiple={true}
+                maxFiles={6}
+                value={formData.images}
+                postId={project?.id}
+                onImagesChange={async (images) => {
+                  const previous = Array.isArray(formData.images) ? formData.images : []
+                  const removed = previous.filter(url => !images.includes(url))
 
-                if (project?.id && removed.length > 0) {
-                  const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
-                  if (confirmed) {
-                    try {
-                      await Promise.all(removed.map(url => removeProjectGalleryImage(project.id, url)))
-                    } catch (err) {
-                      console.error('Error al eliminar imágenes de galería:', err)
-                      alert('❌ Error al eliminar imágenes de la galería')
+                  if (project?.id && removed.length > 0) {
+                    const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
+                    if (confirmed) {
+                      try {
+                        await Promise.all(removed.map(url => removeProjectGalleryImage(project.id, url)))
+                      } catch (err) {
+                        console.error('Error al eliminar imágenes de galería:', err)
+                        alert('❌ Error al eliminar imágenes de la galería')
+                      }
                     }
                   }
-                }
 
-                const previousFileIds = formData.imagesFileIds || []
-                const newFileIds = images.map(url => {
-                  const idx = previous.indexOf(url)
-                  return idx >= 0 ? (previousFileIds[idx] || '') : ''
-                })
-                setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
-              }}
-            />
+                  const previousFileIds = formData.imagesFileIds || []
+                  const newFileIds = images.map(url => {
+                    const idx = previous.indexOf(url)
+                    return idx >= 0 ? (previousFileIds[idx] || '') : ''
+                  })
+                  setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
+                }}
+              />
+            </div>
           </div>
 
           {/* Collaborators */}
