@@ -256,7 +256,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-3xl sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {project ? 'Editar Proyecto' : 'Nuevo Proyecto'}
@@ -270,7 +270,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="title">Título *</Label>
               <Input
@@ -296,7 +296,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="category">Categoría</Label>
               <Select
@@ -327,7 +327,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full max-w-2xl">
             <Label htmlFor="description">Descripción Corta *</Label>
             <Textarea
               id="description"
@@ -341,7 +341,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
           </div>
 
           {/* Full Description */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full max-w-2xl">
             <Label htmlFor="fullDescription">
               Descripción Detallada
               <span className="text-xs text-muted-foreground ml-2">(Soporta Markdown)</span>
@@ -369,7 +369,7 @@ const proyecto = 'Mi proyecto';
           </div>
 
           {/* Status and Featured */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
               <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as any }))}>
@@ -400,7 +400,7 @@ const proyecto = 'Mi proyecto';
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="startDate">Fecha de Inicio</Label>
               <Input
@@ -425,7 +425,7 @@ const proyecto = 'Mi proyecto';
           </div>
 
           {/* Technologies */}
-          <div className="space-y-2">
+          <div className="space-y-2 w-full max-w-2xl">
             <Label>Tecnologías</Label>
             <Select
               value=""
@@ -480,7 +480,7 @@ const proyecto = 'Mi proyecto';
           </div>
 
           {/* Cover Image */}
-          <div className="space-y-4 rounded-lg border bg-card p-5">
+          <div className="space-y-4 w-full max-w-lg">
             <div className="flex items-center justify-between gap-3">
               <Label className="text-base font-semibold">Imagen Principal</Label>
               {project?.id && formData.coverImage && (
@@ -515,68 +515,66 @@ const proyecto = 'Mi proyecto';
                 />
               </div>
             )}
-            <div className="w-full min-w-0">
-              <ImageSelector
-                preset="project"
-                multiple={false}
-                value={formData.coverImage}
-                postId={project?.id}
-                onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
-                onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
-              />
-            </div>
+            <ImageSelector
+              preset="project"
+              multiple={false}
+              value={formData.coverImage}
+              postId={project?.id}
+              onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
+              onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
+            />
           </div>
 
           {/* Images Gallery */}
-          <div className="space-y-4 rounded-lg border bg-card p-5">
+          <div className="space-y-4 w-full max-w-lg">
             <div className="flex items-center justify-between gap-3">
               <Label className="text-base font-semibold">Galería de Imágenes</Label>
               <span className="text-xs text-muted-foreground">
                 {(formData.images?.length ?? 0)} / 6 imágenes
               </span>
             </div>
-            <div className="w-full min-w-0">
-              <ImageSelector
-                preset="project"
-                multiple={true}
-                maxFiles={6}
-                value={formData.images}
-                postId={project?.id}
-                onImagesChange={async (images) => {
-                  const previous = Array.isArray(formData.images) ? formData.images : []
-                  const removed = previous.filter(url => !images.includes(url))
+            <ImageSelector
+              preset="project"
+              multiple={true}
+              maxFiles={6}
+              value={formData.images}
+              postId={project?.id}
+              onImagesChange={async (images) => {
+                const previous = Array.isArray(formData.images) ? formData.images : []
+                const removed = previous.filter(url => !images.includes(url))
 
-                  if (project?.id && removed.length > 0) {
-                    const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
-                    if (confirmed) {
-                      try {
-                        await Promise.all(removed.map(url => removeProjectGalleryImage(project.id, url)))
-                      } catch (err) {
-                        console.error('Error al eliminar imágenes de galería:', err)
-                        alert('❌ Error al eliminar imágenes de la galería')
-                      }
+                if (project?.id && removed.length > 0) {
+                  const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
+                  if (confirmed) {
+                    try {
+                      await Promise.all(removed.map(url => removeProjectGalleryImage(project.id, url)))
+                    } catch (err) {
+                      console.error('Error al eliminar imágenes de galería:', err)
+                      alert('❌ Error al eliminar imágenes de la galería')
                     }
                   }
+                }
 
-                  const previousFileIds = formData.imagesFileIds || []
-                  const newFileIds = images.map(url => {
-                    const idx = previous.indexOf(url)
-                    return idx >= 0 ? (previousFileIds[idx] || '') : ''
-                  })
-                  setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
-                }}
-              />
-            </div>
+                const previousFileIds = formData.imagesFileIds || []
+                const newFileIds = images.map(url => {
+                  const idx = previous.indexOf(url)
+                  return idx >= 0 ? (previousFileIds[idx] || '') : ''
+                })
+                setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
+              }}
+            />
           </div>
 
           {/* Collaborators */}
-          <CollaboratorManager
-            collaborators={formData.collaborators || []}
-            onChange={handleCollaboratorsChange}
-          />
+          <div className="w-full max-w-2xl">
+            <CollaboratorManager
+              collaborators={formData.collaborators || []}
+              onChange={handleCollaboratorsChange}
+            />
+          </div>
 
           {/* Links */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full max-w-2xl">
             <Label>Enlaces</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
