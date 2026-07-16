@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Link, X, Check, AlertCircle, Copy } from 'lucide-react';
+import { Link, X, Check, AlertCircle, Copy, Image as ImageIcon } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
@@ -54,6 +54,60 @@ const formatFileSize = (bytes: number): string => {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+interface ThumbnailWithFallbackProps {
+  imageUrl: string;
+  index: number;
+  disabled?: boolean;
+  onRemove: () => void;
+}
+
+const ThumbnailWithFallback: React.FC<ThumbnailWithFallbackProps> = ({ imageUrl, index, disabled, onRemove }) => {
+  const [imgFailed, setImgFailed] = useState(false);
+
+  let displayName = `Imagen ${index + 1}`;
+  try {
+    const url = new URL(imageUrl);
+    const pathname = url.pathname.split('/').pop() || displayName;
+    displayName = pathname.length > 30 ? pathname.slice(0, 27) + '...' : pathname;
+  } catch {
+    /* URL inválida: mantener nombre por defecto */
+  }
+
+  return (
+    <div className="relative group">
+      {imgFailed ? (
+        <div
+          className="w-full h-24 rounded-lg border bg-muted flex flex-col items-center justify-center p-2 text-center"
+          title={imageUrl}
+        >
+          <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
+          <span className="text-xs text-muted-foreground truncate w-full">
+            {displayName}
+          </span>
+        </div>
+      ) : (
+        <img
+          src={imageUrl}
+          alt={`Imagen ${index + 1}`}
+          className="w-full h-24 object-cover rounded-lg border"
+          onError={() => setImgFailed(true)}
+        />
+      )}
+      <Button
+        type="button"
+        onClick={onRemove}
+        size="icon"
+        variant="destructive"
+        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+        disabled={disabled}
+        title="Eliminar imagen"
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </div>
+  );
 };
 
 export default function ImageSelector({
@@ -412,34 +466,23 @@ export default function ImageSelector({
             </Alert>
           )}
 
-          {/* Mostrar imágenes actuales para gallery */}
-          {preset === 'gallery' && value && Array.isArray(value) && value.length > 0 && (
+          {/* Mostrar imágenes actuales para gallery y project multiple */}
+          {(preset === 'gallery' || (preset === 'project' && multiple)) && value && Array.isArray(value) && value.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Imágenes actuales:</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {value.map((imageUrl, index) => (
-                  <div key={`current-image-${index}`} className="relative group">
-                    <img 
-                      src={imageUrl} 
-                      alt={`Imagen ${index + 1}`} 
-                      className="w-full h-24 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (onImagesChange && Array.isArray(value)) {
-                          const newImages = value.filter((_, i) => i !== index);
-                          onImagesChange(newImages);
-                        }
-                      }}
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      disabled={disabled}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <ThumbnailWithFallback
+                    key={`current-image-${index}`}
+                    imageUrl={imageUrl}
+                    index={index}
+                    disabled={disabled}
+                    onRemove={() => {
+                      if (onImagesChange && Array.isArray(value)) {
+                        onImagesChange(value.filter((_, i) => i !== index));
+                      }
+                    }}
+                  />
                 ))}
               </div>
             </div>
