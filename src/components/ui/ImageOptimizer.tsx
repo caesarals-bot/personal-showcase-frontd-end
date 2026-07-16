@@ -119,38 +119,52 @@ export default function ImageOptimizer({
     // Procesar todas las imágenes y recopilar resultados
     const processedResults: ProcessedImage[] = [];
 
-    // Validar y optimizar cada imagen
+    // Optimizar primero, validar resultado después (permite imágenes grandes tipo AI renders)
     for (const image of newImages) {
       try {
-        // Validación
-        const validationResult = await imageOptimizer.validateImage(image.originalFile, getValidationRules());
-        
-        let updatedImage = { ...image, validationResult, status: validationResult.isValid ? 'optimizing' : 'error' } as ProcessedImage;
-        
-        setImages(prev => prev.map(img => 
-          img.id === image.id ? updatedImage : img
-        ));
+        // PASO 1: Validar SOLO formato MIME + dimensiones (sin restricción de peso)
+        const formatRules = {
+          ...getValidationRules(),
+          maxSizeKB: Number.MAX_SAFE_INTEGER
+        };
+        const formatValidation = await imageOptimizer.validateImage(image.originalFile, formatRules);
 
-        if (validationResult.isValid) {
-          // Optimización
-          const optimizationResult = await imageOptimizer.optimizeImage(image.originalFile, getOptimizationOptions());
-          
-          updatedImage = { 
-            ...updatedImage, 
-            optimizationResult,
-            optimizedFile: optimizationResult.optimizedFile,
-            status: optimizationResult.success ? 'completed' : 'error'
-          };
-          
-          setImages(prev => prev.map(img => 
-            img.id === image.id ? updatedImage : img
-          ));
+        if (!formatValidation.isValid) {
+          // Formato o dimensiones inválidas: rechazo duro
+          const errorImage = { ...image, validationResult: formatValidation, status: 'error' } as ProcessedImage;
+          setImages(prev => prev.map(img => img.id === image.id ? errorImage : img));
+          processedResults.push(errorImage);
+          continue;
         }
-        
+
+        // PASO 2: Optimizar (la imagen grande se reduce drásticamente aquí)
+        const optimizationResult = await imageOptimizer.optimizeImage(image.originalFile, getOptimizationOptions());
+
+        // PASO 3: Validar resultado optimizado contra target del preset
+        const optimizedSizeKB = optimizationResult.optimizedFile.size / 1024;
+        const targetMaxSizeKB = getOptimizationOptions().maxSizeKB;
+        let finalValidation = formatValidation;
+        if (targetMaxSizeKB && optimizedSizeKB > targetMaxSizeKB) {
+          finalValidation = {
+            ...formatValidation,
+            isValid: false,
+            errors: [`No se pudo reducir la imagen a ${targetMaxSizeKB}KB (resultado: ${optimizedSizeKB.toFixed(1)}KB). Intenta con una imagen más pequeña.`]
+          };
+        }
+
+        const updatedImage = {
+          ...image,
+          validationResult: finalValidation,
+          optimizationResult,
+          optimizedFile: optimizationResult.optimizedFile,
+          status: finalValidation.isValid ? 'completed' : 'error'
+        } as ProcessedImage;
+
+        setImages(prev => prev.map(img => img.id === image.id ? updatedImage : img));
         processedResults.push(updatedImage);
       } catch (error) {
         const errorImage = { ...image, status: 'error' } as ProcessedImage;
-        setImages(prev => prev.map(img => 
+        setImages(prev => prev.map(img =>
           img.id === image.id ? errorImage : img
         ));
         processedResults.push(errorImage);
@@ -238,7 +252,7 @@ export default function ImageOptimizer({
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
             <Badge variant="outline">Máximo {maxFiles} archivos</Badge>
             <Badge variant="outline">JPG, PNG, WebP</Badge>
-            <Badge variant="outline">Hasta {getValidationRules().maxSizeKB}KB</Badge>
+            <Badge variant="outline">Optimiza a &lt;{getOptimizationOptions().maxSizeKB}KB</Badge>
           </div>
         </CardContent>
       </Card>
