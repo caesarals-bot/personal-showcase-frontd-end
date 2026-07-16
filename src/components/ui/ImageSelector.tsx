@@ -127,7 +127,9 @@ export default function ImageSelector({
   postId
 }: ImageSelectorProps) {
   const { user } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<'url' | 'upload'>(preset === 'gallery' ? 'upload' : 'url');
+  const [activeTab, setActiveTab] = useState<'url' | 'upload'>(
+  preset === 'gallery' || (preset === 'project' && multiple) ? 'upload' : 'url'
+);
   const [urlValue, setUrlValue] = useState(value);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -488,8 +490,8 @@ export default function ImageSelector({
             </div>
           )}
 
-          {/* Lista de imágenes subidas */}
-          {uploadedImages.length > 0 && (
+          {/* Lista de imágenes subidas (oculta para project gallery: onImagesChange ya mergea en value) */}
+          {uploadedImages.length > 0 && !(preset === 'project' && multiple) && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium">
