@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Project, CreateProjectData, UpdateProjectData, ProjectCollaborator } from '../../types/admin.types';
-import { createProject, updateProject, generateProjectSlug } from '../../services/projectService';
+import { createProject, updateProject, generateProjectSlug, removeProjectCoverImage, removeProjectGalleryImage } from '../../services/projectService';
 import { getCategories } from '../../services/categoryService';
 import { getTags } from '../../services/tagService';
 import type { Category } from '../../types/blog.types';
 import type { Tag } from '../../types/blog.types';
 import CollaboratorManager from './CollaboratorManager';
-import ImageOptimizer from '../../components/ui/ImageOptimizer';
-import { imageOptimizer } from '../../services/imageOptimizer';
-import type { BatchOptimizeAndUploadResult, OptimizeAndUploadResult } from '../../services/imageOptimizer';
-import type { UploadProgress } from '../../services/imageUploadService';
-import { useAuthContext } from '../../contexts/AuthContext';
+import ImageSelector from '@/components/ui/ImageSelector';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MarkdownEditorCompact } from '@/components/ui/MarkdownEditor';
-import { ImageUrlDisplay } from '@/components/ui/ImageUrlDisplay';
 import {
   Select,
   SelectContent,
@@ -41,7 +36,6 @@ interface ProjectFormProps {
 }
 
 const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, onSave }) => {
-  const { user } = useAuthContext();
   const [formData, setFormData] = useState<CreateProjectData>({
     title: '',
     slug: '',
@@ -67,7 +61,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
   const [tags, setTags] = useState<Tag[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
     if (project) {
@@ -78,6 +71,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
         fullDescription: project.fullDescription || '',
         technologies: project.technologies,
         images: project.images,
+        imagesFileIds: project.imagesFileIds || [],
+        coverImage: project.coverImage,
+        coverImageFileId: project.coverImageFileId || '',
         links: project.links,
         collaborators: project.collaborators || [],
         status: project.status,
@@ -94,6 +90,9 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
         fullDescription: '',
         technologies: [],
         images: [],
+        imagesFileIds: [],
+        coverImage: '',
+        coverImageFileId: '',
         links: {
           live: '',
           github: '',
@@ -247,61 +246,6 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
   };
 
 
-
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images?.filter((_, i) => i !== index) || []
-    }));
-  };
-
-  const handleOptimizedImages = async (optimizedFiles: File[]) => {
-    if (!user?.id) {
-      console.error('Usuario no autenticado');
-      return;
-    }
-
-    setUploadingImages(true);
-    try {
-      // Iniciando subida de imágenes optimizadas a Firebase Storage
-      
-      // Usar el servicio de imageOptimizer para optimizar y subir
-      const result: BatchOptimizeAndUploadResult = await imageOptimizer.optimizeAndUploadBatch(
-        optimizedFiles,
-        `projects/${user.id}`, // folder con userId
-        undefined, // options (usa defaults)
-        (_progress: UploadProgress[]) => {
-          // const completed = progress.filter(p => p.status === 'completed').length;
-          // const total = progress.length;
-          // Calculamos el porcentaje pero no lo usamos por ahora
-          // const percentage = total > 0 ? (completed / total) * 100 : 0;
-          // Progreso de subida actualizado
-        }
-      );
-
-      if (result.successCount > 0) {
-        // Agregar las URLs de las imágenes subidas exitosamente
-        const uploadedUrls = result.results
-          .filter((r: OptimizeAndUploadResult) => r.upload && !r.error)
-          .map((r: OptimizeAndUploadResult) => r.upload!.url);
-
-        setFormData(prev => ({
-          ...prev,
-          images: [...(prev.images || []), ...uploadedUrls]
-        }));
-      }
-      
-      // Mostrar errores si los hay
-      if (result.errorCount > 0) {
-        const errors = result.results.filter((r: OptimizeAndUploadResult) => r.error);
-        console.warn('⚠️ Algunas imágenes no se pudieron subir:', errors);
-      }
-    } catch (error) {
-      console.error('❌ Error al procesar imágenes optimizadas:', error);
-    } finally {
-      setUploadingImages(false);
-    }
-  };
 
   const handleCollaboratorsChange = (collaborators: ProjectCollaborator[]) => {
     setFormData(prev => ({
@@ -538,103 +482,72 @@ const proyecto = 'Mi proyecto';
           {/* Cover Image */}
           <div className="space-y-4">
             <Label>Imagen Principal</Label>
-            <div className="space-y-2">
-              <Input
-                type="url"
-                placeholder="URL de la imagen principal del proyecto"
-                value={formData.coverImage || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, coverImage: e.target.value }))}
-              />
-              {formData.coverImage && (
-                <div className="space-y-2">
-                  <div className="relative group max-w-xs">
-                    <img 
-                      src={formData.coverImage} 
-                      alt="Imagen principal" 
-                      className="w-full h-32 object-cover rounded-lg border"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, coverImage: '' }))}
-                      size="icon"
-                      variant="destructive"
-                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <ImageUrlDisplay
-                    urls={[formData.coverImage]}
-                    title="URL de imagen principal"
-                    description="Copia esta URL para usar como imagen principal del proyecto"
-                    className="max-w-xs"
-                  />
-                </div>
-              )}
-            </div>
+            <ImageSelector
+              preset="project"
+              multiple={false}
+              value={formData.coverImage}
+              postId={project?.id}
+              onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
+              onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
+            />
+            {project?.id && formData.coverImage && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    const confirmed = confirm('¿Eliminar la imagen principal también de ImageKit?')
+                    if (!confirmed) return
+                    try {
+                      await removeProjectCoverImage(project.id)
+                      setFormData(prev => ({ ...prev, coverImage: '', coverImageFileId: '' }))
+                      alert('✅ Imagen principal eliminada correctamente')
+                    } catch (err) {
+                      console.error('❌ Error al eliminar imagen principal:', err)
+                      alert('❌ Error al eliminar la imagen principal: ' + (err as Error).message)
+                    }
+                  }}
+                >
+                  Eliminar imagen principal
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Images Gallery */}
           <div className="space-y-4">
             <Label>Galería de Imágenes</Label>
-            <ImageOptimizer
+            <ImageSelector
               preset="project"
-              maxFiles={6}
               multiple={true}
-              onImagesOptimized={handleOptimizedImages}
-              onValidationError={(errors) => {
-                console.error('Errores de validación de imágenes:', errors);
-                // Aquí podrías mostrar un toast o notificación
-              }}
-              disabled={uploadingImages}
-            />
-            
-            {uploadingImages && (
-              <div className="flex items-center space-x-2 text-sm text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span>Subiendo imágenes a Firebase Storage...</span>
-              </div>
-            )}
-            
-            {/* Mostrar imágenes actuales */}
-            {formData.images && formData.images.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Imágenes actuales:</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {formData.images.map((image, index) => (
-                    <div key={`current-image-${index}`} className="relative group">
-                      <img src={image} alt={`Imagen ${index + 1}`} className="w-full h-24 object-cover rounded-lg border" />
-                      <Button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        size="icon"
-                        variant="destructive"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                {/* Mostrar URLs para copiar de la galería */}
-                <ImageUrlDisplay
-                  urls={formData.images}
-                  title="URLs de la galería"
-                  description="Copia estas URLs para usarlas en Markdown o como referencias."
-                  className="max-w-md"
-                />
-              </div>
-            )}
+              maxFiles={6}
+              value={formData.images}
+              postId={project?.id}
+              onImagesChange={async (images) => {
+                const previous = Array.isArray(formData.images) ? formData.images : []
+                const removed = previous.filter(url => !images.includes(url))
 
-            {/* URLs de imágenes para copiar */}
-            {formData.images && formData.images.length > 0 && (
-              <ImageUrlDisplay
-                urls={formData.images}
-                title="URLs de imágenes del proyecto"
-                description="Copia estas URLs para usar en la descripción del proyecto o en otros lugares"
-                className="mt-4"
-              />
-            )}
+                if (project?.id && removed.length > 0) {
+                  const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
+                  if (confirmed) {
+                    try {
+                      await Promise.all(removed.map(url => removeProjectGalleryImage(project.id, url)))
+                    } catch (err) {
+                      console.error('Error al eliminar imágenes de galería:', err)
+                      alert('❌ Error al eliminar imágenes de la galería')
+                    }
+                  }
+                }
+
+                const previousFileIds = formData.imagesFileIds || []
+                const newFileIds = images.map(url => {
+                  const idx = previous.indexOf(url)
+                  return idx >= 0 ? (previousFileIds[idx] || '') : ''
+                })
+                setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
+              }}
+            />
           </div>
 
           {/* Collaborators */}

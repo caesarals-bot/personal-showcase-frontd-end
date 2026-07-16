@@ -21,6 +21,7 @@ import {
   orderBy
 } from 'firebase/firestore'
 import { db } from '@/firebase/config'
+import { ImageKitService } from './imageKitService'
 import type { Project, CreateProjectData, UpdateProjectData } from '@/types/admin.types'
 
 // Base de datos local para desarrollo
@@ -249,6 +250,8 @@ export const createProject = async (data: CreateProjectData, excludeId?: string)
     id: '', // Se asignará después
     ...data,
     images: data.images || [], // Asegurar que images siempre sea un array
+    imagesFileIds: data.imagesFileIds || [], // Asegurar paralelismo con images
+    coverImageFileId: data.coverImageFileId || '',
     links: data.links || {}, // Asegurar que links siempre sea un objeto
     slug,
     createdAt: now,
@@ -370,6 +373,25 @@ export const updateProject = async (id: string, updates: UpdateProjectData): Pro
 export const deleteProject = async (id: string): Promise<void> => {
   if (USE_FIREBASE) {
     try {
+      const project = await getProjectById(id)
+      if (project) {
+        const fileIdsToDelete: string[] = []
+        if (project.coverImageFileId) fileIdsToDelete.push(project.coverImageFileId)
+        if (project.imagesFileIds?.length) fileIdsToDelete.push(...project.imagesFileIds)
+
+        if (fileIdsToDelete.length > 0) {
+          await Promise.allSettled(
+            fileIdsToDelete.map((fileId) => ImageKitService.deleteImage(fileId))
+          ).then((results) => {
+            results.forEach((r, i) => {
+              if (r.status === 'rejected') {
+                console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${fileIdsToDelete[i]}`, r.reason)
+              }
+            })
+          })
+        }
+      }
+
       const projectRef = doc(db, 'portfolio', id)
       await deleteDoc(projectRef)
       return
@@ -487,6 +509,75 @@ export const getAllCategories = async (): Promise<string[]> => {
   const projects = await getProjects()
   const allCategories = projects.map(p => p.category)
   return [...new Set(allCategories)].sort()
+}
+
+/**
+ * Eliminar la imagen principal (cover) de un proyecto
+ */
+export const removeProjectCoverImage = async (projectId: string): Promise<void> => {
+  if (USE_FIREBASE) {
+    const project = await getProjectById(projectId)
+    if (!project || !project.coverImage || !project.coverImageFileId) return
+
+    const fileId = project.coverImageFileId
+    try {
+      await ImageKitService.deleteImage(fileId)
+    } catch (err) {
+      console.warn(`⚠️ No se pudo eliminar la imagen principal de ImageKit: ${fileId}`, err)
+    }
+
+    const projectRef = doc(db, 'portfolio', projectId)
+    await updateDoc(projectRef, { coverImage: '', coverImageFileId: '' })
+    return
+  }
+
+  // Modo local
+  const index = projectsDB.findIndex(p => p.id === projectId)
+  if (index !== -1) {
+    projectsDB[index].coverImage = ''
+    projectsDB[index].coverImageFileId = ''
+    persistProjectsDB()
+  }
+}
+
+/**
+ * Eliminar una imagen de la galería de un proyecto
+ */
+export const removeProjectGalleryImage = async (projectId: string, imageUrl: string): Promise<void> => {
+  if (USE_FIREBASE) {
+    const project = await getProjectById(projectId)
+    if (!project || !project.images?.length) return
+
+    const indexInGallery = project.images.indexOf(imageUrl)
+    if (indexInGallery === -1) return
+
+    const fileId = project.imagesFileIds?.[indexInGallery]
+    if (fileId) {
+      try {
+        await ImageKitService.deleteImage(fileId)
+      } catch (err) {
+        console.warn(`⚠️ No se pudo eliminar imagen de galería de ImageKit: ${fileId}`, err)
+      }
+    }
+
+    const newImages = project.images.filter(url => url !== imageUrl)
+    const newFileIds = (project.imagesFileIds || []).filter((_, i) => i !== indexInGallery)
+    const projectRef = doc(db, 'portfolio', projectId)
+    await updateDoc(projectRef, { images: newImages, imagesFileIds: newFileIds })
+    return
+  }
+
+  // Modo local
+  const index = projectsDB.findIndex(p => p.id === projectId)
+  if (index !== -1) {
+    const currentImages = projectsDB[index].images || []
+    const localIndex = currentImages.indexOf(imageUrl)
+    projectsDB[index].images = currentImages.filter(url => url !== imageUrl)
+    if (projectsDB[index].imagesFileIds && localIndex >= 0) {
+      projectsDB[index].imagesFileIds = projectsDB[index].imagesFileIds!.filter((_, i) => i !== localIndex)
+    }
+    persistProjectsDB()
+  }
 }
 
 // Función auxiliar para limpiar campos undefined antes de enviar a Firebase

@@ -307,7 +307,9 @@ export interface Project {
   description: string
   fullDescription: string
   coverImage?: string
+  coverImageFileId?: string
   images: string[]
+  imagesFileIds?: string[]
   technologies: string[]
   category: string
   status: 'completed' | 'in-progress' | 'planned'
@@ -333,7 +335,9 @@ export interface CreateProjectData {
   description: string
   fullDescription: string
   coverImage?: string
+  coverImageFileId?: string
   images?: string[]
+  imagesFileIds?: string[]
   technologies: string[]
   category: string
   status: 'completed' | 'in-progress' | 'planned'
