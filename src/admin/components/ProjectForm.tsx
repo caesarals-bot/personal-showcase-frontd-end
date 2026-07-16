@@ -256,7 +256,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {project ? 'Editar Proyecto' : 'Nuevo Proyecto'}
@@ -480,18 +480,10 @@ const proyecto = 'Mi proyecto';
           </div>
 
           {/* Cover Image */}
-          <div className="space-y-4">
-            <Label>Imagen Principal</Label>
-            <ImageSelector
-              preset="project"
-              multiple={false}
-              value={formData.coverImage}
-              postId={project?.id}
-              onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
-              onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
-            />
-            {project?.id && formData.coverImage && (
-              <div className="flex justify-end">
+          <div className="space-y-4 rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-base font-semibold">Imagen Principal</Label>
+              {project?.id && formData.coverImage && (
                 <Button
                   type="button"
                   variant="destructive"
@@ -511,13 +503,36 @@ const proyecto = 'Mi proyecto';
                 >
                   Eliminar imagen principal
                 </Button>
+              )}
+            </div>
+            {formData.coverImage && (
+              <div className="relative w-full max-w-md mx-auto">
+                <img
+                  src={formData.coverImage}
+                  alt="Vista previa de imagen principal"
+                  className="w-full aspect-video object-cover rounded-md border bg-muted"
+                  onError={(e) => { e.currentTarget.style.display = 'none' }}
+                />
               </div>
             )}
+            <ImageSelector
+              preset="project"
+              multiple={false}
+              value={formData.coverImage}
+              postId={project?.id}
+              onChange={(url) => setFormData(prev => ({ ...prev, coverImage: url, coverImageFileId: '' }))}
+              onImageUploaded={(info) => setFormData(prev => ({ ...prev, coverImage: info.url, coverImageFileId: info.fileId }))}
+            />
           </div>
 
           {/* Images Gallery */}
-          <div className="space-y-4">
-            <Label>Galería de Imágenes</Label>
+          <div className="space-y-4 rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-base font-semibold">Galería de Imágenes</Label>
+              <span className="text-xs text-muted-foreground">
+                {(formData.images?.length ?? 0)} / 6 imágenes
+              </span>
+            </div>
             <ImageSelector
               preset="project"
               multiple={true}
