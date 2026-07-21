@@ -617,6 +617,8 @@ async function updatePostInFirestore(
   }>
 ): Promise<BlogPost> {
   try {
+    const oldPost = await getPostById(id);
+    
     // Preparar datos para actualizar
     const updateData: any = {
       updatedAt: serverTimestamp(),
@@ -644,6 +646,39 @@ async function updatePostInFirestore(
     const postRef = doc(db, 'posts', id);
     await updateDoc(postRef, updateData);
     
+    // Limpieza de imágenes huérfanas en ImageKit (no bloqueante)
+    if (oldPost) {
+      const fileIdsToDelete: string[] = [];
+
+      // Revisar imagen destacada
+      if (
+        updates.featuredImageFileId !== undefined &&
+        updates.featuredImageFileId !== oldPost.featuredImageFileId &&
+        oldPost.featuredImageFileId
+      ) {
+        fileIdsToDelete.push(oldPost.featuredImageFileId);
+      }
+
+      // Revisar galería
+      if (updates.galleryFileIds !== undefined && oldPost.galleryFileIds) {
+        const newGalleryFileIds = updates.galleryFileIds || [];
+        const removedGalleryIds = oldPost.galleryFileIds.filter(fid => !newGalleryFileIds.includes(fid));
+        fileIdsToDelete.push(...removedGalleryIds);
+      }
+
+      if (fileIdsToDelete.length > 0) {
+        Promise.allSettled(
+          fileIdsToDelete.map(fileId => ImageKitService.deleteImage(fileId))
+        ).then(results => {
+          results.forEach((r, i) => {
+            if (r.status === 'rejected') {
+              console.warn(`⚠️ No se pudo eliminar la imagen huérfana de ImageKit: ${fileIdsToDelete[i]}`, r.reason);
+            }
+          });
+        });
+      }
+    }
+
     // Limpiar caché al actualizar post
     clearPostsCache();
     

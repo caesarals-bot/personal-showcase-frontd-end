@@ -9,6 +9,11 @@
 
 ---
 
+## Trabajo Actual (2026-07-21)
+- **2026-07-21** — Fix: Prevención de imágenes huérfanas al reemplazar. Se interceptan las actualizaciones en los servicios (`postService`, `projectService`, `aboutService`) para borrar automáticamente de ImageKit cualquier imagen que haya sido reemplazada desde el formulario.
+
+---
+
 _Sin trabajo en curso. Última entrada cerrada:_
 
 - **2026-07-15** — Portafolio migrado a `ImageSelector` + `fileIds`. Ver

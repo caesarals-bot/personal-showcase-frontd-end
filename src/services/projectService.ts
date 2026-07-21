@@ -326,6 +326,7 @@ export const updateProject = async (id: string, updates: UpdateProjectData): Pro
   
   if (USE_FIREBASE) {
     try {
+      const oldProject = await getProjectById(id)
       const projectRef = doc(db, 'portfolio', id)
       
       const updateData = {
@@ -338,6 +339,39 @@ export const updateProject = async (id: string, updates: UpdateProjectData): Pro
       
       await updateDoc(projectRef, cleanedUpdateData)
       
+      // Limpieza de imágenes huérfanas en ImageKit (no bloqueante)
+      if (oldProject) {
+        const fileIdsToDelete: string[] = [];
+
+        // Revisar imagen principal
+        if (
+          updates.coverImageFileId !== undefined &&
+          updates.coverImageFileId !== oldProject.coverImageFileId &&
+          oldProject.coverImageFileId
+        ) {
+          fileIdsToDelete.push(oldProject.coverImageFileId);
+        }
+
+        // Revisar galería
+        if (updates.imagesFileIds !== undefined && oldProject.imagesFileIds) {
+          const newImagesFileIds = updates.imagesFileIds || [];
+          const removedImagesIds = oldProject.imagesFileIds.filter(fid => !newImagesFileIds.includes(fid));
+          fileIdsToDelete.push(...removedImagesIds);
+        }
+
+        if (fileIdsToDelete.length > 0) {
+          Promise.allSettled(
+            fileIdsToDelete.map(fileId => ImageKitService.deleteImage(fileId))
+          ).then(results => {
+            results.forEach((r, i) => {
+              if (r.status === 'rejected') {
+                console.warn(`⚠️ No se pudo eliminar la imagen huérfana de ImageKit: ${fileIdsToDelete[i]}`, r.reason);
+              }
+            });
+          });
+        }
+      }
+
       // Obtener el proyecto actualizado
       const updatedProject = await getProjectById(id)
       if (!updatedProject) {

@@ -504,8 +504,9 @@ async function updateSectionInFirestore(id: string, updates: Partial<AboutSectio
     throw new Error(`Sección con id "${id}" no encontrada`);
   }
 
+  const oldSection = currentSections[index];
   const merged: AboutSection = {
-    ...currentSections[index],
+    ...oldSection,
     ...updates,
   };
 
@@ -516,6 +517,21 @@ async function updateSectionInFirestore(id: string, updates: Partial<AboutSectio
     sections: updatedSections,
     updatedAt: Timestamp.now(),
   });
+
+  // Limpieza de imagen huérfana en ImageKit (no bloqueante)
+  if (
+    updates.imageFileId !== undefined &&
+    updates.imageFileId !== oldSection.imageFileId &&
+    oldSection.imageFileId
+  ) {
+    try {
+      ImageKitService.deleteImage(oldSection.imageFileId).catch(err => {
+        console.warn(`⚠️ No se pudo eliminar la imagen huérfana de ImageKit: ${oldSection.imageFileId}`, err);
+      });
+    } catch (err) {
+      console.warn(`⚠️ Error al iniciar borrado en ImageKit: ${oldSection.imageFileId}`, err);
+    }
+  }
 
   return merged;
 }
