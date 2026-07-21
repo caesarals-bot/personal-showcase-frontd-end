@@ -115,16 +115,30 @@ export class ImageKitService {
     }
   }
 
-  static async deleteImage(fileId: string): Promise<void> {
-    const response = await fetch(imageKitConfig.authenticationEndpoint.replace('imagekit-auth', 'imagekit-delete'), {
+  static async deleteImage(fileId: string, imageUrl?: string): Promise<void> {
+    const endpoint = imageKitConfig.authenticationEndpoint.replace('imagekit-auth', 'imagekit-delete');
+    const body: { fileId?: string; imageUrl?: string } = {};
+    if (fileId) body.fileId = fileId;
+    if (imageUrl && !fileId) body.imageUrl = imageUrl;
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileId }),
+      body: JSON.stringify(body),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(`Delete failed: ${response.status} - ${errorData.message || response.statusText}`);
     }
+  }
+
+  /**
+   * Borrar imagen por URL cuando no se tiene el fileId guardado.
+   * El servidor buscará el archivo en ImageKit por nombre y lo borrará.
+   */
+  static async deleteImageByUrl(imageUrl: string): Promise<void> {
+    if (!imageUrl || !imageUrl.includes('imagekit.io')) return; // solo URLs de ImageKit
+    return this.deleteImage('', imageUrl);
   }
 
   static async deleteMultipleImages(imagePaths: string[]): Promise<void> {

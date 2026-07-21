@@ -196,27 +196,53 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       
       if (isUpdate) {
         // --- Borrado de imágenes huérfanas DESDE EL COMPONENTE (patrón About) ---
-        // Cover image reemplazada
-        if (
-          formData.coverImageFileId &&
-          formData.coverImageFileId !== project.coverImageFileId &&
-          project.coverImageFileId
-        ) {
-          ImageKitService.deleteImage(project.coverImageFileId).catch(err => {
-            console.warn('⚠️ No se pudo borrar coverImage huérfana:', err);
-          });
+        // Cover image reemplazada: por fileId O por URL
+        const oldCoverFileId = project.coverImageFileId;
+        const oldCoverUrl = project.coverImage;
+        const newCoverUrl = formData.coverImage;
+        const newCoverFileId = formData.coverImageFileId;
+        const coverChanged = newCoverUrl && oldCoverUrl && newCoverUrl !== oldCoverUrl;
+
+        if (coverChanged) {
+          if (oldCoverFileId && newCoverFileId !== oldCoverFileId) {
+            ImageKitService.deleteImage(oldCoverFileId).catch(err => {
+              console.warn('⚠️ No se pudo borrar coverImage por fileId:', err);
+            });
+          } else if (oldCoverUrl && oldCoverUrl.includes('imagekit.io')) {
+            ImageKitService.deleteImageByUrl(oldCoverUrl).catch(err => {
+              console.warn('⚠️ No se pudo borrar coverImage por URL:', err);
+            });
+          }
         }
-        // Galería: imágenes removidas
+
+        // Galería: imágenes removidas por fileId
         if (project.imagesFileIds?.length) {
           const newIds = formData.imagesFileIds || [];
           const removedIds = project.imagesFileIds.filter(fid => fid && !newIds.includes(fid));
           removedIds.forEach(fid => {
             ImageKitService.deleteImage(fid).catch(err => {
-              console.warn('⚠️ No se pudo borrar imagen de galería huérfana:', err);
+              console.warn('⚠️ No se pudo borrar imagen de galería por fileId:', err);
             });
           });
         }
+        // Galería: fallback por URL cuando no hay fileIds
+        if (project.images?.length && formData.images !== undefined) {
+          const removedUrls = (project.images || []).filter(url =>
+            url.includes('imagekit.io') && !(formData.images || []).includes(url)
+          );
+          const knownByFileId = project.imagesFileIds?.filter(fid => fid) || [];
+          removedUrls.forEach(url => {
+            const idx = (project.images || []).indexOf(url);
+            const hasFileId = idx >= 0 && knownByFileId[idx];
+            if (!hasFileId) {
+              ImageKitService.deleteImageByUrl(url).catch(err => {
+                console.warn('⚠️ No se pudo borrar imagen de galería por URL:', err);
+              });
+            }
+          });
+        }
         // -----------------------------------------------------------------------
+
 
         const updateData: UpdateProjectData = {
           ...formData

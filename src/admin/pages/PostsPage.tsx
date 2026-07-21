@@ -211,15 +211,26 @@ export default function PostsPage() {
 
         try {
             // --- Borrado de imágenes huérfanas DESDE EL COMPONENTE (patrón About) ---
-            // Imagen destacada reemplazada
-            if (
-                formData.featuredImageFileId &&
-                formData.featuredImageFileId !== editingPost.featuredImageFileId &&
-                editingPost.featuredImageFileId
-            ) {
-                ImageKitService.deleteImage(editingPost.featuredImageFileId).catch(err => {
-                    console.warn('⚠️ No se pudo borrar imagen destacada huérfana:', err);
-                });
+            // Imagen destacada reemplazada: comparar por fileId O por URL
+            const oldFeaturedFileId = editingPost.featuredImageFileId;
+            const oldFeaturedUrl = editingPost.featuredImage;
+            const newFeaturedUrl = formData.featuredImage;
+            const newFeaturedFileId = formData.featuredImageFileId;
+
+            const featuredImageChanged = newFeaturedUrl && oldFeaturedUrl && newFeaturedUrl !== oldFeaturedUrl;
+
+            if (featuredImageChanged) {
+                if (oldFeaturedFileId && newFeaturedFileId !== oldFeaturedFileId) {
+                    // Tenemos el fileId viejo → borrar directamente
+                    ImageKitService.deleteImage(oldFeaturedFileId).catch(err => {
+                        console.warn('⚠️ No se pudo borrar imagen destacada por fileId:', err);
+                    });
+                } else if (oldFeaturedUrl && oldFeaturedUrl.includes('imagekit.io')) {
+                    // No tenemos fileId viejo → buscar por URL en ImageKit
+                    ImageKitService.deleteImageByUrl(oldFeaturedUrl).catch(err => {
+                        console.warn('⚠️ No se pudo borrar imagen destacada por URL:', err);
+                    });
+                }
             }
 
             // Imágenes de galería removidas
@@ -230,6 +241,23 @@ export default function PostsPage() {
                     ImageKitService.deleteImage(fid).catch(err => {
                         console.warn('⚠️ No se pudo borrar imagen de galería huérfana:', err);
                     });
+                });
+            }
+            // Galería: fallback por URL cuando no hay fileIds
+            if (editingPost.gallery?.length && formData.gallery !== undefined) {
+                const removedUrls = (editingPost.gallery || []).filter(url =>
+                    url.includes('imagekit.io') && !(formData.gallery || []).includes(url)
+                );
+                const knownRemovedByFileId = editingPost.galleryFileIds?.filter(fid => fid) || [];
+                removedUrls.forEach(url => {
+                    // Solo si no fue ya borrado por fileId
+                    const idx = (editingPost.gallery || []).indexOf(url);
+                    const hasFileId = idx >= 0 && knownRemovedByFileId[idx];
+                    if (!hasFileId) {
+                        ImageKitService.deleteImageByUrl(url).catch(err => {
+                            console.warn('⚠️ No se pudo borrar imagen de galería por URL:', err);
+                        });
+                    }
                 });
             }
             // -----------------------------------------------------------------------
