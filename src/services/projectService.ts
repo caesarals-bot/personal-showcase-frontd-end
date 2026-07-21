@@ -409,17 +409,29 @@ export const deleteProject = async (id: string): Promise<void> => {
     try {
       const project = await getProjectById(id)
       if (project) {
-        const fileIdsToDelete: string[] = []
-        if (project.coverImageFileId) fileIdsToDelete.push(project.coverImageFileId)
-        if (project.imagesFileIds?.length) fileIdsToDelete.push(...project.imagesFileIds)
+        const itemsToDelete: { fileId: string; imageUrl: string }[] = []
+        if (project.coverImage) {
+          itemsToDelete.push({
+            fileId: project.coverImageFileId || '',
+            imageUrl: project.coverImage,
+          })
+        }
+        if (project.images?.length) {
+          project.images.forEach((url, i) => {
+            itemsToDelete.push({
+              fileId: project.imagesFileIds?.[i] || '',
+              imageUrl: url,
+            })
+          })
+        }
 
-        if (fileIdsToDelete.length > 0) {
+        if (itemsToDelete.length > 0) {
           await Promise.allSettled(
-            fileIdsToDelete.map((fileId) => ImageKitService.deleteImage(fileId))
+            itemsToDelete.map((item) => ImageKitService.deleteImage(item.fileId, item.imageUrl))
           ).then((results) => {
             results.forEach((r, i) => {
               if (r.status === 'rejected') {
-                console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${fileIdsToDelete[i]}`, r.reason)
+                console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${itemsToDelete[i].imageUrl}`, r.reason)
               }
             })
           })
@@ -434,13 +446,13 @@ export const deleteProject = async (id: string): Promise<void> => {
       throw error
     }
   }
-  
+
   // Modo local
   const index = projectsDB.findIndex(p => p.id === id)
   if (index === -1) {
     throw new Error('Proyecto no encontrado')
   }
-  
+
   projectsDB.splice(index, 1)
   persistProjectsDB()
 }

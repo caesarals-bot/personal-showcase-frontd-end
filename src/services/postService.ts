@@ -795,17 +795,29 @@ async function deletePostFromFirestore(id: string): Promise<void> {
       throw new Error('Post no encontrado');
     }
 
-    const fileIdsToDelete: string[] = [];
-    if (post.featuredImageFileId) fileIdsToDelete.push(post.featuredImageFileId);
-    if (post.galleryFileIds) fileIdsToDelete.push(...post.galleryFileIds);
+    const itemsToDelete: { fileId: string; imageUrl: string }[] = [];
+    if (post.featuredImage) {
+      itemsToDelete.push({
+        fileId: post.featuredImageFileId || '',
+        imageUrl: post.featuredImage,
+      });
+    }
+    if (post.gallery?.length) {
+      post.gallery.forEach((url, i) => {
+        itemsToDelete.push({
+          fileId: post.galleryFileIds?.[i] || '',
+          imageUrl: url,
+        });
+      });
+    }
 
-    if (fileIdsToDelete.length > 0) {
+    if (itemsToDelete.length > 0) {
       await Promise.allSettled(
-        fileIdsToDelete.map((fileId) => ImageKitService.deleteImage(fileId))
+        itemsToDelete.map((item) => ImageKitService.deleteImage(item.fileId, item.imageUrl))
       ).then((results) => {
         results.forEach((r, i) => {
           if (r.status === 'rejected') {
-            console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${fileIdsToDelete[i]}`, r.reason)
+            console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${itemsToDelete[i].imageUrl}`, r.reason)
           }
         })
       })

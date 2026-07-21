@@ -74,8 +74,8 @@ En `PostsPage.tsx` y `ProjectForm.tsx`, `onImagesChange` reordenaba `galleryFile
 #### Archivos modificados
 - `src/admin/pages/PostsPage.tsx` — `onImagesChange`/`onImagesUploaded` usan `Map<url, fileId>` para preservar fileIds por URL; limpieza de `featuredImageFileId` en state local al eliminar.
 - `src/admin/components/ProjectForm.tsx` — mismo patrón con `imagesFileIds`.
-- `src/services/postService.ts` — `removeFeaturedImage`/`removeGalleryImage` usan `ImageKitService.deleteImage(fileId, imageUrl)` con fallback por URL, propagan errores con `throw`.
-- `src/services/projectService.ts` — `removeProjectCoverImage`/`removeProjectGalleryImage` mismo patrón.
+- `src/services/postService.ts` — `removeFeaturedImage`/`removeGalleryImage`/`deletePostFromFirestore` usan `ImageKitService.deleteImage(fileId, imageUrl)` con fallback por URL, propagan errores con `throw`.
+- `src/services/projectService.ts` — `removeProjectCoverImage`/`removeProjectGalleryImage`/`deleteProject` mismo patrón.
 - `src/services/aboutService.ts` — `removeAboutImage` mismo patrón (defensiva, ya funcionaba).
 - `src/services/imageKitService.ts` — `deleteImage(fileId, imageUrl?)` con validación temprana.
 
