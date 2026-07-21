@@ -27,7 +27,7 @@ export interface ImageSelectorProps {
   value?: string | string[];
   onChange?: (url: string) => void;
   onImagesChange?: (urls: string[]) => void;
-  onImagesUploaded?: (urls: string[]) => void;
+  onImagesUploaded?: (items: {url: string, fileId: string}[]) => void;
   onImageUploaded?: (info: { url: string; fileId: string }) => void;
   label?: string;
   placeholder?: string;
@@ -241,12 +241,17 @@ export default function ImageSelector({
       }
 
       // Si es múltiple o gallery, usar onImagesChange
-      if ((multiple || preset === 'gallery') && uploadedItems.length > 0 && onImagesChange) {
-        // Mantener las imágenes existentes y agregar las nuevas
-        const existingImages = Array.isArray(value) ? value : [];
-        const allImages = [...existingImages, ...uploadedItems.map(i => i.url)];
+      if ((multiple || preset === 'gallery') && uploadedItems.length > 0) {
+        if (onImagesChange) {
+          // Mantener las imágenes existentes y agregar las nuevas
+          const existingImages = Array.isArray(value) ? value : [];
+          const allImages = [...existingImages, ...uploadedItems.map(i => i.url)];
 
-        onImagesChange(allImages);
+          onImagesChange(allImages);
+        }
+        if (onImagesUploaded) {
+          onImagesUploaded(uploadedItems);
+        }
       }
 
       // Notificar todas las URLs subidas exitosamente

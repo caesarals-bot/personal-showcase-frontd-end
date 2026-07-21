@@ -632,7 +632,13 @@ export default function PostsPage() {
                                         const idx = previous.indexOf(url)
                                         return idx >= 0 ? (previousFileIds[idx] || '') : ''
                                     })
-                                    setFormData({ ...formData, gallery: images, galleryFileIds: newFileIds });
+                                    setFormData(prev => ({ ...prev, gallery: images, galleryFileIds: newFileIds }));
+                                }}
+                                onImagesUploaded={(items) => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        galleryFileIds: [...(prev.galleryFileIds || []), ...items.map(i => i.fileId)]
+                                    }));
                                 }}
                             />
                         </div>

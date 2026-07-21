@@ -562,6 +562,12 @@ const proyecto = 'Mi proyecto';
                 })
                 setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
               }}
+              onImagesUploaded={(items) => {
+                setFormData(prev => ({
+                  ...prev,
+                  imagesFileIds: [...(prev.imagesFileIds || []), ...items.map(i => i.fileId)]
+                }))
+              }}
             />
           </div>
 

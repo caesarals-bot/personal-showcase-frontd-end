@@ -10,7 +10,8 @@
 ---
 
 ## Trabajo Actual (2026-07-21)
-- **2026-07-21** — Fix: Prevención de imágenes huérfanas al reemplazar. Se interceptan las actualizaciones en los servicios (`postService`, `projectService`, `aboutService`) para borrar automáticamente de ImageKit cualquier imagen que haya sido reemplazada desde el formulario.
+- **2026-07-21** — Fix: Prevención de imágenes huérfanas al reemplazar. Se interceptan las actualizaciones en los servicios (`postService`, `projectService`, `aboutService`) para borrar automáticamente de ImageKit las imágenes reemplazadas o eliminadas de galerías.
+- **2026-07-21** — Fix crítico: Mapeo de `fileIds` en `postService.ts` (Firestore) que provocaba que no se detectaran imágenes reemplazadas en blogs. Se corrigió también `ImageSelector` y los formularios `PostsPage` y `ProjectForm` para capturar correctamente los `fileIds` de las galerías usando `onImagesUploaded`.
 
 ---
 
