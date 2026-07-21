@@ -59,6 +59,7 @@ import {
     removeFeaturedImage,
     removeGalleryImage
 } from '@/services/postService';
+import { ImageKitService } from '@/services/imageKitService';
 import { getCategories } from '@/services/categoryService';
 import { getTags } from '@/services/tagService';
 import { PostStatusSelector } from '@/components/PostStatusSelector';
@@ -209,7 +210,29 @@ export default function PostsPage() {
         if (!editingPost) return;
 
         try {
+            // --- Borrado de imágenes huérfanas DESDE EL COMPONENTE (patrón About) ---
+            // Imagen destacada reemplazada
+            if (
+                formData.featuredImageFileId &&
+                formData.featuredImageFileId !== editingPost.featuredImageFileId &&
+                editingPost.featuredImageFileId
+            ) {
+                ImageKitService.deleteImage(editingPost.featuredImageFileId).catch(err => {
+                    console.warn('⚠️ No se pudo borrar imagen destacada huérfana:', err);
+                });
+            }
 
+            // Imágenes de galería removidas
+            if (formData.galleryFileIds !== undefined && editingPost.galleryFileIds?.length) {
+                const newIds = formData.galleryFileIds || [];
+                const removedIds = editingPost.galleryFileIds.filter(fid => fid && !newIds.includes(fid));
+                removedIds.forEach(fid => {
+                    ImageKitService.deleteImage(fid).catch(err => {
+                        console.warn('⚠️ No se pudo borrar imagen de galería huérfana:', err);
+                    });
+                });
+            }
+            // -----------------------------------------------------------------------
 
             await updatePost(editingPost.id, formData);
             setEditingPost(null);

@@ -99,9 +99,9 @@ export default function HomeSettingsPage() {
   }
 
   // Capturar imágenes subidas desde ImageSelector
-  const onImagesUploaded = async (urls: string[]) => {
-    if (!urls || urls.length === 0) return
-    const url = urls[0]
+  const onImagesUploaded = async (items: { url: string; fileId: string }[]) => {
+    if (!items || items.length === 0) return
+    const url = items[0].url
     setLoading(true)
     setMessage(null)
     setError(null)

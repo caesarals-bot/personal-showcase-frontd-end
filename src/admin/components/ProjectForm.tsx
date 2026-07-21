@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Project, CreateProjectData, UpdateProjectData, ProjectCollaborator } from '../../types/admin.types';
 import { createProject, updateProject, generateProjectSlug, removeProjectCoverImage, removeProjectGalleryImage } from '../../services/projectService';
+import { ImageKitService } from '../../services/imageKitService';
 import { getCategories } from '../../services/categoryService';
 import { getTags } from '../../services/tagService';
 import type { Category } from '../../types/blog.types';
@@ -194,6 +195,29 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ project, open, onOpenChange, 
       const isUpdate = !!(project && project.id);
       
       if (isUpdate) {
+        // --- Borrado de imágenes huérfanas DESDE EL COMPONENTE (patrón About) ---
+        // Cover image reemplazada
+        if (
+          formData.coverImageFileId &&
+          formData.coverImageFileId !== project.coverImageFileId &&
+          project.coverImageFileId
+        ) {
+          ImageKitService.deleteImage(project.coverImageFileId).catch(err => {
+            console.warn('⚠️ No se pudo borrar coverImage huérfana:', err);
+          });
+        }
+        // Galería: imágenes removidas
+        if (project.imagesFileIds?.length) {
+          const newIds = formData.imagesFileIds || [];
+          const removedIds = project.imagesFileIds.filter(fid => fid && !newIds.includes(fid));
+          removedIds.forEach(fid => {
+            ImageKitService.deleteImage(fid).catch(err => {
+              console.warn('⚠️ No se pudo borrar imagen de galería huérfana:', err);
+            });
+          });
+        }
+        // -----------------------------------------------------------------------
+
         const updateData: UpdateProjectData = {
           ...formData
         };

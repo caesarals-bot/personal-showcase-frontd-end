@@ -254,11 +254,6 @@ export default function ImageSelector({
         }
       }
 
-      // Notificar todas las URLs subidas exitosamente
-      if (onImagesUploaded && uploadedItems.length > 0) {
-        onImagesUploaded(uploadedItems.map(i => i.url));
-      }
-
 
 
       if (uploadedItems.length === 0) {
