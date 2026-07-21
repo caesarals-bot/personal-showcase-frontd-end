@@ -58,6 +58,54 @@
 > Cronología de los cambios cerrados relacionados con ImageKit, movidos
 > desde `CHANGELOG.md` para liberar peso. Orden: más reciente arriba.
 
+### [2026-07-22] - Fix: Deletes de ImageKit robustos + fileIds en galerías
+
+#### Descripción
+Tres bugs concurrentes detectados durante testing manual de About (✅ funcionó) vs Blog (❌ no borraba de ImageKit):
+
+**Bug A — `galleryFileIds` se desincronizan al subir imágenes nuevas.**
+En `PostsPage.tsx` y `ProjectForm.tsx`, `onImagesChange` reordenaba `galleryFileIds` por índice, dejando `""` para URLs nuevas. Luego `onImagesUploaded` concatenaba los fileIds al final del array, desincronizando `gallery[]` con `galleryFileIds[]`. El admin subía 2 imágenes a una galería de 2 → resultado: `['', '', fileIdNuevo1, fileIdNuevo2]` cuando debería ser `[fileIdNuevo1, fileIdNuevo2]`.
+
+**Bug B — Early return silencioso en servicios de delete.**
+`removeFeaturedImage`/`removeGalleryImage`/`removeProjectCoverImage`/`removeProjectGalleryImage` retornaban early sin error si faltaba `fileId` en Firestore (caso posts legacy creados antes del 2026-07-15). El admin veía `alert('✅ Imagen eliminada')` pero nada se borraba de ImageKit ni de Firestore.
+
+**Bug C — (no aplica, descartado)** La URL del delete se construía con `.replace('imagekit-auth', 'imagekit-delete')`. Tras análisis, era frágil pero funcional (About borraba correctamente con ese replace). Se mantiene como estaba para minimizar superficie de cambio.
+
+#### Archivos modificados
+- `src/admin/pages/PostsPage.tsx` — `onImagesChange`/`onImagesUploaded` usan `Map<url, fileId>` para preservar fileIds por URL; limpieza de `featuredImageFileId` en state local al eliminar.
+- `src/admin/components/ProjectForm.tsx` — mismo patrón con `imagesFileIds`.
+- `src/services/postService.ts` — `removeFeaturedImage`/`removeGalleryImage` usan `ImageKitService.deleteImage(fileId, imageUrl)` con fallback por URL, propagan errores con `throw`.
+- `src/services/projectService.ts` — `removeProjectCoverImage`/`removeProjectGalleryImage` mismo patrón.
+- `src/services/aboutService.ts` — `removeAboutImage` mismo patrón (defensiva, ya funcionaba).
+- `src/services/imageKitService.ts` — `deleteImage(fileId, imageUrl?)` con validación temprana.
+
+#### Razón
+El admin reportó que "Eliminar imagen destacada" en Blog no borraba de ImageKit (cero logs en Netlify, sin errores en DevTools). Causa raíz combinada: posts legacy sin `fileId` + servicios que silenciaban errores. El fix aprovecha que la Netlify Function ya soportaba `imageUrl` como fallback (búsqueda por nombre en ImageKit vía REST API).
+
+#### Decisiones técnicas
+- `Map<url, fileId>` en lugar de índice para que reordenamientos no rompan la asociación URL→fileId.
+- `throw` en lugar de `console.warn` para que la UI (`alert('❌ ...')`) muestre el error real al admin.
+- Fallback por `imageUrl` cuando no hay `fileId` permite limpiar imágenes legacy sin tener que re-subir manualmente.
+- Se descartó refactor de la URL del delete (`.replace()`) por ser frágil pero funcional; se mantiene para minimizar superficie de cambio.
+
+#### Compatibilidad
+Posts/Proyectos legacy con `galleryFileIds: ['']` ahora pueden eliminarse de ImageKit usando la URL como fallback. La función server-side busca el archivo por nombre exacto en ImageKit y lo borra.
+
+#### Validaciones
+- ✅ `npm run lint` — 0 errores, 61 warnings preexistentes.
+- ✅ `npm run build` — `built in 18.88s`, sin errores de TypeScript.
+
+#### Testing manual pendiente
+- [ ] Login admin → Posts → post con galería → subir imagen nueva → confirmar que `galleryFileIds[i]` corresponde a `gallery[i]` en Firestore.
+- [ ] Posts → post legacy con `galleryFileIds: ['']` → click "Eliminar" en imagen → archivo desaparece de ImageKit Dashboard; Firestore limpia ambos campos.
+- [ ] Posts → post nuevo → eliminar imagen destacada → archivo desaparece de ImageKit Dashboard.
+- [ ] Posts → borrar post completo → todas sus imágenes se eliminan de ImageKit.
+- [ ] Projects → crear con imagen subida → `coverImageFileId` poblado. Eliminar → archivo desaparece de ImageKit.
+- [ ] Projects → galería → subir 2 imágenes → `imagesFileIds` alineado por URL. Quitar una → borrada de ImageKit.
+- [ ] About → "Eliminar imagen actual" → archivo desaparece de ImageKit Dashboard.
+
+---
+
 ### [2026-07-15] - Fix: ImageKit deletes realmente borran (persistir fileId)
 
 #### Descripción

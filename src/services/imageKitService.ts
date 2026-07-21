@@ -116,15 +116,17 @@ export class ImageKitService {
   }
 
   static async deleteImage(fileId: string, imageUrl?: string): Promise<void> {
+    if (!fileId && !imageUrl) {
+      throw new Error('fileId or imageUrl is required for deletion');
+    }
     const endpoint = imageKitConfig.authenticationEndpoint.replace('imagekit-auth', 'imagekit-delete');
-    const body: { fileId?: string; imageUrl?: string } = {};
-    if (fileId) body.fileId = fileId;
-    if (imageUrl && !fileId) body.imageUrl = imageUrl;
-
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        fileId: fileId || undefined,
+        imageUrl: !fileId && imageUrl ? imageUrl : undefined,
+      }),
     });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

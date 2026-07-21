@@ -606,17 +606,26 @@ const proyecto = 'Mi proyecto';
                 }
 
                 const previousFileIds = formData.imagesFileIds || []
-                const newFileIds = images.map(url => {
-                  const idx = previous.indexOf(url)
-                  return idx >= 0 ? (previousFileIds[idx] || '') : ''
-                })
+                const previousUrlToFileId = new Map(
+                  previous.map((url, i) => [url, previousFileIds[i] || ''])
+                )
+                const newFileIds = images.map(url => previousUrlToFileId.get(url) || '')
                 setFormData(prev => ({ ...prev, images, imagesFileIds: newFileIds }))
               }}
               onImagesUploaded={(items) => {
-                setFormData(prev => ({
-                  ...prev,
-                  imagesFileIds: [...(prev.imagesFileIds || []), ...items.map(i => i.fileId)]
-                }))
+                setFormData(prev => {
+                  const currentImages = prev.images || []
+                  const currentFileIds = prev.imagesFileIds || []
+                  const newFileIdByUrl = new Map(items.map(i => [i.url, i.fileId]))
+
+                  const updatedFileIds = currentImages.map((url, i) =>
+                    newFileIdByUrl.has(url)
+                      ? newFileIdByUrl.get(url)!
+                      : (currentFileIds[i] || '')
+                  )
+
+                  return { ...prev, imagesFileIds: updatedFileIds }
+                })
               }}
             />
           </div>

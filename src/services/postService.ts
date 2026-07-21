@@ -922,15 +922,19 @@ export async function removeFeaturedImage(postId: string): Promise<void> {
   if (USE_FIREBASE) {
     const post = await getPostById(postId);
 
-    if (!post || !post.featuredImage || !post.featuredImageFileId) {
+    if (!post) {
+      throw new Error('Post no encontrado');
+    }
+    if (!post.featuredImage) {
       return;
     }
 
-    const fileId = post.featuredImageFileId;
     try {
-      await ImageKitService.deleteImage(fileId);
+      await ImageKitService.deleteImage(post.featuredImageFileId || '', post.featuredImage);
     } catch (err) {
-      console.warn(`⚠️ No se pudo eliminar la imagen destacada de ImageKit: ${fileId}`, err);
+      throw new Error(
+        `No se pudo eliminar la imagen destacada de ImageKit: ${err instanceof Error ? err.message : 'error desconocido'}`
+      );
     }
 
     const postRef = doc(db, 'posts', postId);
@@ -960,13 +964,14 @@ export async function removeGalleryImage(postId: string, imageUrl: string): Prom
     const indexInGallery = post.gallery.indexOf(imageUrl);
     if (indexInGallery === -1) return;
 
-    const fileId = post.galleryFileIds?.[indexInGallery];
-    if (fileId) {
-      try {
-        await ImageKitService.deleteImage(fileId);
-      } catch (err) {
-        console.warn(`⚠️ No se pudo eliminar la imagen de galería de ImageKit: ${fileId}`, err);
-      }
+    const fileId = post.galleryFileIds?.[indexInGallery] || '';
+
+    try {
+      await ImageKitService.deleteImage(fileId, imageUrl);
+    } catch (err) {
+      throw new Error(
+        `No se pudo eliminar la imagen de galería de ImageKit: ${err instanceof Error ? err.message : 'error desconocido'}`
+      );
     }
 
     const newGallery = post.gallery.filter(url => url !== imageUrl);

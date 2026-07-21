@@ -572,12 +572,12 @@ export async function removeAboutImage(section: AboutSection): Promise<void> {
   }
 
   if (USE_FIREBASE) {
-    if (section.imageFileId) {
-      try {
-        await ImageKitService.deleteImage(section.imageFileId);
-      } catch (err) {
-        console.warn(`⚠️ No se pudo eliminar la imagen de ImageKit: ${section.imageFileId}`, err);
-      }
+    try {
+      await ImageKitService.deleteImage(section.imageFileId || '', section.image);
+    } catch (err) {
+      throw new Error(
+        `No se pudo eliminar la imagen de ImageKit: ${err instanceof Error ? err.message : 'error desconocido'}`
+      );
     }
 
     const currentData = await getAboutDataFromFirestore();

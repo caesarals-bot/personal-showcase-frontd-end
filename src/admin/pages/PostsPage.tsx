@@ -596,11 +596,11 @@ export default function PostsPage() {
                                                     await removeFeaturedImage(editingPost.id);
                                                     
                                                     // Actualizar el estado local del formulario
-                                                    setFormData({ ...formData, featuredImage: '' });
+                                                    setFormData(prev => ({ ...prev, featuredImage: '', featuredImageFileId: '' }));
                                                     
                                                     // Actualizar el post que se está editando
                                                     if (editingPost) {
-                                                        setEditingPost({ ...editingPost, featuredImage: '' });
+                                                        setEditingPost({ ...editingPost, featuredImage: '', featuredImageFileId: '' });
                                                     }
                                                     
                                                     // Recargar los datos para asegurar consistencia
@@ -659,11 +659,9 @@ export default function PostsPage() {
                                 value={formData.gallery}
                                 postId={editingPost?.id}
                                 onImagesChange={async (images) => {
-                                    // Detectar imágenes eliminadas por el usuario
                                     const previous = Array.isArray(formData.gallery) ? formData.gallery : [];
                                     const removed = previous.filter(url => !images.includes(url));
 
-                                    // Confirmar antes de eliminar de ImageKit las imágenes removidas
                                     if (editingPost?.id && removed.length > 0) {
                                         const confirmed = confirm(`Has removido ${removed.length} imagen(es) de la galería. ¿Quieres borrarlas también de ImageKit?`)
                                         if (confirmed) {
@@ -676,20 +674,30 @@ export default function PostsPage() {
                                         }
                                     }
 
-                                    // Sincronizar galleryFileIds con la nueva lista de URLs,
-                                    // conservando los fileIds conocidos por índice.
+                                    // Sincronizar galleryFileIds preservando fileIds conocidos por URL.
+                                    // Las URLs nuevas (no estaban en previous) reciben '' hasta que
+                                    // onImagesUploaded las complete con su fileId real.
                                     const previousFileIds = formData.galleryFileIds || []
-                                    const newFileIds = images.map(url => {
-                                        const idx = previous.indexOf(url)
-                                        return idx >= 0 ? (previousFileIds[idx] || '') : ''
-                                    })
+                                    const previousUrlToFileId = new Map(
+                                        previous.map((url, i) => [url, previousFileIds[i] || ''])
+                                    )
+                                    const newFileIds = images.map(url => previousUrlToFileId.get(url) || '')
                                     setFormData(prev => ({ ...prev, gallery: images, galleryFileIds: newFileIds }));
                                 }}
                                 onImagesUploaded={(items) => {
-                                    setFormData(prev => ({
-                                        ...prev,
-                                        galleryFileIds: [...(prev.galleryFileIds || []), ...items.map(i => i.fileId)]
-                                    }));
+                                    setFormData(prev => {
+                                        const currentGallery = prev.gallery || []
+                                        const currentFileIds = prev.galleryFileIds || []
+                                        const newFileIdByUrl = new Map(items.map(i => [i.url, i.fileId]))
+
+                                        const updatedFileIds = currentGallery.map((url, i) =>
+                                            newFileIdByUrl.has(url)
+                                                ? newFileIdByUrl.get(url)!
+                                                : (currentFileIds[i] || '')
+                                        )
+
+                                        return { ...prev, galleryFileIds: updatedFileIds }
+                                    });
                                 }}
                             />
                         </div>

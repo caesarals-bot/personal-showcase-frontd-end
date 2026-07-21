@@ -9,6 +9,12 @@
 
 ---
 
+## Trabajo Actual (2026-07-22)
+- **2026-07-22** — Fix: Persistencia de `fileIds` en galerías + deletes de ImageKit robustos.
+  - **Bug A (fileIds en galería):** `PostsPage` y `ProjectForm` desincronizaban `galleryFileIds` con `gallery[]` al subir imágenes nuevas. El `onImagesUploaded` concatenaba al final mientras `onImagesChange` reordenaba por índice, dejando fileIds en posiciones incorrectas. Fix: usar `Map<url, fileId>` para actualizar por URL, preservando fileIds conocidos.
+  - **Bug B (early return silencioso):** `removeFeaturedImage`/`removeGalleryImage`/`removeProjectCoverImage`/`removeProjectGalleryImage`/`removeAboutImage` retornaban early sin error si faltaba `fileId`. El admin veía "✅ eliminada" pero nada pasaba. Fix: usar `imageUrl` como fallback en `ImageKitService.deleteImage(fileId, imageUrl)` (la Netlify Function ya lo soporta), y propagar errores con `throw`.
+  - **Validación temprana:** `deleteImage` ahora lanza error claro si no hay `fileId` ni `imageUrl`.
+
 ## Trabajo Actual (2026-07-21)
 - **2026-07-21** — Fix: Prevención de imágenes huérfanas al reemplazar. Se interceptan las actualizaciones en los servicios (`postService`, `projectService`, `aboutService`) para borrar automáticamente de ImageKit las imágenes reemplazadas o eliminadas de galerías.
 - **2026-07-21** — Fix crítico: Mapeo de `fileIds` en `postService.ts` (Firestore) que provocaba que no se detectaran imágenes reemplazadas en blogs. Se corrigió también `ImageSelector` y los formularios `PostsPage` y `ProjectForm` para capturar correctamente los `fileIds` de las galerías usando `onImagesUploaded`.

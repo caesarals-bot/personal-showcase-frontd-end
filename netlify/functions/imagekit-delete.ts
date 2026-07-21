@@ -22,10 +22,8 @@ export const handler: Handler = async (event) => {
   }
 
   const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
-  const urlEndpoint = process.env.VITE_IMAGEKIT_URL_ENDPOINT || process.env.IMAGEKIT_URL_ENDPOINT;
-
   if (!privateKey) {
-    console.error('IMAGEKIT_PRIVATE_KEY environment variable is not set');
+    console.error('[imagekit-delete] IMAGEKIT_PRIVATE_KEY not set');
     return {
       statusCode: 500,
       headers: corsHeaders,
@@ -38,8 +36,8 @@ export const handler: Handler = async (event) => {
 
   try {
     const body = event.body ? JSON.parse(event.body) : {};
-    fileId = body.fileId;
-    imageUrl = body.imageUrl;
+    fileId = body.fileId || undefined;
+    imageUrl = body.imageUrl || undefined;
 
     if (!fileId && !imageUrl) {
       return {
@@ -56,66 +54,83 @@ export const handler: Handler = async (event) => {
     };
   }
 
-  try {
-    const imagekit = new ImageKit({ privateKey });
+  // Si no tenemos fileId pero sí URL, buscar el fileId via REST API de ImageKit
+  if (!fileId && imageUrl) {
+    console.log(`[imagekit-delete] No fileId, searching by URL: ${imageUrl}`);
 
-    // Si no tenemos fileId pero sí la URL, buscar el archivo por nombre en ImageKit
-    if (!fileId && imageUrl) {
-      console.log(`[imagekit-delete] No fileId provided, searching by URL: ${imageUrl}`);
+    try {
+      // Extraer el nombre del archivo de la URL
+      const urlPath = new URL(imageUrl).pathname; // e.g. /account/folder/file.jpg
+      const filename = decodeURIComponent(urlPath.split('/').pop() || '');
 
-      // Extraer el path/nombre del archivo de la URL de ImageKit
-      // URL format: https://ik.imagekit.io/ACCOUNT/folder/filename.ext
-      let searchName: string | undefined;
-      try {
-        const urlObj = new URL(imageUrl);
-        // El path es algo como /tu-cuenta/posts/filename.jpg
-        const parts = urlObj.pathname.split('/');
-        searchName = parts[parts.length - 1]; // último segmento = nombre del archivo
-        // También intentar sin extensión para búsqueda más flexible
-        searchName = decodeURIComponent(searchName);
-      } catch {
-        console.warn('[imagekit-delete] Could not parse imageUrl:', imageUrl);
+      if (!filename) {
+        console.warn('[imagekit-delete] Could not extract filename from URL:', imageUrl);
+        return {
+          statusCode: 400,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Could not extract filename from imageUrl' }),
+        };
       }
 
-      if (searchName) {
-        try {
-          // Buscar archivos con ese nombre en ImageKit
-          const files = await imagekit.listFiles({ name: searchName, limit: 5 });
-          if (files && files.length > 0) {
-            // Encontrar el que tiene la URL más parecida
-            const match = files.find(f => imageUrl && f.url === imageUrl) || files[0];
-            fileId = match.fileId;
-            console.log(`[imagekit-delete] Found fileId by URL: ${fileId}`);
-          } else {
-            console.warn(`[imagekit-delete] No files found with name: ${searchName}`);
-            return {
-              statusCode: 404,
-              headers: corsHeaders,
-              body: JSON.stringify({ error: 'File not found in ImageKit', searchName }),
-            };
-          }
-        } catch (searchErr) {
-          console.error('[imagekit-delete] Error searching file by name:', searchErr);
-          return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: 'Failed to search file', message: String(searchErr) }),
-          };
-        }
-      }
-    }
+      console.log(`[imagekit-delete] Searching for filename: ${filename}`);
 
-    if (!fileId) {
+      // Usar la REST API de ImageKit con Basic auth (private_key como usuario, vacío como password)
+      const authHeader = `Basic ${Buffer.from(`${privateKey}:`).toString('base64')}`;
+      const searchRes = await fetch(
+        `https://api.imagekit.io/v1/files?name=${encodeURIComponent(filename)}&limit=10`,
+        { headers: { Authorization: authHeader } }
+      );
+
+      if (!searchRes.ok) {
+        const errText = await searchRes.text();
+        console.error('[imagekit-delete] Search API error:', searchRes.status, errText);
+        return {
+          statusCode: 500,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'ImageKit search failed', detail: errText }),
+        };
+      }
+
+      const files: Array<{ fileId: string; url: string; name: string }> = await searchRes.json();
+      console.log(`[imagekit-delete] Found ${files.length} file(s) with name: ${filename}`);
+
+      if (!files || files.length === 0) {
+        console.warn('[imagekit-delete] No files found for:', filename);
+        return {
+          statusCode: 404,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'File not found in ImageKit', filename }),
+        };
+      }
+
+      // Priorizar el que tiene la URL exacta; si no, usar el primero
+      const match = files.find(f => f.url === imageUrl) || files[0];
+      fileId = match.fileId;
+      console.log(`[imagekit-delete] Resolved fileId: ${fileId} (from URL search)`);
+    } catch (searchErr) {
+      console.error('[imagekit-delete] Error resolving fileId from URL:', searchErr);
       return {
-        statusCode: 400,
+        statusCode: 500,
         headers: corsHeaders,
-        body: JSON.stringify({ error: 'Could not resolve fileId' }),
+        body: JSON.stringify({ error: 'Failed to resolve fileId', message: String(searchErr) }),
       };
     }
+  }
 
+  if (!fileId) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: 'Could not resolve fileId' }),
+    };
+  }
+
+  // Borrar el archivo en ImageKit
+  try {
+    const imagekit = new ImageKit({ privateKey });
     console.log(`[imagekit-delete] Deleting fileId: ${fileId}`);
     await imagekit.files.delete(fileId);
-    console.log(`[imagekit-delete] Deleted successfully: ${fileId}`);
+    console.log(`[imagekit-delete] ✅ Deleted successfully: ${fileId}`);
 
     return {
       statusCode: 200,
@@ -123,7 +138,7 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify({ success: true, fileId }),
     };
   } catch (error) {
-    console.error('ImageKit delete error:', error);
+    console.error('[imagekit-delete] Delete error:', error);
     return {
       statusCode: 500,
       headers: corsHeaders,

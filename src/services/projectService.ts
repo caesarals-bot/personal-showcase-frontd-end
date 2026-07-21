@@ -551,13 +551,15 @@ export const getAllCategories = async (): Promise<string[]> => {
 export const removeProjectCoverImage = async (projectId: string): Promise<void> => {
   if (USE_FIREBASE) {
     const project = await getProjectById(projectId)
-    if (!project || !project.coverImage || !project.coverImageFileId) return
+    if (!project) throw new Error('Proyecto no encontrado')
+    if (!project.coverImage) return
 
-    const fileId = project.coverImageFileId
     try {
-      await ImageKitService.deleteImage(fileId)
+      await ImageKitService.deleteImage(project.coverImageFileId || '', project.coverImage)
     } catch (err) {
-      console.warn(`⚠️ No se pudo eliminar la imagen principal de ImageKit: ${fileId}`, err)
+      throw new Error(
+        `No se pudo eliminar la imagen principal de ImageKit: ${err instanceof Error ? err.message : 'error desconocido'}`
+      )
     }
 
     const projectRef = doc(db, 'portfolio', projectId)
@@ -585,13 +587,14 @@ export const removeProjectGalleryImage = async (projectId: string, imageUrl: str
     const indexInGallery = project.images.indexOf(imageUrl)
     if (indexInGallery === -1) return
 
-    const fileId = project.imagesFileIds?.[indexInGallery]
-    if (fileId) {
-      try {
-        await ImageKitService.deleteImage(fileId)
-      } catch (err) {
-        console.warn(`⚠️ No se pudo eliminar imagen de galería de ImageKit: ${fileId}`, err)
-      }
+    const fileId = project.imagesFileIds?.[indexInGallery] || ''
+
+    try {
+      await ImageKitService.deleteImage(fileId, imageUrl)
+    } catch (err) {
+      throw new Error(
+        `No se pudo eliminar imagen de galería de ImageKit: ${err instanceof Error ? err.message : 'error desconocido'}`
+      )
     }
 
     const newImages = project.images.filter(url => url !== imageUrl)
