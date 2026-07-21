@@ -69,7 +69,7 @@ En `PostsPage.tsx` y `ProjectForm.tsx`, `onImagesChange` reordenaba `galleryFile
 **Bug B — Early return silencioso en servicios de delete.**
 `removeFeaturedImage`/`removeGalleryImage`/`removeProjectCoverImage`/`removeProjectGalleryImage` retornaban early sin error si faltaba `fileId` en Firestore (caso posts legacy creados antes del 2026-07-15). El admin veía `alert('✅ Imagen eliminada')` pero nada se borraba de ImageKit ni de Firestore.
 
-**Bug C — (no aplica, descartado)** La URL del delete se construía con `.replace('imagekit-auth', 'imagekit-delete')`. Tras análisis, era frágil pero funcional (About borraba correctamente con ese replace). Se mantiene como estaba para minimizar superficie de cambio.
+**Bug C — (aplazado, luego aplicado)** La URL del delete se construía con `.replace('imagekit-auth', 'imagekit-delete')`. Era frágil pero funcional. En commit posterior del mismo día se reemplazó por env var explícita `VITE_IMAGEKIT_DELETE_ENDPOINT` para mejor aislamiento, rotación y auditoría.
 
 #### Archivos modificados
 - `src/admin/pages/PostsPage.tsx` — `onImagesChange`/`onImagesUploaded` usan `Map<url, fileId>` para preservar fileIds por URL; limpieza de `featuredImageFileId` en state local al eliminar.
@@ -77,7 +77,9 @@ En `PostsPage.tsx` y `ProjectForm.tsx`, `onImagesChange` reordenaba `galleryFile
 - `src/services/postService.ts` — `removeFeaturedImage`/`removeGalleryImage`/`deletePostFromFirestore` usan `ImageKitService.deleteImage(fileId, imageUrl)` con fallback por URL, propagan errores con `throw`.
 - `src/services/projectService.ts` — `removeProjectCoverImage`/`removeProjectGalleryImage`/`deleteProject` mismo patrón.
 - `src/services/aboutService.ts` — `removeAboutImage` mismo patrón (defensiva, ya funcionaba).
-- `src/services/imageKitService.ts` — `deleteImage(fileId, imageUrl?)` con validación temprana.
+- `src/services/imageKitService.ts` — `deleteImage(fileId, imageUrl?)` con validación temprana + endpoint desde `imageKitConfig.deleteEndpoint`.
+- `src/config/imageKitConfig.ts` — nueva `deleteEndpoint` desde `VITE_IMAGEKIT_DELETE_ENDPOINT`.
+- `.env.example` — añadida `VITE_IMAGEKIT_DELETE_ENDPOINT=/.netlify/functions/imagekit-delete`.
 
 #### Razón
 El admin reportó que "Eliminar imagen destacada" en Blog no borraba de ImageKit (cero logs en Netlify, sin errores en DevTools). Causa raíz combinada: posts legacy sin `fileId` + servicios que silenciaban errores. El fix aprovecha que la Netlify Function ya soportaba `imageUrl` como fallback (búsqueda por nombre en ImageKit vía REST API).
@@ -86,7 +88,7 @@ El admin reportó que "Eliminar imagen destacada" en Blog no borraba de ImageKit
 - `Map<url, fileId>` en lugar de índice para que reordenamientos no rompan la asociación URL→fileId.
 - `throw` en lugar de `console.warn` para que la UI (`alert('❌ ...')`) muestre el error real al admin.
 - Fallback por `imageUrl` cuando no hay `fileId` permite limpiar imágenes legacy sin tener que re-subir manualmente.
-- Se descartó refactor de la URL del delete (`.replace()`) por ser frágil pero funcional; se mantiene para minimizar superficie de cambio.
+- Env var `VITE_IMAGEKIT_DELETE_ENDPOINT` para aislar la URL del delete de la de auth (mejor rotación y auditoría).
 
 #### Compatibilidad
 Posts/Proyectos legacy con `galleryFileIds: ['']` ahora pueden eliminarse de ImageKit usando la URL como fallback. La función server-side busca el archivo por nombre exacto en ImageKit y lo borra.

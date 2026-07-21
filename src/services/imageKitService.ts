@@ -119,8 +119,7 @@ export class ImageKitService {
     if (!fileId && !imageUrl) {
       throw new Error('fileId or imageUrl is required for deletion');
     }
-    const endpoint = imageKitConfig.authenticationEndpoint.replace('imagekit-auth', 'imagekit-delete');
-    const response = await fetch(endpoint, {
+    const response = await fetch(imageKitConfig.deleteEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

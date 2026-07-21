@@ -15,6 +15,7 @@
   - **Bug B (early return silencioso):** `removeFeaturedImage`/`removeGalleryImage`/`removeProjectCoverImage`/`removeProjectGalleryImage`/`removeAboutImage` retornaban early sin error si faltaba `fileId`. El admin veía "✅ eliminada" pero nada pasaba. Fix: usar `imageUrl` como fallback en `ImageKitService.deleteImage(fileId, imageUrl)` (la Netlify Function ya lo soporta), y propagar errores con `throw`.
   - **Bug D (deletePost/deleteProject con fileIds vacíos):** `deletePostFromFirestore` y `deleteProject` solo incluían `fileIds` poblados en el array de borrado, ignorando proyectos/posts legacy sin `fileId`. Fix: usar `{fileId, imageUrl}` para que cada imagen se intente borrar con fallback por URL.
   - **Validación temprana:** `deleteImage` ahora lanza error claro si no hay `fileId` ni `imageUrl`.
+  - **Env var explícita para delete:** `imageKitConfig.deleteEndpoint` desde `VITE_IMAGEKIT_DELETE_ENDPOINT` reemplaza el `.replace('imagekit-auth', 'imagekit-delete')` frágil. Configurar la env var en Netlify para producción.
 
 ## Trabajo Actual (2026-07-21)
 - **2026-07-21** — Fix: Prevención de imágenes huérfanas al reemplazar. Se interceptan las actualizaciones en los servicios (`postService`, `projectService`, `aboutService`) para borrar automáticamente de ImageKit las imágenes reemplazadas o eliminadas de galerías.
