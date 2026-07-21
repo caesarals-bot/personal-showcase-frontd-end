@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Maximize2, X, ImageOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
+import { isLegacyStorageUrl } from '@/utils/isLegacyStorageUrl'
 import type { ProjectCarouselProps } from '@/types/portfolio'
 
 export default function ProjectCarousel({ 
@@ -79,16 +80,31 @@ export default function ProjectCarousel({
       {/* Main image */}
       <div className="relative w-full h-full overflow-hidden rounded-lg bg-muted flex items-center justify-center">
         <AnimatePresence mode="wait">
-          <motion.img
-            key={currentIndex}
-            src={images[currentIndex].url}
-            alt={images[currentIndex].alt}
-            className="max-w-full max-h-full object-contain"
-            initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.5 }}
-          />
+          {isLegacyStorageUrl(images[currentIndex].url) ? (
+            <motion.div
+              key={`legacy-${currentIndex}`}
+              className="flex flex-col items-center justify-center text-muted-foreground p-4 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ImageOff className="h-12 w-12 mb-3 opacity-50" />
+              <p className="text-sm font-medium">Imagen no disponible</p>
+              <p className="text-xs opacity-70 mt-1">Re-sube desde admin</p>
+            </motion.div>
+          ) : (
+            <motion.img
+              key={currentIndex}
+              src={images[currentIndex].url}
+              alt={images[currentIndex].alt}
+              className="max-w-full max-h-full object-contain"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.5 }}
+            />
+          )}
         </AnimatePresence>
 
         {/* Navigation arrows */}
@@ -158,18 +174,24 @@ export default function ProjectCarousel({
             <button
               key={index}
               className={cn(
-                "relative flex-shrink-0 w-20 h-12 rounded-md overflow-hidden border-2 transition-all duration-200",
-                index === currentIndex 
-                  ? "border-primary ring-2 ring-primary/20" 
+                "relative flex-shrink-0 w-20 h-12 rounded-md overflow-hidden border-2 transition-all duration-200 bg-muted",
+                index === currentIndex
+                  ? "border-primary ring-2 ring-primary/20"
                   : "border-border hover:border-primary/50"
               )}
               onClick={() => goToSlide(index)}
             >
-              <img
-                src={image.url}
-                alt={image.alt}
-                className="w-full h-full object-contain"
-              />
+              {isLegacyStorageUrl(image.url) ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <ImageOff className="h-4 w-4 text-muted-foreground opacity-50" />
+                </div>
+              ) : (
+                <img
+                  src={image.url}
+                  alt={image.alt}
+                  className="w-full h-full object-contain"
+                />
+              )}
               {index === currentIndex && (
                 <div className="absolute inset-0 bg-primary/20" />
               )}

@@ -3,14 +3,13 @@
  *
  * Soporta:
  * - ImageKit: https://ik.imagekit.io/{endpoint}/{filePath}[?query]
- * - Firebase Storage legacy: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?{query}
  *
- * Devuelve null para URLs locales (/algo.webp), URLs vacias o formatos desconocidos.
- * En esos casos no aplica delete (la imagen no vive en storage remoto).
+ * Devuelve null para URLs locales (/algo.webp), URLs vacias, formatos
+ * desconocidos o URLs de Firebase Storage legacy (proveedor descontinuado).
+ * En esos casos no aplica delete (la imagen no vive en ImageKit).
  */
 
 const IMAGEKIT_HOST_PATTERN = /^https?:\/\/ik\.imagekit\.io\/[^/]+\/(.+)$/
-const FIREBASE_STORAGE_PATTERN = /\/o\/(.+?)\?/
 
 export function extractStoragePathFromUrl(url: string): string | null {
   if (!url || typeof url !== 'string') {
@@ -20,11 +19,6 @@ export function extractStoragePathFromUrl(url: string): string | null {
   const ikMatch = url.match(IMAGEKIT_HOST_PATTERN)
   if (ikMatch && ikMatch[1]) {
     return ikMatch[1].split('?')[0]
-  }
-
-  const fbMatch = url.match(FIREBASE_STORAGE_PATTERN)
-  if (fbMatch && fbMatch[1]) {
-    return decodeURIComponent(fbMatch[1])
   }
 
   return null

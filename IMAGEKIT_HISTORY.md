@@ -48,8 +48,10 @@
       cerrado en este commit. Detalles en la sección "Historia cerrada".
 - [ ] **Validación de auth en Netlify Functions** (no bloqueante:
       cualquiera puede pedir firma de upload).
-- [ ] **Migración histórica Firebase Storage → ImageKit**
-      (cuando se regularice la tarjeta de Firebase).
+- [ ] **Re-subida manual de imágenes legacy de Firebase Storage**
+      desde admin — el placeholder en `ProjectCard`/`ProjectCarousel` evita
+      peticiones 402, pero las imágenes definitivas requieren que el admin
+      re-edite cada proyecto y suba imágenes nuevas a ImageKit.
 
 ---
 

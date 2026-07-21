@@ -3,8 +3,9 @@ import { Link } from "react-router-dom"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ExternalLink, Github, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { ExternalLink, Github, ArrowRight, ChevronLeft, ChevronRight, ImageOff } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { isLegacyStorageUrl } from "@/utils/isLegacyStorageUrl"
 import type { ProjectCardProps } from "@/types/portfolio"
 
 export function ProjectCard({ project, className }: ProjectCardProps) {
@@ -105,7 +106,13 @@ export function ProjectCard({ project, className }: ProjectCardProps) {
                     transition: "clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
                   }}
                 >
-                  {currentImage && (
+                  {currentImage && isLegacyStorageUrl(currentImage.url) ? (
+                    <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground p-4 text-center">
+                      <ImageOff className="h-10 w-10 mb-2 opacity-50" />
+                      <p className="text-xs font-medium">Imagen no disponible</p>
+                      <p className="text-[10px] opacity-70 mt-1">Re-sube desde admin</p>
+                    </div>
+                  ) : currentImage && (
                     <img
                       src={currentImage.url}
                       alt={currentImage.alt || `${project.title} - Image ${validImageIndex + 1}`}
