@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Link, X, Check, AlertCircle, Copy, Image as ImageIcon } from 'lucide-react';
+import { Link, X, Check, AlertCircle, Copy, Image as ImageIcon, AlertTriangle } from 'lucide-react';
 import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
@@ -22,6 +22,7 @@ import type { ProjectImageUploadResult } from '../../services/projectImageServic
 import { aboutImageService } from '../../services/aboutImageService';
 import type { AboutImageUploadResult } from '../../services/aboutImageService';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { isLegacyStorageUrl } from '../../utils/isLegacyStorageUrl';
 
 export interface ImageSelectorProps {
   value?: string | string[];
@@ -419,6 +420,15 @@ export default function ImageSelector({
             <p className="text-xs text-muted-foreground">
               Ingresa la URL completa de la imagen (ej: https://ejemplo.com/imagen.jpg)
             </p>
+            {typeof urlValue === 'string' && isLegacyStorageUrl(urlValue) && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Esta URL es de Firebase Storage legacy y devolverá 402 (proyecto bloqueado).
+                  Sube una nueva imagen o pega una URL de ImageKit.
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
 
           {/* Preview de URL */}

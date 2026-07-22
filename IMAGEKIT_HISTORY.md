@@ -48,10 +48,11 @@
       cerrado en este commit. Detalles en la sección "Historia cerrada".
 - [ ] **Validación de auth en Netlify Functions** (no bloqueante:
       cualquiera puede pedir firma de upload).
-- [ ] **Re-subida manual de imágenes legacy de Firebase Storage**
-      desde admin — el placeholder en `ProjectCard`/`ProjectCarousel` evita
-      peticiones 402, pero las imágenes definitivas requieren que el admin
-      re-edite cada proyecto y suba imágenes nuevas a ImageKit.
+- [ ] **Re-subida manual de imágenes legacy de Firebase Storage** (sin plazo):
+      El placeholder en `ProjectCard`/`ProjectCarousel` evita peticiones 402.
+      Las imágenes definitivas requieren que el admin re-edite cada proyecto
+      legacy y suba imágenes nuevas a ImageKit desde `/admin/portfolio`.
+      NO se pueden migrar automáticamente (Firebase Storage caído, 402).
 
 ---
 
