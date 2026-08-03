@@ -5,6 +5,42 @@
 
 ---
 
+## [2026-08-02] - feat(agenda): módulo de reservas + rediseño editorial del contacto
+
+### Qué se implementó (rama `feature/agenda-reuniones`)
+- **Ruta `/agenda`**: UI editorial completa (calendario de días, horarios, formulario
+  con reCAPTCHA, confirmación con Meet + `.ics`, lecturas recomendadas) con lazy-loading
+  y `AgendaPageSkeleton`.
+- **Backend Netlify Functions** (`netlify/functions/`): `booking-settings`,
+  `booking-availability`, `booking-slots`, `booking-create` + helpers en `_shared/`
+  (time, schedule, firebase, google, validation, response, recaptcha, rate-limit, bookings).
+  Concurrencia: claim atómico del slot vía transacción Firestore con ID `dateKey_HHmm`,
+  re-verificación freebusy en vivo, Meet automático y compensación de fallos.
+- **`firestore.rules`**: `bookingSettings` lectura pública; `bookings` solo Admin SDK.
+- **`/contactame`**: formulario rediseñado al estilo editorial (compacto, teal/crema)
+  + card "¿Prefieres hablar en vivo?" → `/agenda`.
+- **Tokens editoriales** (teal/terracotta/crema, `--font-editorial`) en `src/App.css`.
+
+### Validaciones
+- ✅ `npm run build` — 0 errores.
+- ✅ `npx eslint src/ netlify/` — 0 errores (warnings preexistentes en otros archivos).
+- ✅ Typecheck estricto del backend (`tsc` en `netlify/functions`).
+
+### Pendiente (infraestructura, NO código)
+El feature **no está activo en producción**: faltan env vars de Netlify (Google OAuth,
+reCAPTCHA), generación del refresh token con la cuenta `proyectosenevolucion@gmail.com`
+(redirect URI en punycode `https://xn--cesarlondoo-beb.dev`), deploy de reglas de
+Firestore y deploy. Detalle completo en `AGENDA_MODULO_PENDIENTES.md`.
+
+### Commits relacionados
+- `5112037` feat(contacto): formulario compacto estilo editorial (teal/crema)
+
+### Nota de proceso
+A partir de esta fecha se trabaja con **planes cortos** y commit inmediato por plan
+(`build` + `eslint` antes de cada commit) para evitar deuda técnica y alucinaciones.
+
+---
+
 ## [2026-07-04] - fix(deploy): Eliminar redirect cross-domain con encoding inválido + unificar dominio canónico
 
 ### Issue resuelto
