@@ -75,11 +75,8 @@ export default function AgendaPage() {
         {booking.confirmation && lastVisitor ? (
           <BookingConfirmation
             confirmation={booking.confirmation}
-            visitorName={lastVisitor.name}
             visitorEmail={lastVisitor.email}
-            message={lastVisitor.message || ''}
-            ownerName={settings?.owner.name ?? 'César Londoño'}
-            ownerEmail={settings?.owner.email ?? ''}
+            topic={lastVisitor.topic}
             onDone={handleDone}
           />
         ) : settingsHook.loading ? (

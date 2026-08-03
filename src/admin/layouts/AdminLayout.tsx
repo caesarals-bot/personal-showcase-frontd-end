@@ -106,6 +106,12 @@ const navItems: AdminNavItem[] = [
     label: 'Home',
     icon: 'Image',
     path: '/admin/home-settings'
+  },
+  {
+    id: 'agenda-settings',
+    label: 'Agenda',
+    icon: 'Clock',
+    path: '/admin/agenda-settings'
   }
 ]
 

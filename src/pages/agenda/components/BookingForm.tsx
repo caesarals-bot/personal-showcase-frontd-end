@@ -40,7 +40,7 @@ export function BookingForm({
     defaultValues: {
       name: '',
       email: '',
-      message: '',
+      topic: '',
     },
   })
 
@@ -119,15 +119,15 @@ export function BookingForm({
 
           <FormField
             control={form.control}
-            name="message"
+            name="topic"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">
-                  ¿De qué te gustaría hablar? <span className="normal-case">(opcional)</span>
+                  Tema a tratar *
                 </FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Cuéntame brevemente el contexto"
+                    placeholder="Ej. Revisión de mi proyecto web"
                     className="min-h-[80px] resize-none border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                     {...field}
                     disabled={submitting}

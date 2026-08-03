@@ -8,6 +8,7 @@ import PagesLayout from "@/pages/layouts/PagesLayout";
 // HomePage - Carga inmediata (primera impresión)
 import HomePage from "../pages/home/HomePage";
 const HomeSettingsPage = lazy(() => import("@/admin/pages/HomeSettingsPage"));
+const AgendaSettingsPage = lazy(() => import("@/admin/pages/AgendaSettingsPage"));
 
 // Skeletons específicos
 import {
@@ -174,6 +175,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'home-settings',
                 element: withSuspense(HomeSettingsPage, AdminPageSkeleton),
+            },
+            {
+                path: 'agenda-settings',
+                element: withSuspense(AgendaSettingsPage, AdminPageSkeleton),
             },
             {
                 path: 'change-password',

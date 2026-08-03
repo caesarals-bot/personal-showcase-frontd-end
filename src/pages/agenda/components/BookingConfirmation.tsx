@@ -1,40 +1,22 @@
 import { motion } from 'framer-motion'
-import { CalendarPlus, Check } from 'lucide-react'
+import { Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { BookingConfirmation as BookingConfirmationData } from '@/types/booking.types'
 import { formatDateFull, formatTimeRange24 } from '@/lib/bookingDates'
-import { downloadIcs } from '@/lib/ics'
 
 interface BookingConfirmationProps {
   confirmation: BookingConfirmationData
-  visitorName: string
   visitorEmail: string
-  message: string
-  ownerName: string
-  ownerEmail: string
+  topic: string
   onDone: () => void
 }
 
 export function BookingConfirmation({
   confirmation,
-  visitorName,
   visitorEmail,
-  message,
-  ownerName,
-  ownerEmail,
+  topic,
   onDone,
 }: BookingConfirmationProps) {
-  const handleAddToCalendar = () => {
-    downloadIcs({
-      confirmation,
-      visitorName,
-      visitorEmail,
-      message,
-      ownerName,
-      ownerEmail,
-    })
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
@@ -48,15 +30,16 @@ export function BookingConfirmation({
         transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 15 }}
         className="flex size-16 items-center justify-center rounded-full bg-editorial-terracotta"
       >
-        <Check className="size-8 text-white" strokeWidth={3} />
+        <Clock className="size-8 text-white" strokeWidth={2.5} />
       </motion.div>
 
       <div className="text-center">
         <h1 className="font-editorial text-3xl font-bold tracking-tight text-editorial-ink md:text-4xl">
-          ¡Cita confirmada!
+          ¡Solicitud recibida!
         </h1>
         <p className="mt-2 text-sm text-editorial-ink-muted">
-          Te enviamos la invitación con el enlace de Google Meet a {visitorEmail}.
+          Tu horario quedó reservado. Te enviaremos la invitación con el enlace de Google Meet a{' '}
+          <span className="font-medium text-editorial-ink">{visitorEmail}</span>.
         </p>
       </div>
 
@@ -79,33 +62,13 @@ export function BookingConfirmation({
         </div>
         <div className="bg-editorial-cream p-5">
           <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
-            Modalidad
+            Tema
           </p>
-          <p className="mt-1 text-sm font-medium text-editorial-ink">
-            {confirmation.meetLink ? 'Google Meet' : `Reunión de ${confirmation.durationMinutes} min`}
-          </p>
+          <p className="mt-1 text-sm font-medium text-editorial-ink">{topic}</p>
         </div>
       </div>
 
-      {confirmation.meetLink && (
-        <a
-          href={confirmation.meetLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-medium text-editorial-teal underline underline-offset-4 hover:text-editorial-teal-deep"
-        >
-          Unirse a la videollamada
-        </a>
-      )}
-
       <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-        <Button
-          onClick={handleAddToCalendar}
-          className="bg-editorial-teal text-white hover:bg-editorial-teal-deep"
-        >
-          <CalendarPlus className="size-4" />
-          Añadir a mi calendario
-        </Button>
         <Button variant="outline" onClick={onDone} className="border-editorial-line text-editorial-ink">
           Volver al sitio
         </Button>

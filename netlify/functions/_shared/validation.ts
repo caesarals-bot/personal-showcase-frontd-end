@@ -9,7 +9,7 @@ export const HH_MM = /^\d{2}:\d{2}$/
 export const visitorSchema = z.object({
   name: z.string().trim().min(2).max(60),
   email: z.string().trim().email().max(120),
-  message: z.string().trim().max(1000).optional().default(''),
+  topic: z.string().trim().min(3).max(300),
 })
 
 export const getSlotsSchema = z.object({

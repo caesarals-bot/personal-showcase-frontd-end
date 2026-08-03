@@ -59,12 +59,11 @@ export const bookingVisitorSchema = z.object({
     .string()
     .trim()
     .email('Ingresa un email válido'),
-  message: z
+  topic: z
     .string()
     .trim()
-    .max(1000, 'El mensaje no puede exceder 1000 caracteres')
-    .optional()
-    .default(''),
+    .min(3, 'Cuéntanos brevemente el tema a tratar')
+    .max(300, 'El tema no puede exceder 300 caracteres'),
 })
 
 export type BookingVisitor = z.infer<typeof bookingVisitorSchema>
@@ -89,7 +88,7 @@ export interface BookingConfirmation {
   timeZone: string
   meetLink: string | null
   htmlLink: string | null
-  googleEventId: string
+  googleEventId?: string
 }
 
 export interface BookingError {
