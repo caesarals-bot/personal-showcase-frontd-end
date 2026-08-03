@@ -9,6 +9,7 @@ import PagesLayout from "@/pages/layouts/PagesLayout";
 import HomePage from "../pages/home/HomePage";
 const HomeSettingsPage = lazy(() => import("@/admin/pages/HomeSettingsPage"));
 const AgendaSettingsPage = lazy(() => import("@/admin/pages/AgendaSettingsPage"));
+const AgendaBookingsPage = lazy(() => import("@/admin/pages/AgendaBookingsPage"));
 
 // Skeletons específicos
 import {
@@ -179,6 +180,10 @@ export const appRouter = createBrowserRouter([
             {
                 path: 'agenda-settings',
                 element: withSuspense(AgendaSettingsPage, AdminPageSkeleton),
+            },
+            {
+                path: 'agenda-bookings',
+                element: withSuspense(AgendaBookingsPage, AdminPageSkeleton),
             },
             {
                 path: 'change-password',

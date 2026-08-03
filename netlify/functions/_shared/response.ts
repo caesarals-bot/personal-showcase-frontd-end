@@ -19,6 +19,14 @@ export function badRequest(message: string) {
   return json(400, { error: message })
 }
 
+export function unauthorized(message: string) {
+  return json(401, { error: message })
+}
+
+export function forbidden(message: string) {
+  return json(403, { error: message })
+}
+
 export function notFound(message: string) {
   return json(404, { error: message })
 }

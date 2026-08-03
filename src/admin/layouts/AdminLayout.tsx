@@ -31,7 +31,8 @@ import {
   Download,
   Upload,
   Briefcase,
-  Image
+  Image,
+  CalendarClock
 } from 'lucide-react'
 import type { AdminNavItem } from '@/types/admin.types'
 import { NotificationBell } from '@/admin/components/NotificationBell'
@@ -112,6 +113,12 @@ const navItems: AdminNavItem[] = [
     label: 'Agenda',
     icon: 'Clock',
     path: '/admin/agenda-settings'
+  },
+  {
+    id: 'agenda-bookings',
+    label: 'Solicitudes',
+    icon: 'CalendarClock',
+    path: '/admin/agenda-bookings'
   }
 ]
 
@@ -131,7 +138,8 @@ const iconMap: Record<string, any> = {
   Upload,
   Settings,
   Briefcase,
-  Image
+  Image,
+  CalendarClock
 }
 
 export default function AdminLayout() {

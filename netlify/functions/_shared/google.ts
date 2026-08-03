@@ -61,7 +61,7 @@ export interface CreatedEvent {
 export interface CreateEventParams {
   visitorName: string
   visitorEmail: string
-  message: string
+  topic: string
   slotStartIso: string
   slotEndIso: string
 }
@@ -73,8 +73,8 @@ export async function createEvent(params: CreateEventParams): Promise<CreatedEve
 
   const requestBody: calendar_v3.Schema$Event = {
     summary: `Reunión · ${params.visitorName}`,
-    description: params.message
-      ? `Mensaje del visitante:\n${params.message}\n\nAgendada vía cesarlondoño.dev`
+    description: params.topic
+      ? `Tema a tratar:\n${params.topic}\n\nAgendada vía cesarlondoño.dev`
       : 'Agendada vía cesarlondoño.dev',
     start: { dateTime: params.slotStartIso, timeZone: TZ },
     end: { dateTime: params.slotEndIso, timeZone: TZ },

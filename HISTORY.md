@@ -5,6 +5,44 @@
 
 ---
 
+## [2026-08-03] - feat(agenda): solicitud pendiente + gestión admin de disponibilidad e invitaciones
+
+### Qué se implementó (rama `feature/agenda-reuniones`)
+Cambio de flujo: la reserva ya **no crea el evento ni envía invitación automáticamente**.
+El visitante deja sus datos (nombre, correo y **tema a tratar**) y queda como
+**solicitud pendiente**; el dueño gestiona el envío de la invitación desde `/admin`.
+
+- **Form de reserva** (`/agenda`): nuevo campo **"Tema a tratar" obligatorio** (reemplaza
+  el mensaje opcional). Confirmación → "¡Solicitud recibida!" (sin Meet/.ics hasta que el
+  dueño envíe la invitación).
+- **`booking-create`** : solo registra la solicitud `pending` (reCAPTCHA + rate-limit +
+  claim atómico del slot). Un pending sin confirmar expira a los 10 min
+  (`_shared/bookings.ts`).
+- **Página admin `/admin/agenda-settings`**: toggles L-V + horario `start/end`
+  (`workingHours`) y fechas bloqueadas (`dateOverrides`), guardado en Firestore
+  `bookingSettings/config` (reglas: lectura pública, escritura solo admin).
+- **Funciones Netlify internas** (acceso SOLO admin, verificación por ID token de
+  Firebase → role `admin` en `users`, helper `_shared/admin-auth.ts`):
+  - `booking-admin-list` — lista solicitudes.
+  - `booking-admin-invite` — crea el evento Google (con Meet) y envía la invitación a
+    la visitante; doc → `status: 'invited'`.
+  - `booking-admin-cancel` — cancela (borra evento Google si existía) y libera el slot.
+- **Página admin `/admin/agenda-bookings`**: tabla de solicitudes con filtros, botones
+  "Enviar invitación" y "Cancelar".
+- `booking-settings`/`booking-availability`/`booking-slots` no cambian.
+
+### Validaciones
+- ✅ `npm run build` — 0 errores (2 commits).
+- ✅ `npx eslint src/ netlify/` — 0 errores (warnings preexistentes en otros archivos).
+
+### Pendiente
+- Activar infraestructura (env vars `GOOGLE_*`, `RECAPTCHA_SECRET`, OAuth, deploy de
+  reglas `firebase deploy --only firestore:rules`) — ver `AGENDA_MODULO_PENDIENTES.md`.
+- `deleteEvent`/`createEvent` requieren las credenciales Google; sin ellas la invitación
+  no se puede enviar.
+
+---
+
 ## [2026-08-02] - feat(agenda): módulo de reservas + rediseño editorial del contacto
 
 ### Qué se implementó (rama `feature/agenda-reuniones`)

@@ -9,6 +9,14 @@
 
 ---
 
+## Trabajo Actual (2026-08-03)
+- **2026-08-03** — feat(agenda): la reserva ahora deja una **solicitud pendiente**
+  (nombre, correo y "Tema a tratar" obligatorio) sin crear evento ni enviar invitación
+  automáticamente. Nuevas páginas admin: `/admin/agenda-settings` (activar/desactivar
+  días y horas + fechas bloqueadas) y `/admin/agenda-bookings` (listar solicitudes y
+  **enviar invitación** con Meet o **cancelar**). Funciones internas protegidas por
+  ID token de admin (`_shared/admin-auth.ts`). Detalle sellado en `HISTORY.md`.
+
 ## Trabajo Actual (2026-07-22)
 - **2026-07-22** — Estado: Sistema 100% ImageKit. Firebase Storage deshabilitado (402 Payment Required, proyecto bloqueado).
   - **Guards en ImageUploadService:** Todos los métodos de runtime (`uploadImage`, `uploadMultipleImages`, `deleteImage`, `deleteMultipleImages`, `getImageURL`) lanzan error inmediato si se invocan. Solo se mantienen los exports de tipos `UploadResult`/`UploadProgress` que aún usa `ProfileEditPage.tsx`. Imposible subir/borrar accidentalmente a Firebase Storage.
