@@ -100,6 +100,39 @@ netlify dev   # sirve el sitio + las Netlify Functions (same-origin / .netlify/f
 
 ---
 
+## 7. Gestión de disponibilidad (desactivar días/horas) — PLAN PARA MAÑANA
+
+### Estado actual
+- **Sí se puede desactivar días/horas hoy**, pero **sin UI**: editando a mano el
+  documento de Firestore `bookingSettings/config` (reglas ya permiten escritura solo
+  admin; lectura pública).
+  - Días de la semana / horas → array `workingHours` (por `dayOfWeek` 0=dom..6=sáb,
+    con `start`/`end` "HH:mm"). Quitar un día o `"00:00"`–`"00:00"` lo desactiva.
+  - Fechas puntuales → `dateOverrides: [{ date: "YYYY-MM-DD", available: false }]`.
+  - `getBookingConfig()` hace merge sobre `DEFAULT_CONFIG` → un doc parcial funciona.
+- **Limitación**: las reglas de `bookings` deniegan lectura/escritura a clientes
+  (solo Admin SDK). Una UI de admin en el navegador **no puede listar reservas**
+  sin una Netlify Function extra (`booking-admin-list`, con verificación de admin).
+  Para desactivar días/horas NO hace falta eso: solo se escribe `bookingSettings`.
+
+### Plan propuesto (1 commit, corto)
+1. Página admin **"Agenda"** en `/admin` (patrón de `HomeSettingsPage.tsx`):
+   - Toggles por día de la semana (L-V) + inputs `start`/`end`.
+   - Lista de fechas bloqueadas (`dateOverrides`) con añadir/eliminar.
+   - Botón guardar → `db.doc('bookingSettings/config').set({...}, { merge: true })`
+     (solo admin autenticado, cumple las reglas).
+2. Validación: los cambios se reflejan en `/agenda` (días tachados / sin horarios).
+3. `npm run build` + `npx eslint src/ netlify/` + commit.
+
+### Decisiones a confirmar mañana (defaults recomendados en negrita)
+- **Dónde**: página nueva en `/admin` (**recomendado**) vs. algo más simple.
+- **Alcance**: solo desactivar días/horas (**recomendado primero**) vs. además
+  listar/gestionar reservas (requiere la Netlify Function `booking-admin-list`).
+- **Horario**: mismo horario L-V con toggles por día + fechas bloqueadas
+  (**recomendado**) vs. horario configurable por día individual.
+
+---
+
 ## Flujo de trabajo (a partir de mañana)
 
 **Planes de trabajo cortos y verificables** para evitar errores y deuda técnica:
