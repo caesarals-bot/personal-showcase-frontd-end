@@ -100,6 +100,22 @@ service cloud.firestore {
       allow write: if isAdmin(); // Solo el admin puede editar
     }
     
+    // ===== Reglas para "bookingSettings" (Agenda de reuniones) =====
+    // Lectura pública (el calendario de /agenda lo necesita sin auth).
+    // Escritura solo admin. Los visitantes NUNCA escriben aquí.
+    match /bookingSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // ===== Reglas para "bookings" (Agenda de reuniones) =====
+    // Denegado a clientes por completo. Solo el Admin SDK (funciones
+    // Netlify) crea/actualiza bookings, y las funciones ignoran las reglas.
+    // Esto evita que un visitante manipule o lea reservas de otros.
+    match /bookings/{bookingId} {
+      allow read, write: if false;
+    }
+    
     // Denegar todo lo demás por defecto
     match /{document=**} {
       allow read, write: if false;

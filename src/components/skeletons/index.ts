@@ -15,5 +15,6 @@ export {
   AboutPageSkeleton,
   ContactPageSkeleton,
   AuthPageSkeleton,
-  AdminPageSkeleton
+  AdminPageSkeleton,
+  AgendaPageSkeleton
 } from './PageSkeletons'
