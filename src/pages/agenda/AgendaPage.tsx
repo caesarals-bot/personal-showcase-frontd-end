@@ -14,6 +14,7 @@ import { BookingForm } from './components/BookingForm'
 import { BookingConfirmation } from './components/BookingConfirmation'
 import { RecommendedReads } from './components/RecommendedReads'
 import { monthDateKey } from '@/lib/bookingDates'
+import { PREVIEW_SETTINGS } from '@/lib/bookingPreview'
 import type { BookingVisitor } from '@/types/booking.types'
 
 export default function AgendaPage() {
@@ -25,10 +26,11 @@ export default function AgendaPage() {
   const [lastVisitor, setLastVisitor] = useState<BookingVisitor | null>(null)
 
   const settingsHook = useBookingSettings()
-  const settings = settingsHook.data
+  const isPreview = !settingsHook.loading && !settingsHook.data
+  const settings = settingsHook.data ?? PREVIEW_SETTINGS
 
-  const availabilityHook = useBookingAvailability(month)
-  const slotsHook = useSlots(selectedDate)
+  const availabilityHook = useBookingAvailability(month, isPreview)
+  const slotsHook = useSlots(selectedDate, isPreview)
   const booking = useCreateBooking()
 
   const selectedSlot = useMemo(
@@ -85,32 +87,25 @@ export default function AgendaPage() {
             <Loader2 className="size-8 animate-spin" />
             <p className="text-sm">Cargando mi disponibilidad…</p>
           </div>
-        ) : settingsHook.error || !settings ? (
-          <div className="mx-auto max-w-xl border border-editorial-line bg-white/60 p-8 text-editorial-ink">
-            <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
-              Agenda de reuniones
-            </p>
-            <h2 className="mt-2 font-editorial text-2xl font-bold tracking-tight md:text-3xl">
-              La agenda aún no está activa
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-editorial-ink-muted">
-              El backend de reservas (Netlify Functions + Google Calendar) todavía no está
-              disponible en este entorno. En local se activa con{' '}
-              <code className="rounded bg-editorial-cream px-1 py-0.5 font-mono text-xs text-editorial-teal">
-                netlify dev
-              </code>
-              , y en producción con las variables de entorno configuradas en Netlify.
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-editorial-ink-muted">
-              Mientras tanto, escríbeme desde{' '}
-              <a href="/contactame" className="text-editorial-teal underline underline-offset-4">
-                el formulario de contacto
-              </a>
-              .
-            </p>
+        ) : settingsHook.loading ? (
+          <div className="flex flex-col items-center gap-4 py-24 text-editorial-ink-muted">
+            <Loader2 className="size-8 animate-spin" />
+            <p className="text-sm">Cargando mi disponibilidad…</p>
           </div>
         ) : (
           <>
+            {isPreview && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mx-auto mb-8 max-w-3xl border border-editorial-terracotta/50 bg-editorial-cream px-4 py-3 text-sm text-editorial-ink"
+              >
+                <span className="font-semibold text-editorial-terracotta">Vista previa:</span>{' '}
+                el backend de reservas no está conectado en este entorno. Los horarios son de
+                ejemplo y la reserva está deshabilitada.
+              </motion.div>
+            )}
+
             <motion.header
               initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -183,15 +178,21 @@ export default function AgendaPage() {
                       durationMinutes={settings.slotDurationMinutes}
                     />
 
-                    {selectedSlot && (
-                      <BookingForm
-                        key={`${selectedDate}_${selectedTime}`}
-                        isoStart={selectedSlot.isoStart}
-                        onSubmit={handleSubmit}
-                        submitting={booking.status === 'submitting'}
-                        error={booking.error}
-                      />
-                    )}
+                    {selectedSlot &&
+                      (isPreview ? (
+                        <div className="border border-dashed border-editorial-line bg-editorial-cream p-5 text-sm text-editorial-ink-muted">
+                          La reserva se habilitará cuando se active el backend (Netlify
+                          Functions + Google Calendar).
+                        </div>
+                      ) : (
+                        <BookingForm
+                          key={`${selectedDate}_${selectedTime}`}
+                          isoStart={selectedSlot.isoStart}
+                          onSubmit={handleSubmit}
+                          submitting={booking.status === 'submitting'}
+                          error={booking.error}
+                        />
+                      ))}
                   </>
                 )}
               </motion.div>

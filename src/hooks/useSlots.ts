@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getDaySlots } from '@/services/bookingService'
+import { previewDaySlots } from '@/lib/bookingPreview'
 import type { Slot } from '@/types/booking.types'
 
-export function useSlots(date: string | null) {
+export function useSlots(date: string | null, preview = false) {
   const [slots, setSlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -10,6 +11,13 @@ export function useSlots(date: string | null) {
   useEffect(() => {
     if (!date) {
       setSlots([])
+      setError(null)
+      setLoading(false)
+      return
+    }
+
+    if (preview) {
+      setSlots(previewDaySlots(date))
       setError(null)
       setLoading(false)
       return
@@ -35,7 +43,7 @@ export function useSlots(date: string | null) {
     return () => {
       cancelled = true
     }
-  }, [date])
+  }, [date, preview])
 
   return { slots, loading, error }
 }

@@ -82,8 +82,9 @@ completa se requieren las tres.
 ```bash
 netlify dev   # sirve el sitio + las Netlify Functions (same-origin / .netlify/functions)
 ```
-- `npm run dev` (vite solo) **no** sirve las funciones: `/agenda` mostrará el panel
-  "La agenda aún no está activa". Ese fallback es intencional.
+- `npm run dev` (vite solo) **no** sirve las funciones: `/agenda` mostrará el **modo
+  vista previa** (banner + calendario con horarios de ejemplo, reserva deshabilitada).
+  Ese fallback es intencional y está etiquetado.
 
 ### 5. Limpieza / revisión menor
 - `netlify.toml:34` — `Access-Control-Allow-Origin: https://vocal-baklava-c94c36.netlify.app`
