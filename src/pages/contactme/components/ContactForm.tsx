@@ -112,7 +112,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
       } else {
         resetRecaptcha() // Resetear reCAPTCHA en caso de error
       }
-    } catch (error) {
+    } catch (_error) {
       setResponse({
         success: false,
         message: 'Error inesperado. Por favor intenta nuevamente.',
@@ -165,20 +165,21 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
         />
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
           {/* Nombre y Email en una fila */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nombre *</FormLabel>
+                  <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">Nombre *</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Tu nombre completo"
                       {...field}
                       disabled={status === 'submitting'}
+                      className="border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                     />
                   </FormControl>
                   <FormMessage />
@@ -191,13 +192,14 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email *</FormLabel>
+                  <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">Email *</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
                       placeholder="tu@email.com"
                       {...field}
                       disabled={status === 'submitting'}
+                      className="border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                     />
                   </FormControl>
                   <FormMessage />
@@ -212,12 +214,13 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
             name="company"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Empresa (opcional)</FormLabel>
+                <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">Empresa (opcional)</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Nombre de tu empresa"
                     {...field}
                     disabled={status === 'submitting'}
+                    className="border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                   />
                 </FormControl>
                 <FormMessage />
@@ -231,12 +234,13 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
             name="subject"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Asunto *</FormLabel>
+                <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">Asunto *</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="¿De qué quieres hablar?"
                     {...field}
                     disabled={status === 'submitting'}
+                    className="border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                   />
                 </FormControl>
                 <FormMessage />
@@ -250,11 +254,11 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
             name="message"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mensaje *</FormLabel>
+                <FormLabel className="text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">Mensaje *</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Cuéntame sobre tu proyecto, idea o cualquier cosa en la que pueda ayudarte..."
-                    className="min-h-[120px] resize-none"
+                    className="min-h-[96px] resize-none border-editorial-line bg-white/60 text-editorial-ink focus-visible:ring-editorial-teal"
                     {...field}
                     disabled={status === 'submitting'}
                   />
@@ -278,11 +282,11 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm font-normal cursor-pointer">
+                  <FormLabel className="text-sm font-normal cursor-pointer text-editorial-ink">
                     Acepto los{' '}
                     <button
                       type="button"
-                      className="text-primary underline hover:no-underline"
+                      className="text-editorial-teal underline hover:no-underline"
                       onClick={() => {
                         // Aquí podrías abrir un modal o navegar a una página de términos
                       }}
@@ -292,7 +296,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
                     y{' '}
                     <button
                       type="button"
-                      className="text-primary underline hover:no-underline"
+                      className="text-editorial-teal underline hover:no-underline"
                       onClick={() => {
                         // Aquí podrías abrir un modal o navegar a una página de privacidad
                       }}
@@ -361,7 +365,6 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
           {/* Botón de envío */}
           <Button
             type="submit"
-            size="lg"
             disabled={
               status === 'submitting' || 
               status === 'success' || 
@@ -369,7 +372,7 @@ export default function ContactForm({ onSubmit, className }: ContactFormProps) {
               !rateLimit.canAttempt() ||
               !recaptchaToken
             }
-            className="w-full"
+            className="w-full bg-editorial-teal text-white hover:bg-editorial-teal-deep"
           >
             {getStatusIcon()}
             {rateLimit.isBlocked ? 'Bloqueado temporalmente' : getButtonText()}

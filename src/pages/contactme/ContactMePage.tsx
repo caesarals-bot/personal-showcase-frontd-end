@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
-import { MessageCircle, Send } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, CalendarClock, MessageCircle } from 'lucide-react'
 
 import ContactForm from './components/ContactForm'
 import ContactInfoDisplay from './components/ContactInfoDisplay'
@@ -76,26 +77,58 @@ const ContactMePage = () => {
                         transition={{ duration: 0.6, delay: 0.6 }}
                         className="lg:col-span-2"
                     >
-                        <div className="rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow lg:p-8">
-                            <div className="mb-6">
-                                <div className="mb-4 flex items-center gap-3">
-                                    <div className="rounded-lg bg-primary/10 p-2">
-                                        <Send className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
-                                        Envíame un mensaje
-                                    </h2>
-                                </div>
-                                <p className="text-foreground/70">
+                        <div className="border border-editorial-line bg-white/60 p-6 lg:p-8">
+                            <div className="mx-auto mb-6 w-full max-w-xl">
+                                <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
+                                    Formulario de contacto
+                                </p>
+                                <h2 className="font-editorial text-2xl font-bold tracking-tight text-editorial-ink md:text-3xl">
+                                    Envíame un mensaje
+                                </h2>
+                                <p className="mt-1 text-sm text-editorial-ink-muted">
                                     Completa el formulario y te responderé lo antes posible.
-                                    Todos los campos marcados con * son obligatorios.
+                                    Los campos marcados con * son obligatorios.
                                 </p>
                             </div>
 
-                            <ContactForm />
+                            <div className="mx-auto w-full max-w-xl">
+                                <ContactForm />
+                            </div>
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Card: Agenda una reunión */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.7 }}
+                    className="mt-8"
+                >
+                    <div className="flex flex-col items-center justify-between gap-5 border border-editorial-line bg-editorial-cream p-6 text-editorial-ink sm:flex-row sm:p-8">
+                        <div className="flex items-start gap-4">
+                            <div className="hidden rounded-full bg-editorial-terracotta p-3 sm:block">
+                                <CalendarClock className="size-5 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-editorial text-xl font-bold tracking-tight md:text-2xl">
+                                    ¿Prefieres hablar en vivo?
+                                </h3>
+                                <p className="mt-1 text-sm text-editorial-ink-muted">
+                                    Reserva una reunión de 30 minutos directo en mi
+                                    calendario.
+                                </p>
+                            </div>
+                        </div>
+                        <Link
+                            to="/agenda"
+                            className="inline-flex shrink-0 items-center gap-2 border border-editorial-teal bg-editorial-teal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-editorial-teal-deep"
+                        >
+                            Agenda una reunión
+                            <ArrowRight className="size-4" />
+                        </Link>
+                    </div>
+                </motion.div>
 
                 {/* Sección adicional */}
                 <motion.div

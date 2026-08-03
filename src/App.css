@@ -39,6 +39,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Editorial (Agenda de reuniones) */
+  --color-editorial-teal: oklch(0.37 0.075 190);
+  --color-editorial-teal-deep: oklch(0.28 0.06 192);
+  --color-editorial-terracotta: oklch(0.62 0.16 34);
+  --color-editorial-terracotta-deep: oklch(0.5 0.17 32);
+  --color-editorial-cream: oklch(0.96 0.015 85);
+  --color-editorial-ink: oklch(0.26 0.012 255);
+  --color-editorial-ink-muted: oklch(0.47 0.012 255);
+  --color-editorial-line: oklch(0.83 0.02 85);
+  --font-editorial: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 :root {
