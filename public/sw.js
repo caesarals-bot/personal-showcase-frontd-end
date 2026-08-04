@@ -1,6 +1,6 @@
 // Service Worker para cache inteligente
 // Versión del cache - incrementar cuando se actualice el contenido
-const CACHE_VERSION = 'v1.0.1';
+const CACHE_VERSION = 'v1.0.2';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
@@ -114,6 +114,13 @@ self.addEventListener('fetch', (event) => {
   // Excluir URLs de DiceBear API del manejo de cache
   if (isDiceBearAPI(request.url)) {
     // Dejar que DiceBear API se maneje directamente sin cache
+    return;
+  }
+
+  // Excluir Firestore de Google del manejo de cache: usa conexiones de
+  // streaming (gapic / Listen channel) que se rompen si el SW clona la
+  // respuesta con cache.put(). Dejar que Firestore se maneje directo.
+  if (isFirestore(request.url)) {
     return;
   }
 
@@ -259,6 +266,10 @@ function isGoogleUserContent(url) {
 
 function isDiceBearAPI(url) {
   return url.includes('api.dicebear.com');
+}
+
+function isFirestore(url) {
+  return url.includes('firestore.googleapis.com') || url.includes('.firebaseio.com');
 }
 
 // Limpiar cache periódicamente

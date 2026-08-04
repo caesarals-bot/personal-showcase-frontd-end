@@ -8,14 +8,12 @@ import { wallClockToUtcMs } from './time'
 import type { BookingConfig, CandidateSlot } from './schedule'
 import { candidateSlotMs } from './schedule'
 
-const PENDING_EXPIRY_MS = 10 * 60 * 1000
-
 export interface BookingRecord {
   id: string
   dateKey: string
   slotStartMs: number
   slotEndMs: number
-  status: 'pending' | 'confirmed'
+  status: 'pending' | 'confirmed' | 'invited'
   createdAtMs: number
   visitor: { name: string; email: string; message?: string }
   googleEventId?: string
@@ -23,11 +21,12 @@ export interface BookingRecord {
   timeZone?: string
 }
 
+// Una solicitud mantiene el slot ocupado hasta que el dueño la acepta
+// (status 'invited', creando el evento) o la cancela (borra el doc).
+// No expira automáticamente: si expirara, el slot se liberaría solo y el
+// visitante podría recibir un falso "reservado" (409) por un pending huérfano.
 function isActive(b: BookingRecord): boolean {
-  return (
-    b.status === 'confirmed' ||
-    (b.status === 'pending' && Date.now() - b.createdAtMs < PENDING_EXPIRY_MS)
-  )
+  return b.status === 'pending' || b.status === 'confirmed' || b.status === 'invited'
 }
 
 function toBooking(doc: { id: string; data: () => Record<string, unknown> }): BookingRecord {
