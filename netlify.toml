@@ -30,11 +30,9 @@
     Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
     X-Permitted-Cross-Domain-Policies = "none"
     
-    # CORS Headers para Firebase (Chrome requiere dominio específico)
-    Access-Control-Allow-Origin = "https://vocal-baklava-c94c36.netlify.app"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
-    Access-Control-Allow-Credentials = "true"
+    # CORS: no se requiere Access-Control-Allow-Origin para este sitio (todas las
+    # llamadas a las Netlify Functions son same-origin). Los redirects/functions
+    # no necesitan CORS en Netlify.
     
     # Content Security Policy (configuración completa y segura para Firebase, reCAPTCHA, EmailJS y Google Fonts)
     Content-Security-Policy = """

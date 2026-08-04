@@ -10,6 +10,14 @@
 ---
 
 ## Trabajo Actual (2026-08-03)
+- **2026-08-03** — Activación del módulo /agenda en producción: credenciales
+  `GOOGLE_*` y `RECAPTCHA_SECRET` cargadas en Netlify (server-side) y verificadas
+  con test read-only de Google Calendar. Se deja solo env `VITE_*` en `.env.local`
+  (se eliminan los `GOOGLE_*`/`RECAPTCHA_SECRET` del archivo local). Cleanup:
+  se quita el header CORS obsoleto de `netlify.toml` (apuntaba a un dominio Netlify
+  viejo) y se elimina un bloque condicional duplicado en `AgendaPage.tsx`. Pendiente
+  manual: publicar reglas de Firestore (`bookingSettings`/`bookings`) + verificación
+  post-deploy (ver `AGENDA_MODULO_PENDIENTES.md`).
 - **2026-08-03** — feat(agenda): la reserva ahora deja una **solicitud pendiente**
   (nombre, correo y "Tema a tratar" obligatorio) sin crear evento ni enviar invitación
   automáticamente. Nuevas páginas admin: `/admin/agenda-settings` (activar/desactivar

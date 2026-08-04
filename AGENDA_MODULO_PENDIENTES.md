@@ -1,9 +1,10 @@
 # Módulo /agenda — Estado y pendientes
 
-> Fecha: 2026-08-02 · Rama: `feature/agenda-reuniones` (base: `main` @ `79229a4`)
+> Fecha: 2026-08-03 · Rama: `feature/agenda-reuniones` (base: `main` @ `79229a4`)
 > Frontend + backend implementados y verificados (`npm run build` + ESLint OK).
-> **El feature NO está activo en producción**: depende de infraestructura (env vars
-> de Netlify, OAuth de Google y Firestore) descrita abajo.
+> **Activación en curso (2026-08-03)**: env vars `GOOGLE_*` y `RECAPTCHA_SECRET`
+> cargadas en Netlify y credenciales de Google Calendar verificadas (test read-only
+> OK). Pendiente: aplicar las reglas de Firestore y verificación post-deploy (abajo).
 
 ## Qué ya está implementado
 
@@ -120,10 +121,13 @@ netlify dev   # sirve el sitio + las Netlify Functions (same-origin / .netlify/f
   `booking-admin-list`, `booking-admin-invite`, `booking-admin-cancel`.
 
 ### Pendientes
-- **Infraestructura** (env vars `GOOGLE_*`, `RECAPTCHA_SECRET`, OAuth, deploy de
-  reglas `firebase deploy --only firestore:rules`) — sección 1–3 de este archivo.
-  Sin `GOOGLE_*`, el envío de invitación desde admin no funciona (sí la
-  disponibilidad y la creación de solicitudes).
+- **Firestore**: aplicar las reglas de `firestore.rules` (sección `bookingSettings` y
+  `bookings`) en la consola de Firebase → Firestore → Reglas → Publicar. Sin esto,
+  el panel `/admin/agenda-settings` no podrá escribir `bookingSettings/config`
+  (las reglas nuevas exigen role admin; sin publicarlas rige el deny default).
+- **Verificación post-deploy**: probar el flujo completo (sección 6 de este archivo).
+  Si la creación de solicitud falla con "Verificación anti-bot fallida", revisar el
+  par `VITE_RECAPTCHA_SITE_KEY`/`RECAPTCHA_SECRET` en Netlify (deben coincidir).
 - Cancelación de una solicitud **ya invitada**: se borra el evento y el doc
   (`booking-admin-cancel`). No hay flujo de "reagendar" aún.
 

@@ -84,11 +84,6 @@ export default function AgendaPage() {
             <Loader2 className="size-8 animate-spin" />
             <p className="text-sm">Cargando mi disponibilidad…</p>
           </div>
-        ) : settingsHook.loading ? (
-          <div className="flex flex-col items-center gap-4 py-24 text-editorial-ink-muted">
-            <Loader2 className="size-8 animate-spin" />
-            <p className="text-sm">Cargando mi disponibilidad…</p>
-          </div>
         ) : (
           <>
             {isPreview && (
