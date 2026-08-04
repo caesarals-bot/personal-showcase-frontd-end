@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarX2, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -25,7 +26,14 @@ export function SlotPicker({
   error = null,
   durationMinutes = 30,
 }: SlotPickerProps) {
-  const showOccupied = occupied.length > 0
+  const occupiedTimes = useMemo(() => new Set(occupied.map(s => s.startTime)), [occupied])
+
+  // Un solo grid cronológico: libres + ocupados ordenados por hora de inicio.
+  const allSlots = useMemo(
+    () => [...slots, ...occupied].sort((a, b) => a.startTime.localeCompare(b.startTime)),
+    [slots, occupied],
+  )
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -51,7 +59,7 @@ export function SlotPicker({
         <div className="border border-editorial-line bg-editorial-cream p-4 text-sm text-editorial-ink">
           No pudimos consultar los horarios. Intenta de nuevo.
         </div>
-      ) : slots.length === 0 ? (
+      ) : allSlots.length === 0 ? (
         <div className="flex flex-col items-start gap-2 border border-editorial-line p-4">
           <CalendarX2 className="size-5 text-editorial-terracotta" />
           <p className="text-sm text-editorial-ink">
@@ -60,7 +68,19 @@ export function SlotPicker({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {slots.map(slot => {
+          {allSlots.map(slot => {
+            const isTaken = occupiedTimes.has(slot.startTime)
+            if (isTaken) {
+              return (
+                <div
+                  key={slot.isoStart}
+                  aria-disabled
+                  className="cursor-not-allowed border border-dashed border-editorial-line bg-editorial-cream/40 px-3 py-2.5 text-center text-sm font-medium text-editorial-ink-muted/50 line-through"
+                >
+                  {formatSlotTime(slot.isoStart)}
+                </div>
+              )
+            }
             const active = slot.startTime === selectedTime
             return (
               <button
@@ -78,25 +98,6 @@ export function SlotPicker({
               </button>
             )
           })}
-        </div>
-      )}
-
-      {showOccupied && (
-        <div className="border-t border-editorial-line pt-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">
-            Ya ocupados
-          </p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {occupied.map(slot => (
-              <div
-                key={slot.isoStart}
-                aria-disabled
-                className="border border-dashed border-editorial-line bg-editorial-cream/40 px-3 py-2.5 text-center text-sm font-medium text-editorial-ink-muted/50 line-through"
-              >
-                {formatSlotTime(slot.isoStart)}
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

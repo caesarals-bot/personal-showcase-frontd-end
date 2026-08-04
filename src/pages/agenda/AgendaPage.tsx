@@ -39,6 +39,13 @@ export default function AgendaPage() {
     [slotsHook.slots, selectedTime],
   )
 
+  // Horas ocupadas (reserva o freebusy) o bloqueadas por el admin: nunca
+  // deben poder abrir el formulario de reserva.
+  const blockedTimes = useMemo(
+    () => new Set(slotsHook.occupied.map(s => s.startTime)),
+    [slotsHook.occupied],
+  )
+
   const handleSelectDate = (date: string | null) => {
     setSelectedDate(date)
     setSelectedTime(null)
@@ -46,6 +53,11 @@ export default function AgendaPage() {
 
   const handleSubmit = async (visitor: BookingVisitor) => {
     if (!selectedDate || !selectedTime) return
+    // Guard: si la hora quedó ocupada/bloqueada mientras el visitante llenaba
+    // el formulario, no enviar la reserva.
+    if (blockedTimes.has(selectedTime)) {
+      throw new BookingServiceError('Ese horario ya no está disponible. Elige otro.', 409)
+    }
     try {
       await booking.submit({
         date: selectedDate,
@@ -181,7 +193,7 @@ export default function AgendaPage() {
                       durationMinutes={settings.slotDurationMinutes}
                     />
 
-                    {selectedSlot &&
+                    {selectedSlot && !blockedTimes.has(selectedTime!) &&
                       (isPreview ? (
                         <div className="border border-dashed border-editorial-line bg-editorial-cream p-5 text-sm text-editorial-ink-muted">
                           La reserva se habilitará cuando se active el backend (Netlify
