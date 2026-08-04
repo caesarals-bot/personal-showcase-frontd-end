@@ -1,19 +1,18 @@
 // Service Worker para cache inteligente
 // Versión del cache - incrementar cuando se actualice el contenido
-const CACHE_VERSION = 'v1.0.2';
+const CACHE_VERSION = 'v1.0.3';
 const STATIC_CACHE = `static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `images-${CACHE_VERSION}`;
 
-// Recursos estáticos para cachear inmediatamente
+// Recursos estáticos para cachear inmediatamente (nombres con hash o inmutables).
+// NO incluir el HTML de la app: la navegación siempre va a red para recibir la
+// última versión desplegada.
 const STATIC_ASSETS = [
-  '/',
   '/vite.svg',
   '/logocesar.svg',
   '/mia (1).webp',
   '/robots.txt',
   '/sitemap.xml',
-  // Agregar otros recursos críticos aquí
 ];
 
 // Patrones de URLs para diferentes estrategias de cache
@@ -23,13 +22,7 @@ const CACHE_STRATEGIES = {
     /\.(js|css|woff2?|ttf|eot)$/,
     /\/assets\//,
   ],
-  
-  // Network First - para contenido dinámico
-  DYNAMIC: [
-    /\/api\//,
-    /\/admin\//,
-  ],
-  
+
   // Cache First con fallback - para imágenes
   IMAGES: [
     /\.(png|jpg|jpeg|gif|webp|avif|svg)$/,
@@ -68,7 +61,6 @@ self.addEventListener('activate', (event) => {
           cacheNames.map((cacheName) => {
             // Eliminar caches antiguos
             if (cacheName !== STATIC_CACHE && 
-                cacheName !== DYNAMIC_CACHE && 
                 cacheName !== IMAGE_CACHE) {
               console.log('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
@@ -93,47 +85,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Excluir URLs de Google reCAPTCHA del manejo de cache
-  if (isGoogleRecaptcha(request.url)) {
-    // Dejar que reCAPTCHA se maneje directamente sin cache
+  // Dejar que el navegador maneje de forma directa y siempre fresca:
+  //  1. Cualquier origen externo (Google reCAPTCHA / Fonts / UserContent,
+  //     DiceBear, Firestore, etc.). No cachearlos evita errores de streaming
+  //     y errores cross-origin.
+  //  2. Navegaciones de documentos (HTML / SPA). Al no interceptarlas, el
+  //     usuario SIEMPRE recibe la última versión desplegada, sin versiones
+  //     viejas cacheadas, y no se generan errores "Failed to fetch" al
+  //     navegar entre rutas.
+  //  3. Requests que no sean GET.
+  if (
+    url.origin !== self.location.origin ||
+    request.mode === 'navigate' ||
+    request.destination === 'document' ||
+    request.method !== 'GET'
+  ) {
     return;
   }
 
-  // Excluir URLs de Google Fonts del manejo de cache
-  if (isGoogleFonts(request.url)) {
-    // Dejar que Google Fonts se maneje directamente sin cache
-    return;
-  }
-
-  // Excluir URLs de Google User Content del manejo de cache
-  if (isGoogleUserContent(request.url)) {
-    // Dejar que Google User Content se maneje directamente sin cache
-    return;
-  }
-
-  // Excluir URLs de DiceBear API del manejo de cache
-  if (isDiceBearAPI(request.url)) {
-    // Dejar que DiceBear API se maneje directamente sin cache
-    return;
-  }
-
-  // Excluir Firestore de Google del manejo de cache: usa conexiones de
-  // streaming (gapic / Listen channel) que se rompen si el SW clona la
-  // respuesta con cache.put(). Dejar que Firestore se maneje directo.
-  if (isFirestore(request.url)) {
-    return;
-  }
-
-  // Determinar estrategia de cache
+  // Determinar estrategia de cache solo para assets estáticos e imágenes
+  // del propio sitio (nombres con hash, inmutables).
   if (isStaticAsset(request.url)) {
     event.respondWith(cacheFirstStrategy(request, STATIC_CACHE));
   } else if (isImage(request.url)) {
     event.respondWith(cacheFirstStrategy(request, IMAGE_CACHE));
-  } else if (isDynamicContent(request.url)) {
-    event.respondWith(networkFirstStrategy(request, DYNAMIC_CACHE));
   } else {
-    // Estrategia por defecto: Network First
-    event.respondWith(networkFirstStrategy(request, DYNAMIC_CACHE));
+    // Cualquier otra cosa del mismo origen (APIs, funciones Netlify, datos
+    // dinámicos) se resuelve SIEMPRE por red, sin cachear ni interceptar.
+    // Así la disponibilidad de la agenda y los datos siempre son frescos.
+    return;
   }
 });
 
@@ -176,100 +156,13 @@ async function cacheFirstStrategy(request, cacheName) {
   }
 }
 
-// Estrategia Network First
-async function networkFirstStrategy(request, cacheName) {
-  // No cachear solicitudes que no sean GET
-  if (request.method !== 'GET') {
-    return fetch(request);
-  }
-
-  try {
-    // Intentar red primero
-    const networkResponse = await fetch(request);
-    
-    // Cachear respuesta exitosa
-    if (networkResponse && networkResponse.status === 200) {
-      const cache = await caches.open(cacheName);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    console.log('Network failed, trying cache:', request.url);
-    
-    // Fallback a cache
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // Si no hay cache, mostrar página offline
-    if (request.destination === 'document') {
-      return new Response(
-        `<!DOCTYPE html>
-        <html>
-        <head>
-          <title>Sin conexión</title>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-            .offline { max-width: 400px; margin: 0 auto; }
-            h1 { color: #ef4444; }
-          </style>
-        </head>
-        <body>
-          <div class="offline">
-            <h1>Sin conexión</h1>
-            <p>No se pudo cargar la página. Verifica tu conexión a internet.</p>
-            <button onclick="window.location.reload()">Reintentar</button>
-          </div>
-        </body>
-        </html>`,
-        { headers: { 'Content-Type': 'text/html' } }
-      );
-    }
-    
-    throw error;
-  }
-}
-
-// Funciones de utilidad para determinar tipo de recurso
+// Función de utilidad para determinar tipo de recurso
 function isStaticAsset(url) {
   return CACHE_STRATEGIES.STATIC.some(pattern => pattern.test(url));
 }
 
 function isImage(url) {
   return CACHE_STRATEGIES.IMAGES.some(pattern => pattern.test(url));
-}
-
-function isDynamicContent(url) {
-  return CACHE_STRATEGIES.DYNAMIC.some(pattern => pattern.test(url));
-}
-
-function isGoogleRecaptcha(url) {
-  // Excluir todas las URLs relacionadas con Google reCAPTCHA
-  return url.includes('google.com/recaptcha') || 
-         url.includes('gstatic.com/recaptcha') ||
-         url.includes('googleapis.com/recaptcha');
-}
-
-function isGoogleFonts(url) {
-  // Excluir todas las URLs relacionadas con Google Fonts
-  return url.includes('fonts.googleapis.com') || 
-         url.includes('fonts.gstatic.com');
-}
-
-function isGoogleUserContent(url) {
-  return url.includes('googleusercontent.com');
-}
-
-function isDiceBearAPI(url) {
-  return url.includes('api.dicebear.com');
-}
-
-function isFirestore(url) {
-  return url.includes('firestore.googleapis.com') || url.includes('.firebaseio.com');
 }
 
 // Limpiar cache periódicamente
