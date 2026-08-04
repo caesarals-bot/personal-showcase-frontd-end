@@ -21,6 +21,7 @@ export const PREVIEW_SETTINGS: BookingSettings = {
     { dayOfWeek: 5, start: '09:00', end: '17:00' },
   ],
   dateOverrides: [],
+  timeBlocks: [],
   owner: { name: 'César Londoño', email: 'proyectosenevolucion@gmail.com' },
 }
 
@@ -52,6 +53,7 @@ function zonedToIso(dateKey: string, hh: number, mm: number, timeZone: string): 
 export function previewDaySlots(dateKey: string): Slot[] {
   const dow = dateKeyToUtc(dateKey).getUTCDay()
   const hours = PREVIEW_SETTINGS.workingHours.filter(w => w.dayOfWeek === dow)
+  const timeBlocks = PREVIEW_SETTINGS.timeBlocks ?? []
   const slots: Slot[] = []
   for (const w of hours) {
     const [sh, sm] = w.start.split(':').map(Number)
@@ -61,8 +63,13 @@ export function previewDaySlots(dateKey: string): Slot[] {
     for (let t = startMin; t + PREVIEW_SETTINGS.slotDurationMinutes <= endMin; t += PREVIEW_SETTINGS.slotDurationMinutes) {
       const hh = Math.floor(t / 60)
       const mm = t % 60
+      const startTime = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
+      // Bloqueo manual de horas: no se ofrece el slot en vista previa.
+      if (timeBlocks.some(b => b.date === dateKey && startTime >= b.start && startTime < b.end)) {
+        continue
+      }
       slots.push({
-        startTime: `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`,
+        startTime,
         endTime: `${String(Math.floor((t + PREVIEW_SETTINGS.slotDurationMinutes) / 60)).padStart(2, '0')}:${String((t + PREVIEW_SETTINGS.slotDurationMinutes) % 60).padStart(2, '0')}`,
         isoStart: zonedToIso(dateKey, hh, mm, PREVIEW_SETTINGS.timeZone),
         isoEnd: zonedToIso(

@@ -10,7 +10,7 @@ import {
   getAgendaSettings,
   saveAgendaSettings,
 } from '@/services/bookingAdminService'
-import type { WorkingHours } from '@/types/booking.types'
+import type { TimeBlock, WorkingHours } from '@/types/booking.types'
 
 const DEFAULT_HOURS: WorkingHours[] = [
   { dayOfWeek: 1, start: '09:00', end: '17:00' },
@@ -56,6 +56,8 @@ export default function AgendaSettingsPage() {
   const [days, setDays] = useState<DayRow[]>(toDayRows(DEFAULT_HOURS))
   const [overrides, setOverrides] = useState<string[]>([])
   const [newOverride, setNewOverride] = useState('')
+  const [blocks, setBlocks] = useState<TimeBlock[]>([])
+  const [newBlock, setNewBlock] = useState<TimeBlock>({ date: '', start: '', end: '' })
 
   useEffect(() => {
     const load = async () => {
@@ -70,6 +72,9 @@ export default function AgendaSettingsPage() {
               .filter(o => o.available === false)
               .map(o => o.date),
           )
+        }
+        if (data?.timeBlocks?.length) {
+          setBlocks(data.timeBlocks)
         }
       } catch (e) {
         console.warn('No se pudo cargar la configuración de agenda:', e)
@@ -97,6 +102,30 @@ export default function AgendaSettingsPage() {
     setError(null)
   }
 
+  const addBlock = () => {
+    const { date, start, end } = newBlock
+    if (!date || !start || !end) {
+      setError('Completa fecha, hora de inicio y hora de fin del bloqueo.')
+      return
+    }
+    if (start >= end) {
+      setError('La hora de inicio debe ser anterior a la de fin.')
+      return
+    }
+    const dup = blocks.some(b => b.date === date && b.start === start && b.end === end)
+    if (dup) {
+      setError('Ese bloqueo ya existe.')
+      return
+    }
+    setBlocks(prev => [...prev, { date, start, end }])
+    setNewBlock({ date: '', start: '', end: '' })
+    setError(null)
+  }
+
+  const removeBlock = (index: number) => {
+    setBlocks(prev => prev.filter((_, i) => i !== index))
+  }
+
   const onSave = async () => {
     for (const d of days) {
       if (d.enabled && (!d.start || !d.end || d.start >= d.end)) {
@@ -112,7 +141,7 @@ export default function AgendaSettingsPage() {
         .filter(d => d.enabled)
         .map(d => ({ dayOfWeek: d.dayOfWeek, start: d.start, end: d.end }))
       const dateOverrides = overrides.map(date => ({ date, available: false }))
-      await saveAgendaSettings({ workingHours, dateOverrides })
+      await saveAgendaSettings({ workingHours, dateOverrides, timeBlocks: blocks })
       setMessage('Disponibilidad guardada. Los cambios ya se reflejan en /agenda.')
     } catch (e) {
       console.error(e)
@@ -208,6 +237,60 @@ export default function AgendaSettingsPage() {
               />
               <Button variant="secondary" onClick={addOverride} disabled={!newOverride}>
                 <Plus className="size-4" /> Bloquear fecha
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Bloqueos por hora (rango puntual)</Label>
+            {blocks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay bloqueos por hora. Úsalos para pausar rangos específicos
+                (ej: solo de 14:00 a 15:00 un día puntual).
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {blocks.map((b, i) => (
+                  <div key={`${b.date}-${b.start}-${i}`} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+                    <span className="text-sm font-medium">
+                      {b.date} · {b.start} – {b.end}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeBlock(i)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Input
+                type="date"
+                value={newBlock.date}
+                onChange={e => setNewBlock(prev => ({ ...prev, date: e.target.value }))}
+                className="w-44"
+                aria-label="Fecha del bloqueo"
+              />
+              <Input
+                type="time"
+                value={newBlock.start}
+                onChange={e => setNewBlock(prev => ({ ...prev, start: e.target.value }))}
+                className="w-32"
+                aria-label="Hora de inicio del bloqueo"
+              />
+              <span className="flex items-center text-sm text-muted-foreground">a</span>
+              <Input
+                type="time"
+                value={newBlock.end}
+                onChange={e => setNewBlock(prev => ({ ...prev, end: e.target.value }))}
+                className="w-32"
+                aria-label="Hora de fin del bloqueo"
+              />
+              <Button variant="secondary" onClick={addBlock}>
+                <Plus className="size-4" /> Bloquear horas
               </Button>
             </div>
           </div>

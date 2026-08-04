@@ -16,6 +16,14 @@ export interface DateOverride {
   available: boolean
 }
 
+// Bloqueo manual de un rango horario en una fecha puntual (desde el admin).
+// El slot queda ocupado/bloqueado: se tacha en /agenda y no se puede reservar.
+export interface TimeBlock {
+  date: string // "YYYY-MM-DD"
+  start: string // "HH:mm" (inclusive)
+  end: string // "HH:mm" (exclusive)
+}
+
 export interface BookingConfig {
   timeZone: string
   slotDurationMinutes: number
@@ -24,6 +32,7 @@ export interface BookingConfig {
   maxDaysAhead: number
   workingHours: WorkingHours[]
   dateOverrides: DateOverride[]
+  timeBlocks: TimeBlock[]
   owner: { name: string; email: string }
 }
 
@@ -41,6 +50,7 @@ export const DEFAULT_CONFIG: BookingConfig = {
     { dayOfWeek: 5, start: '09:00', end: '17:00' },
   ],
   dateOverrides: [],
+  timeBlocks: [],
   owner: { name: 'César Londoño', email: 'proyectosenevolucion@gmail.com' },
 }
 
@@ -88,6 +98,20 @@ export function candidateSlotsForDate(config: BookingConfig, dateKey: string): C
 export function isDateOverridden(config: BookingConfig, dateKey: string): boolean | null {
   const ov = config.dateOverrides.find(o => o.date === dateKey)
   return ov ? ov.available : null
+}
+
+// True si el slot que inicia en startMinutes cae dentro de un bloqueo manual
+// de horas (timeBlocks) para esa fecha. Comparación de strings "HH:mm" es
+// segura: formato fijo con padStart (timeOf) y rango [start, end).
+export function isTimeBlocked(
+  config: BookingConfig,
+  dateKey: string,
+  startMinutes: number,
+): boolean {
+  const start = timeOf(startMinutes)
+  return config.timeBlocks.some(
+    b => b.date === dateKey && start >= b.start && start < b.end,
+  )
 }
 
 // Ventana [desde, hasta] en UTC-ms dentro de la cual se puede reservar el dateKey.

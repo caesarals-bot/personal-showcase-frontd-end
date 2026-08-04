@@ -6,7 +6,7 @@
 import { db } from './firebase'
 import { wallClockToUtcMs } from './time'
 import type { BookingConfig, CandidateSlot } from './schedule'
-import { candidateSlotMs } from './schedule'
+import { candidateSlotMs, isTimeBlocked } from './schedule'
 
 export interface BookingRecord {
   id: string
@@ -91,6 +91,9 @@ export function computeFreeSlots(
 
   const free: CandidateSlot[] = []
   for (const c of candidates) {
+    // Bloqueo manual de horas (timeBlocks del admin): el slot no se ofrece.
+    if (isTimeBlocked(config, dateKey, c.startMinutes)) continue
+
     const { startMs, endMs } = candidateSlotMs(config, dateKey, c)
     if (startMs < minStartMs || startMs > maxStartMs) continue
 

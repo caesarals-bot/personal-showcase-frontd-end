@@ -16,6 +16,7 @@ export const handler: Handler = async () => {
       maxDaysAhead: config.maxDaysAhead,
       workingHours: config.workingHours,
       dateOverrides: config.dateOverrides,
+      timeBlocks: config.timeBlocks,
       owner: config.owner,
     })
   } catch (error) {

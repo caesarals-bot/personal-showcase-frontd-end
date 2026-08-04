@@ -14,6 +14,14 @@ export interface DateOverride {
   available: boolean
 }
 
+// Bloqueo manual de un rango horario en una fecha puntual (desde el admin).
+// El slot queda ocupado/bloqueado: se tacha en /agenda y no se puede reservar.
+export interface TimeBlock {
+  date: string // "YYYY-MM-DD"
+  start: string // "HH:mm" (inclusive)
+  end: string // "HH:mm" (exclusive)
+}
+
 export interface BookingSettings {
   timeZone: string
   slotDurationMinutes: number
@@ -22,6 +30,7 @@ export interface BookingSettings {
   maxDaysAhead: number
   workingHours: WorkingHours[]
   dateOverrides: DateOverride[]
+  timeBlocks?: TimeBlock[]
   owner: { name: string; email: string }
 }
 

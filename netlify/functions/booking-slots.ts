@@ -4,7 +4,7 @@
 // de Google en tiempo real), con hora de inicio/fin y ISO con offset.
 
 import type { Handler } from '@netlify/functions'
-import { getBookingConfig, candidateSlotsForDate, isDateOverridden, candidateSlotMs } from './_shared/schedule'
+import { getBookingConfig, candidateSlotsForDate, isDateOverridden, candidateSlotMs, isTimeBlocked } from './_shared/schedule'
 import { getBookingsForDate, computeFreeSlots, overlaps, type BusyInterval } from './_shared/bookings'
 import { fetchBusyWindows } from './_shared/google'
 import { wallClockToUtcMs, zonedToIso } from './_shared/time'
@@ -72,6 +72,8 @@ export const handler: Handler = async (event) => {
     ]
     const occupied = candidates
       .filter(c => {
+        // Bloqueo manual de horas del admin: se tacha en la grilla, no solo se omite.
+        if (isTimeBlocked(config, date, c.startMinutes)) return true
         const { startMs, endMs } = candidateSlotMs(config, date, c)
         const padStart = startMs - config.bufferMinutes * 60000
         const padEnd = endMs + config.bufferMinutes * 60000

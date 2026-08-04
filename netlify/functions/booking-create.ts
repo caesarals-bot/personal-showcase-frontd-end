@@ -21,6 +21,7 @@ import {
   getBookingConfig,
   candidateSlotsForDate,
   isDateOverridden,
+  isTimeBlocked,
   minutesOf,
   timeOf,
 } from './_shared/schedule'
@@ -67,6 +68,12 @@ export const handler: Handler = async (event) => {
     const candidate = candidates.find(c => c.startTime === startTime)
     if (!candidate) {
       return badRequest('El horario elegido no está disponible')
+    }
+
+    // Bloqueo manual de horas (timeBlocks del admin): rechazar server-side,
+    // no solo ocultarlo en la UI.
+    if (isTimeBlocked(config, date, minutesOf(startTime))) {
+      return badRequest('Ese horario está bloqueado. Elige otro.')
     }
 
     const startMinutes = minutesOf(startTime)
