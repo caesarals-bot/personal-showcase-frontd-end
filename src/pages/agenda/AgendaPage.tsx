@@ -8,6 +8,7 @@ import { useBookingSettings } from '@/hooks/useBookingSettings'
 import { useBookingAvailability } from '@/hooks/useBookingAvailability'
 import { useSlots } from '@/hooks/useSlots'
 import { useCreateBooking } from '@/hooks/useCreateBooking'
+import { BookingServiceError } from '@/services/bookingService'
 import { AvailabilityCalendar } from './components/AvailabilityCalendar'
 import { SlotPicker } from './components/SlotPicker'
 import { BookingForm } from './components/BookingForm'
@@ -45,13 +46,23 @@ export default function AgendaPage() {
 
   const handleSubmit = async (visitor: BookingVisitor, recaptchaToken: string) => {
     if (!selectedDate || !selectedTime) return
-    await booking.submit({
-      date: selectedDate,
-      startTime: selectedTime,
-      visitor,
-      recaptchaToken,
-    })
-    setLastVisitor(visitor)
+    try {
+      await booking.submit({
+        date: selectedDate,
+        startTime: selectedTime,
+        visitor,
+        recaptchaToken,
+      })
+      setLastVisitor(visitor)
+    } catch (err) {
+      // Si el slot se acabó de tomar (409) mientras el visitante llenaba el
+      // formulario, refrescar los horarios del día para que el slot ocupado
+      // desaparezca de la grilla de forma inmediata.
+      if (err instanceof BookingServiceError && err.status === 409) {
+        slotsHook.reload()
+      }
+      throw err
+    }
   }
 
   const handleDone = () => {
