@@ -7,6 +7,7 @@ import { formatDayHeader, formatSlotTime } from '@/lib/bookingDates'
 interface SlotPickerProps {
   date: string
   slots: Slot[]
+  occupied?: Slot[]
   selectedTime: string | null
   onSelect: (time: string) => void
   loading?: boolean
@@ -17,12 +18,14 @@ interface SlotPickerProps {
 export function SlotPicker({
   date,
   slots,
+  occupied = [],
   selectedTime,
   onSelect,
   loading = false,
   error = null,
   durationMinutes = 30,
 }: SlotPickerProps) {
+  const showOccupied = occupied.length > 0
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -75,6 +78,25 @@ export function SlotPicker({
               </button>
             )
           })}
+        </div>
+      )}
+
+      {showOccupied && (
+        <div className="border-t border-editorial-line pt-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-editorial-ink-muted">
+            Ya ocupados
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {occupied.map(slot => (
+              <div
+                key={slot.isoStart}
+                aria-disabled
+                className="border border-dashed border-editorial-line bg-editorial-cream/40 px-3 py-2.5 text-center text-sm font-medium text-editorial-ink-muted/50 line-through"
+              >
+                {formatSlotTime(slot.isoStart)}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

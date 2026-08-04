@@ -163,6 +163,7 @@ export default function AgendaPage() {
                     <SlotPicker
                       date={selectedDate}
                       slots={slotsHook.slots}
+                      occupied={slotsHook.occupied}
                       selectedTime={selectedTime}
                       onSelect={setSelectedTime}
                       loading={slotsHook.loading}

@@ -5,12 +5,14 @@ import type { Slot } from '@/types/booking.types'
 
 export function useSlots(date: string | null, preview = false) {
   const [slots, setSlots] = useState<Slot[]>([])
+  const [occupied, setOccupied] = useState<Slot[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     if (!date) {
       setSlots([])
+      setOccupied([])
       setError(null)
       setLoading(false)
       return
@@ -18,6 +20,7 @@ export function useSlots(date: string | null, preview = false) {
 
     if (preview) {
       setSlots(previewDaySlots(date))
+      setOccupied([])
       setError(null)
       setLoading(false)
       return
@@ -28,11 +31,15 @@ export function useSlots(date: string | null, preview = false) {
     setError(null)
     getDaySlots(date)
       .then(res => {
-        if (!cancelled) setSlots(res.slots)
+        if (!cancelled) {
+          setSlots(res.slots)
+          setOccupied(res.occupied ?? [])
+        }
       })
       .catch(err => {
         if (!cancelled) {
           setSlots([])
+          setOccupied([])
           setError(err as Error)
         }
       })
@@ -45,5 +52,5 @@ export function useSlots(date: string | null, preview = false) {
     }
   }, [date, preview])
 
-  return { slots, loading, error }
+  return { slots, occupied, loading, error }
 }

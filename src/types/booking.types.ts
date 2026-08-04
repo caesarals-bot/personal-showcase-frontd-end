@@ -47,6 +47,7 @@ export interface SlotsResponse {
   date: string
   timeZone: string
   slots: Slot[]
+  occupied?: Slot[]
 }
 
 export const bookingVisitorSchema = z.object({

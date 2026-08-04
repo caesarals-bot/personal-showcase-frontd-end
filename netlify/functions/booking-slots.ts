@@ -4,8 +4,8 @@
 // de Google en tiempo real), con hora de inicio/fin y ISO con offset.
 
 import type { Handler } from '@netlify/functions'
-import { getBookingConfig, candidateSlotsForDate, isDateOverridden } from './_shared/schedule'
-import { getBookingsForDate, computeFreeSlots } from './_shared/bookings'
+import { getBookingConfig, candidateSlotsForDate, isDateOverridden, candidateSlotMs } from './_shared/schedule'
+import { getBookingsForDate, computeFreeSlots, overlaps, type BusyInterval } from './_shared/bookings'
 import { fetchBusyWindows } from './_shared/google'
 import { wallClockToUtcMs, zonedToIso } from './_shared/time'
 import { ok, badRequest, serverError } from './_shared/response'
@@ -64,7 +64,37 @@ export const handler: Handler = async (event) => {
       ),
     }))
 
-    return ok({ date, timeZone: config.timeZone, slots })
+    // Slots tomados (ocupados por una solicitud o por busy de Google) para
+    // mostrarlos deshabilitados en la UI, en lugar de solo omitirlos.
+    const taken: BusyInterval[] = [
+      ...bookings.map(b => ({ startMs: b.slotStartMs, endMs: b.slotEndMs })),
+      ...busy,
+    ]
+    const occupied = candidates
+      .filter(c => {
+        const { startMs, endMs } = candidateSlotMs(config, date, c)
+        const padStart = startMs - config.bufferMinutes * 60000
+        const padEnd = endMs + config.bufferMinutes * 60000
+        return taken.some(t => overlaps(padStart, padEnd, t.startMs, t.endMs))
+      })
+      .map(c => ({
+        startTime: c.startTime,
+        endTime: c.endTime,
+        isoStart: zonedToIso(
+          date,
+          Math.floor(c.startMinutes / 60),
+          c.startMinutes % 60,
+          config.timeZone,
+        ),
+        isoEnd: zonedToIso(
+          date,
+          Math.floor((c.startMinutes + config.slotDurationMinutes) / 60),
+          (c.startMinutes + config.slotDurationMinutes) % 60,
+          config.timeZone,
+        ),
+      }))
+
+    return ok({ date, timeZone: config.timeZone, slots, occupied })
   } catch (error) {
     console.error('booking-slots error:', error)
     return serverError('Error al consultar los horarios del día')
