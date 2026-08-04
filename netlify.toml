@@ -7,8 +7,30 @@
   publish = "dist"
   
   # Variables de entorno para el build
+  # IMPORTANTE: las VITE_* son build-time (frontend). NO se inyectan en las
+  # funciones (los secrets GOOGLE_*, RECAPTCHA_SECRET, IMAGEKIT_PRIVATE_KEY y
+  # FIREBASE_SERVICE_ACCOUNT viven SOLO en la UI de Netlify).
   [build.environment]
     NODE_VERSION = "20"
+    VITE_FIREBASE_API_KEY = "AIzaSyBupQc--IDMqdfHDp-dRDXh7LUARn-TPHI"
+    VITE_FIREBASE_AUTH_DOMAIN = "my-page-showcase.firebaseapp.com"
+    VITE_FIREBASE_PROJECT_ID = "my-page-showcase"
+    VITE_FIREBASE_STORAGE_BUCKET = "my-page-showcase.firebasestorage.app"
+    VITE_FIREBASE_MESSAGING_SENDER_ID = "84431372085"
+    VITE_FIREBASE_APP_ID = "1:84431372085:web:487a6dcf057e3aaab8567c"
+    VITE_FIREBASE_MEASUREMENT_ID = "G-F1F0EH2RCB"
+    VITE_USE_FIREBASE = "true"
+    VITE_DEV_MODE = "false"
+    VITE_EMAILJS_SERVICE_ID = "service_bd7aoee"
+    VITE_EMAILJS_TEMPLATE_ID = "template_kjcau4q"
+    VITE_EMAILJS_PUBLIC_KEY = "uDjZTszd8ulJbDAkY"
+    VITE_IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/clblog1"
+    VITE_IMAGEKIT_PUBLIC_KEY = "public_g1fdC0HzQ0sk/okzqA3mSdTAly0="
+    VITE_IMAGEKIT_AUTHENTICATION_ENDPOINT = "https://xn--cesarlondoo-beb.dev/.netlify/functions/imagekit-auth"
+    VITE_IMAGEKIT_DELETE_ENDPOINT = "/.netlify/functions/imagekit-delete"
+    VITE_ADMIN_EMAIL = "proyectosenevolucion@gmail.com"
+    VITE_SITE_URL = "https://cesarlondoño.dev"
+    VITE_RECAPTCHA_SITE_KEY = "6LfxSnQtAAAAAJojMNFlnn8MM4HYkb3ZDJwmfgyb"
 
 # Redirects para SPA (React Router) — el cross-domain se define en public/_redirects
 [[redirects]]
