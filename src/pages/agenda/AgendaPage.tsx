@@ -44,14 +44,13 @@ export default function AgendaPage() {
     setSelectedTime(null)
   }
 
-  const handleSubmit = async (visitor: BookingVisitor, recaptchaToken: string) => {
+  const handleSubmit = async (visitor: BookingVisitor) => {
     if (!selectedDate || !selectedTime) return
     try {
       await booking.submit({
         date: selectedDate,
         startTime: selectedTime,
         visitor,
-        recaptchaToken,
       })
       setLastVisitor(visitor)
     } catch (err) {

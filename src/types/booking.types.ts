@@ -73,7 +73,6 @@ export const createBookingSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   startTime: z.string().regex(/^\d{2}:\d{2}$/),
   visitor: bookingVisitorSchema,
-  recaptchaToken: z.string().min(1, 'Completa la verificación de seguridad'),
 })
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>

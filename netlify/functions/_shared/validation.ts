@@ -24,7 +24,6 @@ export const createBookingSchema = z.object({
   date: z.string().regex(DATE_KEY, 'date debe ser YYYY-MM-DD'),
   startTime: z.string().regex(HH_MM, 'startTime debe ser HH:mm'),
   visitor: visitorSchema,
-  recaptchaToken: z.string().min(1, 'recaptchaToken es requerido'),
 })
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>
