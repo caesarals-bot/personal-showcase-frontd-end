@@ -58,10 +58,6 @@ export async function getBookingConfig(): Promise<BookingConfig> {
   const snap = await db.doc('bookingSettings/config').get()
   if (!snap.exists) return DEFAULT_CONFIG
   const data = snap.data() as Partial<BookingConfig>
-  // [DEBUG AGENDA] Telemetría temporal para inspeccionar el formato real de
-  // timeBlocks en Firestore (date/start/end) antes de cualquier sanitización.
-  const rawData = snap.data()
-  console.log('[DEBUG AGENDA] Raw timeBlocks from Firestore:', JSON.stringify(rawData?.timeBlocks, null, 2))
   // Sanitizar timeBlocks: normaliza start/end a "HH:mm" (tolera datos viejos
   // guardados con formato inconsistente) y descarta bloques inválidos.
   const rawBlocks = Array.isArray(data.timeBlocks) ? data.timeBlocks : []
