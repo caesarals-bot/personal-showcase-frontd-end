@@ -47,8 +47,12 @@ export const handler: Handler = async (event) => {
 
     const freeSlots = computeFreeSlots(config, date, candidates, bookings, busy)
 
-    const slots = freeSlots.map(c => ({
-      startTime: c.startTime,
+    // Clave canónica: startMinutes (minutos absolutos desde medianoche, ej. 780
+    // para las 13:00) permite al frontend comparar/deshabilitar slots sin
+    // depender del formato de string de la hora (24h vs 12h).
+    const toSlot = (c: CandidateSlot) => ({
+      startTime: timeOf(c.startMinutes),
+      startMinutes: c.startMinutes,
       endTime: c.endTime,
       isoStart: zonedToIso(
         date,
@@ -62,7 +66,9 @@ export const handler: Handler = async (event) => {
         (c.startMinutes + config.slotDurationMinutes) % 60,
         config.timeZone,
       ),
-    }))
+    })
+
+    const slots = freeSlots.map(toSlot)
 
     // Slots tomados (ocupados por una solicitud o por busy de Google) para
     // mostrarlos deshabilitados en la UI, en lugar de solo omitirlos.
@@ -79,22 +85,7 @@ export const handler: Handler = async (event) => {
         const padEnd = endMs + config.bufferMinutes * 60000
         return taken.some(t => overlaps(padStart, padEnd, t.startMs, t.endMs))
       })
-      .map(c => ({
-        startTime: c.startTime,
-        endTime: c.endTime,
-        isoStart: zonedToIso(
-          date,
-          Math.floor(c.startMinutes / 60),
-          c.startMinutes % 60,
-          config.timeZone,
-        ),
-        isoEnd: zonedToIso(
-          date,
-          Math.floor((c.startMinutes + config.slotDurationMinutes) / 60),
-          (c.startMinutes + config.slotDurationMinutes) % 60,
-          config.timeZone,
-        ),
-      }))
+      .map(toSlot)
 
     return ok({ date, timeZone: config.timeZone, slots, occupied })
   } catch (error) {

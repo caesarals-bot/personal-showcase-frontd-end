@@ -81,6 +81,7 @@ export function previewDaySlots(dateKey: string): Slot[] {
       if (isBlocked) continue
       slots.push({
         startTime,
+        startMinutes: t,
         endTime,
         isoStart: zonedToIso(dateKey, hh, mm, PREVIEW_SETTINGS.timeZone),
         isoEnd: zonedToIso(

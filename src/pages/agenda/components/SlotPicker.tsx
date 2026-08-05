@@ -26,13 +26,19 @@ export function SlotPicker({
   error = null,
   durationMinutes = 30,
 }: SlotPickerProps) {
-  // Un solo grid cronológico deduplicado por startTime: si un slot aparece en
-  // `slots` y en `occupied` (colisión de intervalos), el estado ocupado gana.
+  // Clave canónica: minutos absolutos desde medianoche (startMinutes). Si un
+  // slot viejo no lo trae, se deriva del startTime "HH:mm". Nunca se comparan
+  // strings de hora formateados (24h vs 12h).
+  const minutesOf = (s: Slot): number =>
+    s.startMinutes ?? Number(s.startTime.split(':')[0]) * 60 + Number(s.startTime.split(':')[1])
+
+  // Un solo grid cronológico deduplicado por startMinutes: si un slot aparece
+  // en `slots` y en `occupied` (colisión de intervalos), el estado ocupado gana.
   const allSlots = useMemo(() => {
-    const map = new Map<string, Slot & { taken: boolean }>()
-    for (const s of slots) map.set(s.startTime, { ...s, taken: false })
-    for (const s of occupied) map.set(s.startTime, { ...s, taken: true })
-    return [...map.values()].sort((a, b) => a.startTime.localeCompare(b.startTime))
+    const map = new Map<number, Slot & { taken: boolean }>()
+    for (const s of slots) map.set(minutesOf(s), { ...s, taken: false })
+    for (const s of occupied) map.set(minutesOf(s), { ...s, taken: true })
+    return [...map.values()].sort((a, b) => minutesOf(a) - minutesOf(b))
   }, [slots, occupied])
 
   return (

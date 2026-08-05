@@ -47,6 +47,7 @@ export interface AvailabilityResponse {
 
 export interface Slot {
   startTime: string
+  startMinutes?: number // clave canónica: minutos desde medianoche (ej. 780)
   endTime: string
   isoStart: string
   isoEnd: string

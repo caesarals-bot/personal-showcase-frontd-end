@@ -18,6 +18,16 @@ import { monthDateKey } from '@/lib/bookingDates'
 import { PREVIEW_SETTINGS } from '@/lib/bookingPreview'
 import type { BookingVisitor } from '@/types/booking.types'
 
+// Clave canónica de hora: minutos absolutos desde medianoche. Nunca se comparan
+// strings de hora formateados (24h "13:00" vs 12h "1:00 PM").
+function minutesOf(s: { startMinutes?: number; startTime: string }): number {
+  return s.startMinutes ?? Number(s.startTime.split(':')[0]) * 60 + Number(s.startTime.split(':')[1])
+}
+function minutesOfTime(time: string | null): number {
+  if (!time) return NaN
+  return Number(time.split(':')[0]) * 60 + Number(time.split(':')[1])
+}
+
 export default function AgendaPage() {
   const navigate = useNavigate()
   const now = new Date()
@@ -35,14 +45,15 @@ export default function AgendaPage() {
   const booking = useCreateBooking()
 
   const selectedSlot = useMemo(
-    () => slotsHook.slots.find(s => s.startTime === selectedTime) ?? null,
+    () => slotsHook.slots.find(s => minutesOf(s) === minutesOfTime(selectedTime)) ?? null,
     [slotsHook.slots, selectedTime],
   )
 
   // Horas ocupadas (reserva o freebusy) o bloqueadas por el admin: nunca
-  // deben poder abrir el formulario de reserva.
+  // deben poder abrir el formulario de reserva. Se comparan por MINUTOS
+  // absolutos (startMinutes), nunca por strings de hora (24h vs 12h).
   const blockedTimes = useMemo(
-    () => new Set(slotsHook.occupied.map(s => s.startTime)),
+    () => new Set(slotsHook.occupied.map(minutesOf)),
     [slotsHook.occupied],
   )
 
@@ -55,7 +66,7 @@ export default function AgendaPage() {
     if (!selectedDate || !selectedTime) return
     // Guard: si la hora quedó ocupada/bloqueada mientras el visitante llenaba
     // el formulario, no enviar la reserva.
-    if (blockedTimes.has(selectedTime)) {
+    if (blockedTimes.has(minutesOfTime(selectedTime))) {
       throw new BookingServiceError('Ese horario ya no está disponible. Elige otro.', 409)
     }
     try {
@@ -193,7 +204,7 @@ export default function AgendaPage() {
                       durationMinutes={settings.slotDurationMinutes}
                     />
 
-                    {selectedSlot && !blockedTimes.has(selectedTime!) &&
+                    {selectedSlot && !blockedTimes.has(minutesOfTime(selectedTime)) &&
                       (isPreview ? (
                         <div className="border border-dashed border-editorial-line bg-editorial-cream p-5 text-sm text-editorial-ink-muted">
                           La reserva se habilitará cuando se active el backend (Netlify
