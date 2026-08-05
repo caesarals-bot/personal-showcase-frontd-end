@@ -64,13 +64,15 @@ export function previewDaySlots(dateKey: string): Slot[] {
       const hh = Math.floor(t / 60)
       const mm = t % 60
       const startTime = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
-      // Bloqueo manual de horas: no se ofrece el slot en vista previa.
-      if (timeBlocks.some(b => b.date === dateKey && startTime >= b.start && startTime < b.end)) {
+      const endTime = `${String(Math.floor((t + PREVIEW_SETTINGS.slotDurationMinutes) / 60)).padStart(2, '0')}:${String((t + PREVIEW_SETTINGS.slotDurationMinutes) % 60).padStart(2, '0')}`
+      // Bloqueo manual de horas: traslape de rango [inicio, fin) del slot con el
+      // bloqueo (etiquetas de pared en timeZone del config, no UTC).
+      if (timeBlocks.some(b => b.date === dateKey && startTime < b.end && endTime > b.start)) {
         continue
       }
       slots.push({
         startTime,
-        endTime: `${String(Math.floor((t + PREVIEW_SETTINGS.slotDurationMinutes) / 60)).padStart(2, '0')}:${String((t + PREVIEW_SETTINGS.slotDurationMinutes) % 60).padStart(2, '0')}`,
+        endTime,
         isoStart: zonedToIso(dateKey, hh, mm, PREVIEW_SETTINGS.timeZone),
         isoEnd: zonedToIso(
           dateKey,

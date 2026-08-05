@@ -26,13 +26,14 @@ export function SlotPicker({
   error = null,
   durationMinutes = 30,
 }: SlotPickerProps) {
-  const occupiedTimes = useMemo(() => new Set(occupied.map(s => s.startTime)), [occupied])
-
-  // Un solo grid cronológico: libres + ocupados ordenados por hora de inicio.
-  const allSlots = useMemo(
-    () => [...slots, ...occupied].sort((a, b) => a.startTime.localeCompare(b.startTime)),
-    [slots, occupied],
-  )
+  // Un solo grid cronológico deduplicado por startTime: si un slot aparece en
+  // `slots` y en `occupied` (colisión de intervalos), el estado ocupado gana.
+  const allSlots = useMemo(() => {
+    const map = new Map<string, Slot & { taken: boolean }>()
+    for (const s of slots) map.set(s.startTime, { ...s, taken: false })
+    for (const s of occupied) map.set(s.startTime, { ...s, taken: true })
+    return [...map.values()].sort((a, b) => a.startTime.localeCompare(b.startTime))
+  }, [slots, occupied])
 
   return (
     <motion.div
@@ -69,8 +70,7 @@ export function SlotPicker({
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {allSlots.map(slot => {
-            const isTaken = occupiedTimes.has(slot.startTime)
-            if (isTaken) {
+            if (slot.taken) {
               return (
                 <div
                   key={slot.isoStart}

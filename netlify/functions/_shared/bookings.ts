@@ -92,7 +92,7 @@ export function computeFreeSlots(
   const free: CandidateSlot[] = []
   for (const c of candidates) {
     // Bloqueo manual de horas (timeBlocks del admin): el slot no se ofrece.
-    if (isTimeBlocked(config, dateKey, c.startMinutes)) continue
+    if (isTimeBlocked(config, dateKey, c.startMinutes, config.slotDurationMinutes)) continue
 
     const { startMs, endMs } = candidateSlotMs(config, dateKey, c)
 

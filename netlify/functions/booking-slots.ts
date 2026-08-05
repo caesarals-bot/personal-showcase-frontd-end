@@ -73,7 +73,7 @@ export const handler: Handler = async (event) => {
     const occupied = candidates
       .filter(c => {
         // Bloqueo manual de horas del admin: se tacha en la grilla, no solo se omite.
-        if (isTimeBlocked(config, date, c.startMinutes)) return true
+        if (isTimeBlocked(config, date, c.startMinutes, config.slotDurationMinutes)) return true
         const { startMs, endMs } = candidateSlotMs(config, date, c)
         const padStart = startMs - config.bufferMinutes * 60000
         const padEnd = endMs + config.bufferMinutes * 60000

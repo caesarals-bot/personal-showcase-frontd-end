@@ -18,6 +18,7 @@
 import type { Handler } from '@netlify/functions'
 import { db } from './_shared/firebase'
 import {
+  DEFAULT_CONFIG,
   getBookingConfig,
   candidateSlotsForDate,
   isDateOverridden,
@@ -31,6 +32,7 @@ import { ok, badRequest, conflict, serverError, tooManyRequests } from './_share
 import { createBookingSchema } from './_shared/validation'
 
 class SlotTakenError extends Error {}
+class TimeBlockedError extends Error {}
 
 export const handler: Handler = async (event) => {
   let body: unknown
@@ -71,8 +73,9 @@ export const handler: Handler = async (event) => {
     }
 
     // Bloqueo manual de horas (timeBlocks del admin): rechazar server-side,
-    // no solo ocultarlo en la UI.
-    if (isTimeBlocked(config, date, minutesOf(startTime))) {
+    // no solo ocultarlo en la UI. Fast-fail con el config ya leído; dentro de
+    // la transacción se re-valida con datos frescos (ver abajo).
+    if (isTimeBlocked(config, date, minutesOf(startTime), config.slotDurationMinutes)) {
       return badRequest('Ese horario está bloqueado. Elige otro.')
     }
 
@@ -101,6 +104,26 @@ export const handler: Handler = async (event) => {
         if (snap.exists) {
           throw new SlotTakenError()
         }
+
+        // Re-validar timeBlocks con el config FRESCO dentro de la transacción:
+        // cierra la condición de carrera si el admin agrega un bloqueo entre
+        // la lectura del config y el write (Firestore serializa transacciones).
+        const cfgSnap = await tx.get(db.doc('bookingSettings/config'))
+        const freshConfig: typeof config = {
+          ...DEFAULT_CONFIG,
+          ...(cfgSnap.exists ? (cfgSnap.data() as Partial<typeof config>) : {}),
+        }
+        if (
+          isTimeBlocked(
+            freshConfig,
+            date,
+            startMinutes,
+            freshConfig.slotDurationMinutes,
+          )
+        ) {
+          throw new TimeBlockedError()
+        }
+
         tx.set(bookingRef, {
           dateKey: date,
           slotStart: slotStartIso,
@@ -119,6 +142,9 @@ export const handler: Handler = async (event) => {
     } catch (error) {
       if (error instanceof SlotTakenError) {
         return conflict('Ese horario acaba de ser reservado por otra persona. Elige otro.')
+      }
+      if (error instanceof TimeBlockedError) {
+        return badRequest('Ese horario está bloqueado. Elige otro.')
       }
       throw error
     }

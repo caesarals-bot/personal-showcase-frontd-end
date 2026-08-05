@@ -100,17 +100,24 @@ export function isDateOverridden(config: BookingConfig, dateKey: string): boolea
   return ov ? ov.available : null
 }
 
-// True si el slot que inicia en startMinutes cae dentro de un bloqueo manual
-// de horas (timeBlocks) para esa fecha. Comparación de strings "HH:mm" es
-// segura: formato fijo con padStart (timeOf) y rango [start, end).
+// True si el slot [startMinutes, startMinutes+durationMinutes) traslapa con
+// un bloqueo manual de horas (timeBlocks) para esa fecha.
+//
+// IMPORTANTE (zona horaria): timeBlocks son etiquetas de pared ("HH:mm") en
+// config.timeZone. NUNCA se convierten a UTC por separado; la comparacion de
+// strings es correcta porque los limites de cada slot se derivan con
+// wallClockToUtcMs(dateKey, hh, mm, config.timeZone), siempre con la timezone
+// del config, aunque la Netlify Function corra en UTC.
 export function isTimeBlocked(
   config: BookingConfig,
   dateKey: string,
   startMinutes: number,
+  durationMinutes: number,
 ): boolean {
   const start = timeOf(startMinutes)
+  const end = timeOf(startMinutes + durationMinutes)
   return config.timeBlocks.some(
-    b => b.date === dateKey && start >= b.start && start < b.end,
+    b => b.date === dateKey && start < b.end && end > b.start,
   )
 }
 
