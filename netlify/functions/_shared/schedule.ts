@@ -57,12 +57,28 @@ export const DEFAULT_CONFIG: BookingConfig = {
 export async function getBookingConfig(): Promise<BookingConfig> {
   const snap = await db.doc('bookingSettings/config').get()
   if (!snap.exists) return DEFAULT_CONFIG
-  return { ...DEFAULT_CONFIG, ...(snap.data() as Partial<BookingConfig>) }
+  const data = snap.data() as Partial<BookingConfig>
+  // Sanitizar timeBlocks: normaliza start/end a "HH:mm" (tolera datos viejos
+  // guardados con formato inconsistente) y descarta bloques inválidos.
+  const rawBlocks = Array.isArray(data.timeBlocks) ? data.timeBlocks : []
+  const timeBlocks: TimeBlock[] = rawBlocks
+    .map(b => {
+      const start = timeOf(minutesOf(b?.start))
+      const end = timeOf(minutesOf(b?.end))
+      if (!Number.isFinite(minutesOf(start)) || !Number.isFinite(minutesOf(end))) return null
+      return { date: b?.date, start, end }
+    })
+    .filter((b): b is TimeBlock => Boolean(b && b.date))
+  return { ...DEFAULT_CONFIG, ...data, timeBlocks }
 }
 
 export function minutesOf(time: string): number {
+  if (typeof time !== 'string') return NaN
   const [h, m] = time.split(':').map(Number)
-  return h * 60 + m
+  const hh = Number.isFinite(h) ? h : NaN
+  const mm = Number.isFinite(m) ? m : NaN
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return NaN
+  return hh * 60 + mm
 }
 
 export function timeOf(minutes: number): string {
@@ -104,21 +120,27 @@ export function isDateOverridden(config: BookingConfig, dateKey: string): boolea
 // un bloqueo manual de horas (timeBlocks) para esa fecha.
 //
 // IMPORTANTE (zona horaria): timeBlocks son etiquetas de pared ("HH:mm") en
-// config.timeZone. NUNCA se convierten a UTC por separado; la comparacion de
-// strings es correcta porque los limites de cada slot se derivan con
-// wallClockToUtcMs(dateKey, hh, mm, config.timeZone), siempre con la timezone
-// del config, aunque la Netlify Function corra en UTC.
+// config.timeZone. NUNCA se convierten a UTC por separado; los limites de cada
+// slot se derivan con wallClockToUtcMs(dateKey, hh, mm, config.timeZone),
+// siempre con la timezone del config, aunque la Netlify Function corra en UTC.
+// La comparacion usa MINUTOS ABSOLUTOS desde medianoche (minutesOf), no
+// strings: es inmune a variaciones de formato ("13:0" vs "13:00").
 export function isTimeBlocked(
   config: BookingConfig,
   dateKey: string,
   startMinutes: number,
   durationMinutes: number,
 ): boolean {
-  const start = timeOf(startMinutes)
-  const end = timeOf(startMinutes + durationMinutes)
-  return config.timeBlocks.some(
-    b => b.date === dateKey && start < b.end && end > b.start,
-  )
+  const slotStart = startMinutes
+  const slotEnd = startMinutes + durationMinutes
+  return config.timeBlocks.some(b => {
+    if (b.date !== dateKey) return false
+    const blockStart = minutesOf(b.start)
+    const blockEnd = minutesOf(b.end)
+    // Bloques con horas invalidas nunca bloquean.
+    if (!Number.isFinite(blockStart) || !Number.isFinite(blockEnd)) return false
+    return slotStart < blockEnd && slotEnd > blockStart
+  })
 }
 
 // Ventana [desde, hasta] en UTC-ms dentro de la cual se puede reservar el dateKey.

@@ -108,22 +108,31 @@ export default function AgendaSettingsPage() {
       setError('Completa fecha, hora de inicio y hora de fin del bloqueo.')
       return
     }
-    if (start >= end) {
+    const normStart = normalizeTime(start)
+    const normEnd = normalizeTime(end)
+    if (normStart >= normEnd) {
       setError('La hora de inicio debe ser anterior a la de fin.')
       return
     }
-    const dup = blocks.some(b => b.date === date && b.start === start && b.end === end)
+    const dup = blocks.some(b => b.date === date && b.start === normStart && b.end === normEnd)
     if (dup) {
       setError('Ese bloqueo ya existe.')
       return
     }
-    setBlocks(prev => [...prev, { date, start, end }])
+    setBlocks(prev => [...prev, { date, start: normStart, end: normEnd }])
     setNewBlock({ date: '', start: '', end: '' })
     setError(null)
   }
 
   const removeBlock = (index: number) => {
     setBlocks(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Normaliza "HH:mm" (tolerante a "13:0" o "9:5") a "09:05" para que el
+  // dato guardado en Firestore tenga siempre el formato que compara el backend.
+  const normalizeTime = (t: string): string => {
+    const [h, m] = t.split(':')
+    return `${String(Number(h)).padStart(2, '0')}:${String(Number(m)).padStart(2, '0')}`
   }
 
   const onSave = async () => {
