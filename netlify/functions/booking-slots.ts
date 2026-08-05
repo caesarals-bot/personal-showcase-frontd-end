@@ -4,7 +4,7 @@
 // de Google en tiempo real), con hora de inicio/fin y ISO con offset.
 
 import type { Handler } from '@netlify/functions'
-import { getBookingConfig, candidateSlotsForDate, isDateOverridden, candidateSlotMs, isTimeBlocked } from './_shared/schedule'
+import { getBookingConfig, candidateSlotsForDate, isDateOverridden, candidateSlotMs, isTimeBlocked, timeOf, minutesOf, type CandidateSlot } from './_shared/schedule'
 import { getBookingsForDate, computeFreeSlots, overlaps, type BusyInterval } from './_shared/bookings'
 import { fetchBusyWindows } from './_shared/google'
 import { wallClockToUtcMs, zonedToIso } from './_shared/time'
@@ -49,24 +49,33 @@ export const handler: Handler = async (event) => {
 
     // Clave canónica: startMinutes (minutos absolutos desde medianoche, ej. 780
     // para las 13:00) permite al frontend comparar/deshabilitar slots sin
-    // depender del formato de string de la hora (24h vs 12h).
-    const toSlot = (c: CandidateSlot) => ({
-      startTime: timeOf(c.startMinutes),
-      startMinutes: c.startMinutes,
-      endTime: c.endTime,
-      isoStart: zonedToIso(
-        date,
-        Math.floor(c.startMinutes / 60),
-        c.startMinutes % 60,
-        config.timeZone,
-      ),
-      isoEnd: zonedToIso(
-        date,
-        Math.floor((c.startMinutes + config.slotDurationMinutes) / 60),
-        (c.startMinutes + config.slotDurationMinutes) % 60,
-        config.timeZone,
-      ),
-    })
+    // depender del formato de string de la hora (24h vs 12h). Sanitiza la
+    // entrada para evitar excepciones de runtime con candidatos malformados.
+    const toSlot = (c: CandidateSlot) => {
+      const startMinutes =
+        typeof c.startMinutes === 'number' && Number.isFinite(c.startMinutes)
+          ? c.startMinutes
+          : minutesOf(c.startTime || '00:00')
+      const safeStart = Number.isFinite(startMinutes) ? startMinutes : 0
+      const startTime = c.startTime || timeOf(safeStart)
+      return {
+        startTime: timeOf(minutesOf(startTime)),
+        startMinutes: safeStart,
+        endTime: c.endTime,
+        isoStart: zonedToIso(
+          date,
+          Math.floor(safeStart / 60),
+          safeStart % 60,
+          config.timeZone,
+        ),
+        isoEnd: zonedToIso(
+          date,
+          Math.floor((safeStart + config.slotDurationMinutes) / 60),
+          (safeStart + config.slotDurationMinutes) % 60,
+          config.timeZone,
+        ),
+      }
+    }
 
     const slots = freeSlots.map(toSlot)
 
