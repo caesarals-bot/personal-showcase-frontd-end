@@ -108,18 +108,24 @@ export default function AgendaSettingsPage() {
       setError('Completa fecha, hora de inicio y hora de fin del bloqueo.')
       return
     }
+    // Normaliza la fecha a YYYY-MM-DD con padding de ceros (tolera "2026-8-6").
+    const normDate = date.replace(
+      /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
+      (_, y: string, m: string, d: string) =>
+        `${y}-${String(Number(m)).padStart(2, '0')}-${String(Number(d)).padStart(2, '0')}`,
+    )
     const normStart = normalizeTime(start)
     const normEnd = normalizeTime(end)
     if (normStart >= normEnd) {
       setError('La hora de inicio debe ser anterior a la de fin.')
       return
     }
-    const dup = blocks.some(b => b.date === date && b.start === normStart && b.end === normEnd)
+    const dup = blocks.some(b => b.date === normDate && b.start === normStart && b.end === normEnd)
     if (dup) {
       setError('Ese bloqueo ya existe.')
       return
     }
-    setBlocks(prev => [...prev, { date, start: normStart, end: normEnd }])
+    setBlocks(prev => [...prev, { date: normDate, start: normStart, end: normEnd }])
     setNewBlock({ date: '', start: '', end: '' })
     setError(null)
   }

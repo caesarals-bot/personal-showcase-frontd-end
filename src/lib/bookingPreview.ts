@@ -71,7 +71,14 @@ export function previewDaySlots(dateKey: string): Slot[] {
       const slotStartMin = t
       const slotEndMin = t + PREVIEW_SETTINGS.slotDurationMinutes
       const isBlocked = timeBlocks.some(b => {
-        if (b.date !== dateKey) return false
+        // Normalizar la fecha del bloqueo (tolera "2026-8-6" sin padding) antes
+        // de compararla con el dateKey canónico "YYYY-MM-DD".
+        const bDate = b.date?.replace(
+          /^(\d{4})-(\d{1,2})-(\d{1,2})$/,
+          (_, y: string, m: string, d: string) =>
+            `${y}-${String(Number(m)).padStart(2, '0')}-${String(Number(d)).padStart(2, '0')}`,
+        )
+        if (bDate !== dateKey) return false
         const [bsh, bsm] = b.start.split(':').map(Number)
         const [beh, bem] = b.end.split(':').map(Number)
         const blockStartMin = bsh * 60 + bsm

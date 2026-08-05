@@ -65,10 +65,12 @@ export async function getBookingConfig(): Promise<BookingConfig> {
     .map(b => {
       const start = timeOf(minutesOf(b?.start))
       const end = timeOf(minutesOf(b?.end))
+      const date = normalizeDate(b?.date)
       if (!Number.isFinite(minutesOf(start)) || !Number.isFinite(minutesOf(end))) return null
-      return { date: b?.date, start, end }
+      if (!date) return null
+      return { date, start, end }
     })
-    .filter((b): b is TimeBlock => Boolean(b && b.date))
+    .filter((b): b is TimeBlock => Boolean(b))
   return { ...DEFAULT_CONFIG, ...data, timeBlocks }
 }
 
@@ -79,6 +81,16 @@ export function minutesOf(time: string): number {
   const mm = Number.isFinite(m) ? m : NaN
   if (!Number.isFinite(hh) || !Number.isFinite(mm)) return NaN
   return hh * 60 + mm
+}
+
+// Normaliza una fecha a "YYYY-MM-DD" con padding de ceros. Tolerante a
+// formatos sin padding ("2026-8-6") y descarta fechas inválidas (devuelve null).
+export function normalizeDate(d: string): string | null {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec((d ?? '').trim())
+  if (!m) return null
+  const [, y, mo, day] = m.map(Number)
+  if (mo < 1 || mo > 12 || day < 1 || day > 31) return null
+  return `${String(y).padStart(4, '0')}-${String(mo).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 export function timeOf(minutes: number): string {
@@ -134,7 +146,10 @@ export function isTimeBlocked(
   const slotStart = startMinutes
   const slotEnd = startMinutes + durationMinutes
   return config.timeBlocks.some(b => {
-    if (b.date !== dateKey) return false
+    // Sanitización defensiva de la fecha: tolera bloques guardados con formato
+    // sin padding ("2026-8-6") que no pasaron por getBookingConfig.
+    const bDate = normalizeDate(b.date)
+    if (bDate !== dateKey) return false
     const blockStart = minutesOf(b.start)
     const blockEnd = minutesOf(b.end)
     // Bloques con horas invalidas nunca bloquean.
