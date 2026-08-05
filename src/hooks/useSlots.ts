@@ -11,10 +11,13 @@ export function useSlots(date: string | null, preview = false) {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
+    // Limpiar estado previo ante cualquier cambio de fecha/recarga: evita que
+    // slots de un día anterior parpadeen o queden cacheados en el estado local.
+    setSlots([])
+    setOccupied([])
+    setError(null)
+
     if (!date) {
-      setSlots([])
-      setOccupied([])
-      setError(null)
       setLoading(false)
       return
     }
@@ -22,14 +25,12 @@ export function useSlots(date: string | null, preview = false) {
     if (preview) {
       setSlots(previewDaySlots(date))
       setOccupied([])
-      setError(null)
       setLoading(false)
       return
     }
 
     let cancelled = false
     setLoading(true)
-    setError(null)
     getDaySlots(date)
       .then(res => {
         if (!cancelled) {

@@ -30,14 +30,26 @@ export function SlotPicker({
   // slot viejo no lo trae, se deriva del startTime "HH:mm". Nunca se comparan
   // strings de hora formateados (24h vs 12h).
   const minutesOf = (s: Slot): number =>
-    s.startMinutes ?? Number(s.startTime.split(':')[0]) * 60 + Number(s.startTime.split(':')[1])
+    typeof s.startMinutes === 'number' ? s.startMinutes : Number(s.startTime.split(':')[0]) * 60 + Number(s.startTime.split(':')[1])
 
-  // Un solo grid cronológico deduplicado por startMinutes: si un slot aparece
-  // en `slots` y en `occupied` (colisión de intervalos), el estado ocupado gana.
+  // Un solo grid cronológico deduplicado por startMinutes. El estado OCUPADO
+  // prevalece SIEMPRE: al unificar, los slots de `occupied` sobreescriben la
+  // entrada del Map (misma clave numérica) con taken:true.
   const allSlots = useMemo(() => {
     const map = new Map<number, Slot & { taken: boolean }>()
-    for (const s of slots) map.set(minutesOf(s), { ...s, taken: false })
-    for (const s of occupied) map.set(minutesOf(s), { ...s, taken: true })
+
+    // 1. Cargar slots libres
+    for (const s of slots) {
+      const min = typeof s.startMinutes === 'number' ? s.startMinutes : minutesOf(s)
+      map.set(min, { ...s, taken: false })
+    }
+
+    // 2. Sobreescribir con slots ocupados (ocupado prevalece)
+    for (const o of occupied) {
+      const min = typeof o.startMinutes === 'number' ? o.startMinutes : minutesOf(o)
+      map.set(min, { ...o, taken: true })
+    }
+
     return [...map.values()].sort((a, b) => minutesOf(a) - minutesOf(b))
   }, [slots, occupied])
 

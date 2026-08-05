@@ -1,11 +1,16 @@
 // Utilidades de respuesta HTTP para las funciones.
+// Las respuestas JSON de disponibilidad NUNCA deben cachearse (ni en el
+// navegador ni en la CDN de Netlify): los horarios cambian en tiempo real
+// (reservas, freebusy de Google, timeBlocks del admin).
+const NO_STORE =
+  'no-store, no-cache, must-revalidate, proxy-revalidate'
 
 export function json(statusCode: number, body: unknown) {
   return {
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
+      'Cache-Control': NO_STORE,
     },
     body: JSON.stringify(body),
   }
@@ -40,7 +45,7 @@ export function tooManyRequests(message: string, retryAfterSec?: number) {
     ...json(429, { error: message, retryAfterSec }),
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
+      'Cache-Control': NO_STORE,
       ...(retryAfterSec ? { 'Retry-After': String(retryAfterSec) } : {}),
     },
   }

@@ -28,6 +28,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     res = await fetch(`${BASE}${path}`, {
       ...init,
+      // Impedir caché del navegador/CDN en las respuestas JSON de disponibilidad:
+      // los horarios cambian en tiempo real (reservas, freebusy, timeBlocks).
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
         ...(init?.headers ?? {}),
