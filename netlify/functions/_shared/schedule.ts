@@ -131,12 +131,12 @@ export function isDateOverridden(config: BookingConfig, dateKey: string): boolea
 // True si el slot [startMinutes, startMinutes+durationMinutes) traslapa con
 // un bloqueo manual de horas (timeBlocks) para esa fecha.
 //
-// IMPORTANTE (zona horaria): timeBlocks son etiquetas de pared ("HH:mm") en
-// config.timeZone. NUNCA se convierten a UTC por separado; los limites de cada
-// slot se derivan con wallClockToUtcMs(dateKey, hh, mm, config.timeZone),
-// siempre con la timezone del config, aunque la Netlify Function corra en UTC.
-// La comparacion usa MINUTOS ABSOLUTOS desde medianoche (minutesOf), no
-// strings: es inmune a variaciones de formato ("13:0" vs "13:00").
+// IMPORTANTE (zona horaria): timeBlocks y workingHours son etiquetas de pared
+// (wall-clock) en config.timeZone (America/Santiago). NUNCA se convierten a UTC
+// por separado; los limites de cada slot se derivan con wallClockToUtcMs(dateKey,
+// hh, mm, config.timeZone), siempre con la timezone del config, aunque la Netlify
+// Function corra en UTC. La comparacion usa MINUTOS ABSOLUTOS desde medianoche
+// (minutesOf), no strings: es inmune a variaciones de formato ("13:0" vs "13:00").
 export function isTimeBlocked(
   config: BookingConfig,
   dateKey: string,

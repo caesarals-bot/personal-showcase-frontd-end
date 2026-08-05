@@ -45,15 +45,18 @@ export function wallClockToUtcMs(dateKey: string, hh: number, mm: number, timeZo
 }
 
 // "2026-08-14 09:00" -> ISO 8601 con offset explícito (p.ej. 2026-08-14T09:00:00-04:00).
+//
+// Los argumentos hh/mm son la hora LOCAL de pared (wall-clock) en timeZone. El
+// string se construye DIRECTAMENTE con dateKey + hh:mm + el offset: jamás se
+// mezclan componentes UTC (getUTCHours) con el offset local, porque eso aplica
+// un doble offset y desplaza la hora. utcMs se usa SOLO para derivar el offset
+// correcto (protege el cambio por DST de Chile).
 export function zonedToIso(dateKey: string, hh: number, mm: number, timeZone: string): string {
   const utcMs = wallClockToUtcMs(dateKey, hh, mm, timeZone)
   const offset = tzOffsetMinutes(timeZone, new Date(utcMs))
   const sign = offset >= 0 ? '+' : '-'
   const abs = Math.abs(offset)
-  const d = new Date(utcMs)
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(
-    d.getUTCHours(),
-  )}:${pad(d.getUTCMinutes())}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
+  return `${dateKey}T${pad(hh)}:${pad(mm)}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
 }
 
 export function isoToUtcMs(iso: string): number {

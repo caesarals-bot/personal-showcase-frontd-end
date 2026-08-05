@@ -37,17 +37,18 @@ function offsetMinutesAt(ms: number, timeZone: string): number {
 }
 
 function zonedToIso(dateKey: string, hh: number, mm: number, timeZone: string): string {
+  // Los argumentos hh/mm son la hora LOCAL de pared (wall-clock). El string se
+  // construye directamente con dateKey + hh:mm + el offset (jamás con
+  // getUTCHours, para no aplicar doble offset). El instante UTC se usa SOLO
+  // para derivar el offset correcto (DST de Chile).
   const [y, mo, d] = dateKey.split('-').map(Number)
   const asUtc = Date.UTC(y, mo - 1, d, hh, mm)
   const utcMs = asUtc - offsetMinutesAt(asUtc, timeZone) * 60000
   const offset = offsetMinutesAt(utcMs, timeZone)
   const sign = offset >= 0 ? '+' : '-'
   const abs = Math.abs(offset)
-  const dt = new Date(utcMs)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}T${pad(
-    dt.getUTCHours(),
-  )}:${pad(dt.getUTCMinutes())}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
+  return `${dateKey}T${pad(hh)}:${pad(mm)}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
 }
 
 export function previewDaySlots(dateKey: string): Slot[] {
