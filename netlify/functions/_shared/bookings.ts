@@ -95,12 +95,18 @@ export function computeFreeSlots(
     if (isTimeBlocked(config, dateKey, c.startMinutes)) continue
 
     const { startMs, endMs } = candidateSlotMs(config, dateKey, c)
-    if (startMs < minStartMs || startMs > maxStartMs) continue
 
     const padStart = startMs - config.bufferMinutes * 60000
     const padEnd = endMs + config.bufferMinutes * 60000
     const blocked = taken.some(t => overlaps(padStart, padEnd, t.startMs, t.endMs))
+
+    // Un slot YA tomado (reserva pending/invited o busy de Google) se mantiene
+    // ocupado aunque quede fuera de la ventana de reserva (lead time/horizonte):
+    // booking-slots lo marca en `occupied` y en /agenda se tacha. Solo los
+    // slots libres se filtran por ventana.
     if (blocked) continue
+
+    if (startMs < minStartMs || startMs > maxStartMs) continue
 
     free.push(c)
   }
