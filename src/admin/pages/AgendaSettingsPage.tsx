@@ -176,41 +176,41 @@ export default function AgendaSettingsPage() {
 
   return (
     <div className="container mx-auto space-y-6 p-4">
-      <Card>
+      <Card className="space-y-4 py-4">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CalendarOff className="h-5 w-5" /> Gestión de disponibilidad de la agenda
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Configura qué días y horas pueden reservar los visitantes. Los cambios se
             aplican de inmediato en <span className="font-medium">/agenda</span>.
           </p>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label>Horario laboral</Label>
             {days.map(d => (
-              <div key={d.dayOfWeek} className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
+              <div key={d.dayOfWeek} className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 p-2">
                 <Switch
                   checked={d.enabled}
                   onCheckedChange={checked => updateDay(d.dayOfWeek, { enabled: checked })}
                 />
-                <span className="w-24 text-sm font-medium">{DAY_LABELS[d.dayOfWeek]}</span>
+                <span className="w-20 text-sm font-medium">{DAY_LABELS[d.dayOfWeek]}</span>
                 {d.enabled ? (
                   <>
                     <Input
                       type="time"
                       value={d.start}
                       onChange={e => updateDay(d.dayOfWeek, { start: e.target.value })}
-                      className="w-32"
+                      className="h-8 w-[5.5rem] px-2 text-sm"
                     />
-                    <span className="text-sm text-muted-foreground">a</span>
+                    <span className="flex items-center text-sm text-muted-foreground">a</span>
                     <Input
                       type="time"
                       value={d.end}
                       onChange={e => updateDay(d.dayOfWeek, { end: e.target.value })}
-                      className="w-32"
+                      className="h-8 w-[5.5rem] px-2 text-sm"
                     />
                   </>
                 ) : (
@@ -220,7 +220,7 @@ export default function AgendaSettingsPage() {
             ))}
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label>Fechas bloqueadas (excepciones puntuales)</Label>
             {overrides.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -230,7 +230,7 @@ export default function AgendaSettingsPage() {
             ) : (
               <div className="space-y-2">
                 {overrides.map(date => (
-                  <div key={date} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+                  <div key={date} className="flex items-center justify-between rounded-lg border bg-muted/30 px-2.5 py-1.5">
                     <span className="text-sm font-medium">{date}</span>
                     <Button
                       variant="ghost"
@@ -248,15 +248,15 @@ export default function AgendaSettingsPage() {
                 type="date"
                 value={newOverride}
                 onChange={e => setNewOverride(e.target.value)}
-                className="w-48"
+                className="h-8 w-44 text-sm"
               />
-              <Button variant="secondary" onClick={addOverride} disabled={!newOverride}>
+              <Button variant="secondary" size="sm" onClick={addOverride} disabled={!newOverride}>
                 <Plus className="size-4" /> Bloquear fecha
               </Button>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label>Bloqueos por hora (rango puntual)</Label>
             {blocks.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -266,7 +266,7 @@ export default function AgendaSettingsPage() {
             ) : (
               <div className="space-y-2">
                 {blocks.map((b, i) => (
-                  <div key={`${b.date}-${b.start}-${i}`} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+                  <div key={`${b.date}-${b.start}-${i}`} className="flex items-center justify-between rounded-lg border bg-muted/30 px-2.5 py-1.5">
                     <span className="text-sm font-medium">
                       {b.date} · {b.start} – {b.end}
                     </span>
@@ -286,14 +286,14 @@ export default function AgendaSettingsPage() {
                 type="date"
                 value={newBlock.date}
                 onChange={e => setNewBlock(prev => ({ ...prev, date: e.target.value }))}
-                className="w-44"
+                className="h-8 w-40 text-sm"
                 aria-label="Fecha del bloqueo"
               />
               <Input
                 type="time"
                 value={newBlock.start}
                 onChange={e => setNewBlock(prev => ({ ...prev, start: e.target.value }))}
-                className="w-32"
+                className="h-8 w-[5.5rem] px-2 text-sm"
                 aria-label="Hora de inicio del bloqueo"
               />
               <span className="flex items-center text-sm text-muted-foreground">a</span>
@@ -301,16 +301,16 @@ export default function AgendaSettingsPage() {
                 type="time"
                 value={newBlock.end}
                 onChange={e => setNewBlock(prev => ({ ...prev, end: e.target.value }))}
-                className="w-32"
+                className="h-8 w-[5.5rem] px-2 text-sm"
                 aria-label="Hora de fin del bloqueo"
               />
-              <Button variant="secondary" onClick={addBlock}>
+              <Button variant="secondary" size="sm" onClick={addBlock}>
                 <Plus className="size-4" /> Bloquear horas
               </Button>
             </div>
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-1">
             <Button onClick={onSave} disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Guardar disponibilidad
