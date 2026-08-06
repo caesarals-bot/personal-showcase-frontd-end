@@ -23,26 +23,23 @@ const ContactMePage = () => {
                     transition={{ duration: 0.6 }}
                     className="mb-10 text-center md:mb-12"
                 >
-                    <div className="mb-4 flex justify-center">
-                        <motion.div
+                    <motion.h1
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="mb-4 flex items-center justify-center gap-3 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl"
+                    >
+                        <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                            Hablemos
+                        </span>
+                        <motion.span
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
                             className="rounded-full bg-primary/10 p-3"
                         >
                             <MessageCircle className="h-7 w-7 text-primary" />
-                        </motion.div>
-                    </div>
-
-                    <motion.h1
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        className="mb-4 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl"
-                    >
-                        <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                            Hablemos
-                        </span>
+                        </motion.span>
                     </motion.h1>
 
                     <motion.p
