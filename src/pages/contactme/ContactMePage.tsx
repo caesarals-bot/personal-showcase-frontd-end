@@ -15,7 +15,7 @@ const ContactMePage = () => {
                 keywords={['contacto', 'colaboración', 'freelance', 'proyectos', 'consultoría']}
                 type="website"
             />
-            <div className="container mx-auto px-4 py-8 lg:py-12">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -57,16 +57,16 @@ const ContactMePage = () => {
                 </motion.div>
 
                 {/* Contenido principal */}
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-12">
+                <div className="grid grid-cols-1 gap-8 lg:grid lg:grid-cols-12 lg:items-start lg:gap-8">
                     {/* Información de contacto */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.5 }}
-                        className="lg:col-span-1"
+                        className="lg:col-span-5"
                     >
-                        <div className="sticky top-8">
-                            <ContactInfoDisplay className="rounded-2xl border border-border/50 bg-card/80 p-6 backdrop-blur-md shadow-lg hover:shadow-xl transition-shadow lg:p-8" />
+                        <div className="lg:sticky lg:top-24">
+                            <ContactInfoDisplay className="rounded-3xl border border-editorial-line/60 bg-white p-6 shadow-xl lg:p-8" />
                         </div>
                     </motion.div>
 
@@ -75,9 +75,9 @@ const ContactMePage = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
-                        className="lg:col-span-2"
+                        className="lg:col-span-7"
                     >
-                        <div className="border border-editorial-line bg-white/60 p-6 lg:p-8">
+                        <div className="rounded-3xl border border-editorial-line/60 bg-white p-6 shadow-xl lg:p-8">
                             <div className="mx-auto mb-6 w-full max-w-xl">
                                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
                                     Formulario de contacto
@@ -105,7 +105,7 @@ const ContactMePage = () => {
                     transition={{ duration: 0.6, delay: 0.7 }}
                     className="mt-8"
                 >
-                    <div className="flex flex-col items-center justify-between gap-5 border border-editorial-line bg-editorial-cream p-6 text-editorial-ink sm:flex-row sm:p-8">
+                    <div className="flex flex-col items-center justify-between gap-5 rounded-3xl border border-editorial-line/60 bg-editorial-cream p-6 text-editorial-ink shadow-xl sm:flex-row sm:p-8">
                         <div className="flex items-start gap-4">
                             <div className="hidden rounded-full bg-editorial-terracotta p-3 sm:block">
                                 <CalendarClock className="size-5 text-white" />
@@ -122,7 +122,7 @@ const ContactMePage = () => {
                         </div>
                         <Link
                             to="/agenda"
-                            className="inline-flex shrink-0 items-center gap-2 border border-editorial-teal bg-editorial-teal px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-editorial-teal-deep"
+                            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-editorial-teal bg-editorial-teal px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-editorial-teal-deep hover:shadow-md active:scale-[0.98]"
                         >
                             Agenda una reunión
                             <ArrowRight className="size-4" />
@@ -137,7 +137,7 @@ const ContactMePage = () => {
                     transition={{ duration: 0.6, delay: 0.8 }}
                     className="mt-12 text-center"
                 >
-                    <div className="rounded-2xl border border-border/50 bg-card/60 p-8 backdrop-blur-md shadow-md">
+                    <div className="rounded-3xl border border-editorial-line/60 bg-white/60 p-8 shadow-xl backdrop-blur-md">
                         <h3 className="mb-4 text-xl font-bold tracking-tight md:text-2xl">
                             ¿Prefieres otro medio?
                         </h3>
