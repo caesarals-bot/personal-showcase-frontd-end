@@ -28,9 +28,9 @@ const ContactMePage = () => {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="rounded-full bg-primary/10 p-4"
+                            className="rounded-full bg-primary/10 p-3"
                         >
-                            <MessageCircle className="h-8 w-8 text-primary" />
+                            <MessageCircle className="h-7 w-7 text-primary" />
                         </motion.div>
                     </div>
 
@@ -38,7 +38,7 @@ const ContactMePage = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
-                        className="mb-4 text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl"
+                        className="mb-4 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl"
                     >
                         <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                             Hablemos
@@ -57,7 +57,7 @@ const ContactMePage = () => {
                 </motion.div>
 
                 {/* Contenido principal */}
-                <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-8">
+                <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-12 lg:gap-6">
                     {/* Información de contacto + banner en vivo */}
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
@@ -65,12 +65,12 @@ const ContactMePage = () => {
                         transition={{ duration: 0.6, delay: 0.5 }}
                         className="flex flex-col gap-6 lg:col-span-5"
                     >
-                        <div className="rounded-3xl border border-editorial-line/60 bg-white p-6 shadow-xl lg:p-8">
+                        <div className="rounded-3xl border border-editorial-line/60 bg-white p-5 shadow-xl lg:p-6">
                             <ContactInfoDisplay />
                         </div>
 
                         {/* Card: ¿Prefieres hablar en vivo? (integrada en la columna de info) */}
-                        <div className="flex flex-col gap-4 rounded-3xl border border-editorial-line/60 bg-editorial-cream p-6 text-editorial-ink shadow-xl">
+                        <div className="flex flex-col gap-4 rounded-3xl border border-editorial-line/60 bg-editorial-cream p-5 text-editorial-ink shadow-xl lg:p-6">
                             <div className="flex items-start gap-4">
                                 <div className="rounded-full bg-editorial-terracotta p-3">
                                     <CalendarClock className="size-5 text-white" />
@@ -102,7 +102,7 @@ const ContactMePage = () => {
                         transition={{ duration: 0.6, delay: 0.6 }}
                         className="lg:col-span-7"
                     >
-                        <div className="h-full rounded-3xl border border-editorial-line/60 bg-white p-6 shadow-xl lg:p-8">
+                        <div className="h-full rounded-3xl border border-editorial-line/60 bg-white p-5 shadow-xl lg:p-6">
                             <div className="mb-6">
                                 <p className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
                                     Formulario de contacto
@@ -128,7 +128,7 @@ const ContactMePage = () => {
                     transition={{ duration: 0.6, delay: 0.8 }}
                     className="mt-10 text-center md:mt-12"
                 >
-                    <div className="rounded-3xl border border-editorial-line/60 bg-white/60 p-6 shadow-xl backdrop-blur-md md:p-8">
+                    <div className="rounded-3xl border border-editorial-line/60 bg-white/60 p-5 shadow-xl backdrop-blur-md md:p-6">
                         <h3 className="mb-3 text-xl font-bold tracking-tight md:text-2xl">
                             ¿Prefieres otro medio?
                         </h3>
