@@ -182,10 +182,11 @@ export default function AgendaPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex flex-col gap-8"
+                className="flex flex-col gap-6"
               >
                 {!selectedDate ? (
-                  <div className="flex h-full min-h-40 items-center justify-center border border-dashed border-editorial-line p-6 text-center">
+                  <div className="flex h-full min-h-[26rem] flex-col items-center justify-center gap-3 border border-editorial-line bg-white/60 p-6 text-center">
+                    <CalendarDays className="size-8 text-editorial-teal" />
                     <p className="max-w-xs text-sm text-editorial-ink-muted">
                       Selecciona una fecha del calendario para ver los horarios
                       disponibles.

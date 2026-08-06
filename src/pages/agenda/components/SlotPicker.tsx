@@ -86,8 +86,9 @@ export function SlotPicker({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {allSlots.map(slot => {
+        <div className="max-h-[24rem] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {allSlots.map(slot => {
             if (slot.taken) {
               return (
                 <div
@@ -115,7 +116,8 @@ export function SlotPicker({
                 {formatSlotTime(slot.isoStart)}
               </button>
             )
-          })}
+            })}
+          </div>
         </div>
       )}
 
