@@ -39,7 +39,7 @@ export interface BookingConfig {
 export const DEFAULT_CONFIG: BookingConfig = {
   timeZone: 'America/Santiago',
   slotDurationMinutes: 30,
-  bufferMinutes: 15,
+  bufferMinutes: 30,
   minLeadTimeHours: 24,
   maxDaysAhead: 60,
   workingHours: [
@@ -109,10 +109,14 @@ export function candidateSlotsForDate(config: BookingConfig, dateKey: string): C
   const dow = dayOfWeekOf(dateKey)
   const hours = config.workingHours.filter(w => w.dayOfWeek === dow)
   const slots: CandidateSlot[] = []
+  // Paso de 60 minutos: solo se ofrecen horas en punto (09:00, 10:00, ...).
+  // La reunión dura slotDurationMinutes (30) y los 30 min restantes de cada
+  // hora quedan como buffer de cortesía entre reuniones.
+  const STEP_MINUTES = 60
   for (const w of hours) {
     const start = minutesOf(w.start)
     const end = minutesOf(w.end)
-    for (let t = start; t + config.slotDurationMinutes <= end; t += config.slotDurationMinutes) {
+    for (let t = start; t + config.slotDurationMinutes <= end; t += STEP_MINUTES) {
       slots.push({
         startMinutes: t,
         startTime: timeOf(t),

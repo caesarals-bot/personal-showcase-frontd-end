@@ -10,7 +10,7 @@ import { dateKeyToUtc, daysInMonth, todayDateKey } from './bookingDates'
 export const PREVIEW_SETTINGS: BookingSettings = {
   timeZone: 'America/Santiago',
   slotDurationMinutes: 30,
-  bufferMinutes: 15,
+  bufferMinutes: 30,
   minLeadTimeHours: 24,
   maxDaysAhead: 60,
   workingHours: [
@@ -61,7 +61,9 @@ export function previewDaySlots(dateKey: string): Slot[] {
     const [eh, em] = w.end.split(':').map(Number)
     const startMin = sh * 60 + sm
     const endMin = eh * 60 + em
-    for (let t = startMin; t + PREVIEW_SETTINGS.slotDurationMinutes <= endMin; t += PREVIEW_SETTINGS.slotDurationMinutes) {
+    // Paso de 60 minutos: solo horas en punto (paridad con el backend
+    // candidateSlotsForDate). La reunión dura 30 min y deja 30 de buffer.
+    for (let t = startMin; t + PREVIEW_SETTINGS.slotDurationMinutes <= endMin; t += 60) {
       const hh = Math.floor(t / 60)
       const mm = t % 60
       const startTime = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`
