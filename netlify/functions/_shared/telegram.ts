@@ -13,6 +13,13 @@ export interface BookingNotificationData {
 
 const TELEGRAM_API = 'https://api.telegram.org'
 
+// Escapa caracteres especiales de Markdown (legacy) en campos del usuario:
+// si el nombre o el email contienen _, *, ` o corchetes, Telegram rechaza el
+// mensaje con 400 "can't parse entities" y la notificación se pierde.
+function escapeMarkdown(text: string): string {
+  return text.replace(/[_*`[\]]/g, '\\$1')
+}
+
 export async function sendBookingTelegramNotification(
   data: BookingNotificationData,
 ): Promise<void> {
@@ -29,11 +36,11 @@ export async function sendBookingTelegramNotification(
   const text = [
     '🔔 ¡NUEVA REUNIÓN RESERVADA!',
     '',
-    `👤 Cliente: ${data.name}`,
-    `📧 Email: ${data.email}`,
+    `👤 Cliente: ${escapeMarkdown(data.name)}`,
+    `📧 Email: ${escapeMarkdown(data.email)}`,
     `📅 Fecha: ${data.date}`,
     `⏰ Hora: ${data.startTime}`,
-    `💬 Tema: ${data.topic}`,
+    `💬 Tema: ${escapeMarkdown(data.topic)}`,
   ].join('\n')
 
   try {
@@ -48,8 +55,9 @@ export async function sendBookingTelegramNotification(
     })
 
     if (!res.ok) {
+      const body = await res.text()
       console.warn(
-        `sendBookingTelegramNotification: Telegram respondió ${res.status} ${res.statusText}`,
+        `sendBookingTelegramNotification: Telegram respondió ${res.status} ${res.statusText}: ${body.slice(0, 300)}`,
       )
     }
   } catch (error) {
