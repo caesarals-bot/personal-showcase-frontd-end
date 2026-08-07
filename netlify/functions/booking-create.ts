@@ -27,7 +27,7 @@ import {
   timeOf,
 } from './_shared/schedule'
 import { zonedToIso } from './_shared/time'
-import { checkBookingRateLimit } from './_shared/rate-limit'
+import { checkBookingRateLimit, checkIpRateLimit } from './_shared/rate-limit'
 import { ok, badRequest, conflict, serverError, tooManyRequests } from './_shared/response'
 import { createBookingSchema } from './_shared/validation'
 
@@ -51,6 +51,15 @@ export const handler: Handler = async (event) => {
   const { date, startTime, visitor } = input
 
   try {
+    // Rate limit por IP: máx 3 solicitudes por IP cada 15 minutos (anti-bots).
+    const ipRate = await checkIpRateLimit(event, 15 * 60 * 1000, 3)
+    if (!ipRate.ok) {
+      return tooManyRequests(
+        'Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.',
+        ipRate.retryAfterSec,
+      )
+    }
+
     const rate = await checkBookingRateLimit(visitor.email)
     if (!rate.ok) {
       return tooManyRequests(
