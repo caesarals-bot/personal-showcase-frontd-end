@@ -20,12 +20,17 @@ service cloud.firestore {
       allow read: if isAuthenticated() && 
         (request.auth.uid == userId || isAdmin());
       
-      // Permitir crear documento solo si el UID coincide con el usuario autenticado
-      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Permitir crear documento solo si el UID coincide con el usuario autenticado.
+      // El rol se fuerza a 'user' en la creación (nadie puede crearse admin).
+      allow create: if isAuthenticated() && request.auth.uid == userId &&
+        request.resource.data.role == 'user';
       
-      // Los usuarios pueden actualizar su propio documento, los admins pueden actualizar cualquiera
+      // Los usuarios pueden actualizar su propio documento, los admins pueden
+      // actualizar cualquiera. El rol es INMUTABLE para el propio usuario:
+      // un usuario no puede cambiarse a sí mismo el role (solo un admin puede).
       allow update: if isAuthenticated() && 
-        (request.auth.uid == userId || isAdmin());
+        ((request.auth.uid == userId &&
+          request.resource.data.role == resource.data.role) || isAdmin());
       
       // Solo admins pueden eliminar usuarios
       allow delete: if isAdmin();

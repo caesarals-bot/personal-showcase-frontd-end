@@ -1,4 +1,5 @@
 import { imageKitConfig } from '../config/imageKitConfig';
+import { getAuth, getIdToken } from 'firebase/auth';
 
 export interface UploadResult {
   url: string;
@@ -119,9 +120,19 @@ export class ImageKitService {
     if (!fileId && !imageUrl) {
       throw new Error('fileId or imageUrl is required for deletion');
     }
+    // El borrado está protegido con requireAdmin: enviamos el ID token del
+    // usuario autenticado (debe tener role == 'admin').
+    const user = getAuth().currentUser;
+    if (!user) {
+      throw new Error('Debes iniciar sesión como administrador para eliminar imágenes.');
+    }
+    const token = await getIdToken(user);
     const response = await fetch(imageKitConfig.deleteEndpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         fileId: fileId || undefined,
         imageUrl: !fileId && imageUrl ? imageUrl : undefined,

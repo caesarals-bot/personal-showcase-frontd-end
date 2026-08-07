@@ -4,11 +4,6 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Función helper para verificar si el usuario está autenticado
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
     // Función helper para verificar si el usuario es admin
     function isAdmin() {
       return request.auth != null && 
@@ -25,7 +20,11 @@ service firebase.storage {
       return request.resource.size < 5 * 1024 * 1024;
     }
     
-    // ===== REGLAS PARA PORTFOLIO - SOLO ADMIN =====
+    // ===== REGLAS DE PRODUCCIÓN — SOLO ADMIN =====
+    // El sitio migró a ImageKit para almacenamiento de imágenes (2026-07-14).
+    // Firebase Storage queda restringido a escritura exclusiva de administradores
+    // (backend/scripts de mantenimiento). Los visitantes NO suben archivos.
+
     // Imágenes de proyectos/portfolio - Solo admin puede subir
     match /projects/{userId}/{fileName} {
       // Lectura: Todos pueden ver imágenes de proyectos
@@ -36,93 +35,43 @@ service firebase.storage {
                       isValidImageType() && 
                       isValidSize();
     }
-    
-    // ===== MODO TEST PARA OTRAS IMÁGENES =====
-    // Permite lectura y escritura para otras rutas (temporal)
-    match /{allPaths=**} {
-      allow read: if true;
-      allow write: if isAuthenticated();
-    }
-    
-    // ===== REGLAS PARA PRODUCCIÓN (COMENTADAS) =====
-    // Descomenta estas reglas y comenta las de arriba para producción
-    
-    /*
-    // Función helper para verificar autenticación
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Función helper para verificar si es el propietario
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Función helper para validar tipos de archivo de imagen
-    function isValidImageType() {
-      return request.resource.contentType.matches('image/.*');
-    }
-    
-    // Función helper para validar tamaño de archivo (5MB máximo)
-    function isValidSize() {
-      return request.resource.size < 5 * 1024 * 1024;
-    }
-    
-    // Reglas para avatares de usuario
-    match /avatars/{userId}/{fileName} {
-      // Lectura: Todos pueden ver avatares
-      allow read: if true;
-      
-      // Escritura: Solo el usuario propietario puede subir su avatar
-      allow write: if isAuthenticated() && 
-                      isOwner(userId) && 
-                      isValidImageType() && 
-                      request.resource.size < 1 * 1024 * 1024; // 1MB para avatares
-    }
-    
-    // Reglas para imágenes de proyectos
-    match /projects/{userId}/{fileName} {
-      // Lectura: Todos pueden ver imágenes de proyectos
-      allow read: if true;
-      
-      // Escritura: Solo usuarios autenticados pueden subir imágenes de proyectos
-      allow write: if isAuthenticated() && 
-                      isValidImageType() && 
-                      isValidSize();
-    }
-    
-    // Reglas para imágenes de blog
+
+    // Imágenes de blog - Solo admin puede subir
     match /blog/{userId}/{fileName} {
       // Lectura: Todos pueden ver imágenes de blog
       allow read: if true;
-      
-      // Escritura: Solo usuarios autenticados pueden subir imágenes de blog
-      allow write: if isAuthenticated() && 
-                      isValidImageType() && 
+
+      // Escritura: Solo admin
+      allow write: if isAdmin() &&
+                      isValidImageType() &&
                       isValidSize();
     }
-    
-    // Reglas para thumbnails
-    match /thumbnails/{userId}/{fileName} {
-      // Lectura: Todos pueden ver thumbnails
-      allow read: if true;
-      
-      // Escritura: Solo usuarios autenticados pueden subir thumbnails
-      allow write: if isAuthenticated() && 
-                      isValidImageType() && 
-                      request.resource.size < 500 * 1024; // 500KB para thumbnails
-    }
-    
-    // Reglas para imágenes generales
+
+    // Imágenes generales - Solo admin puede subir
     match /images/{userId}/{fileName} {
       // Lectura: Todos pueden ver imágenes
       allow read: if true;
-      
-      // Escritura: Solo usuarios autenticados pueden subir imágenes
-      allow write: if isAuthenticated() && 
-                      isValidImageType() && 
+
+      // Escritura: Solo admin
+      allow write: if isAdmin() &&
+                      isValidImageType() &&
                       isValidSize();
     }
-    */
+
+    // Avatares de usuario - Solo admin (o el propio usuario en el futuro)
+    match /avatars/{userId}/{fileName} {
+      // Lectura: Todos pueden ver avatares
+      allow read: if true;
+
+      // Escritura: Solo admin
+      allow write: if isAdmin() &&
+                      isValidImageType() &&
+                      request.resource.size < 1 * 1024 * 1024; // 1MB para avatares
+    }
+
+    // Todo lo demás: denegado
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
   }
 }
