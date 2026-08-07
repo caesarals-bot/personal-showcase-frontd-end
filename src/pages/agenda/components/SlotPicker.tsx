@@ -107,10 +107,11 @@ export function SlotPicker({
                 type="button"
                 onClick={() => onSelect(slot.startTime)}
                 className={cn(
-                  'border px-3 py-2.5 text-center text-sm font-medium transition-colors',
+                  'border px-3 py-2.5 text-center text-sm font-medium transition-all duration-200 ease-out',
+                  'hover:border-editorial-terracotta hover:bg-editorial-terracotta/10 hover:shadow-md active:scale-[0.98]',
                   active
-                    ? 'border-editorial-terracotta bg-editorial-terracotta text-white'
-                    : 'border-editorial-line bg-transparent text-editorial-ink hover:bg-editorial-cream',
+                    ? 'border-editorial-terracotta bg-editorial-terracotta text-white shadow-md'
+                    : 'border-editorial-line bg-transparent text-editorial-ink',
                 )}
               >
                 {formatSlotTime(slot.isoStart)}

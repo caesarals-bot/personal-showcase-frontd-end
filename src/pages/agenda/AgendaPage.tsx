@@ -104,7 +104,7 @@ export default function AgendaPage() {
         type="website"
       />
 
-      <div className="container mx-auto px-4 py-10 lg:py-16">
+      <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-16">
         {booking.confirmation && lastVisitor ? (
           <BookingConfirmation
             confirmation={booking.confirmation}
@@ -147,34 +147,36 @@ export default function AgendaPage() {
               </p>
             </motion.header>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+            <div className="grid grid-cols-1 gap-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
               {/* Calendario */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="border border-editorial-line bg-white/60 p-6"
+                className="lg:col-span-5"
               >
-                <div className="mb-4 flex items-center gap-2">
-                  <CalendarDays className="size-4 text-editorial-teal" />
-                  <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
-                    Elige un día
-                  </span>
+                <div className="rounded-3xl border border-editorial-line/60 bg-white p-5 shadow-xl lg:p-6 lg:sticky lg:top-24">
+                  <div className="mb-4 flex items-center gap-2">
+                    <CalendarDays className="size-4 text-editorial-teal" />
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-editorial-ink-muted">
+                      Elige un día
+                    </span>
+                  </div>
+                  <AvailabilityCalendar
+                    month={month}
+                    onMonthChange={setMonth}
+                    availability={availabilityHook.availability}
+                    selectedDate={selectedDate}
+                    onSelect={handleSelectDate}
+                    settings={settings}
+                    loading={availabilityHook.loading}
+                  />
+                  {availabilityHook.error && (
+                    <p className="mt-3 text-xs text-red-700">
+                      No pudimos cargar la disponibilidad de este mes.
+                    </p>
+                  )}
                 </div>
-                <AvailabilityCalendar
-                  month={month}
-                  onMonthChange={setMonth}
-                  availability={availabilityHook.availability}
-                  selectedDate={selectedDate}
-                  onSelect={handleSelectDate}
-                  settings={settings}
-                  loading={availabilityHook.loading}
-                />
-                {availabilityHook.error && (
-                  <p className="mt-3 text-xs text-red-700">
-                    No pudimos cargar la disponibilidad de este mes.
-                  </p>
-                )}
               </motion.div>
 
               {/* Horarios + formulario */}
@@ -182,10 +184,10 @@ export default function AgendaPage() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-6 lg:col-span-7"
               >
                 {!selectedDate ? (
-                  <div className="flex h-full min-h-[26rem] flex-col items-center justify-center gap-3 border border-editorial-line bg-white/60 p-6 text-center">
+                  <div className="flex min-h-[26rem] flex-col items-center justify-center gap-3 rounded-3xl border border-editorial-line/60 bg-white/60 p-6 text-center shadow-xl">
                     <CalendarDays className="size-8 text-editorial-teal" />
                     <p className="max-w-xs text-sm text-editorial-ink-muted">
                       Selecciona una fecha del calendario para ver los horarios
