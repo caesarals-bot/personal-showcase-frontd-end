@@ -30,6 +30,7 @@ import { zonedToIso } from './_shared/time'
 import { checkBookingRateLimit, checkIpRateLimit } from './_shared/rate-limit'
 import { ok, badRequest, conflict, serverError, tooManyRequests } from './_shared/response'
 import { createBookingSchema } from './_shared/validation'
+import { sendBookingTelegramNotification } from './_shared/telegram'
 
 class SlotTakenError extends Error {}
 class TimeBlockedError extends Error {}
@@ -157,6 +158,16 @@ export const handler: Handler = async (event) => {
       }
       throw error
     }
+
+    // Notificación por Telegram al dueño (non-blocking: nunca aborta la
+    // reserva aunque Telegram falle o no esté configurado).
+    await sendBookingTelegramNotification({
+      name: visitor.name,
+      email: visitor.email,
+      date,
+      startTime: timeOf(startMinutes),
+      topic: visitor.topic,
+    })
 
     return ok({
       bookingId,
